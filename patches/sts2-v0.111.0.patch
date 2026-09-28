@@ -1,0 +1,65 @@
+diff --git a/STS2AIMCP/Game/GameStateService.cs b/STS2AIMCP/Game/GameStateService.cs
+index 0ae855e..a934a23 100644
+--- a/STS2AIMCP/Game/GameStateService.cs
++++ b/STS2AIMCP/Game/GameStateService.cs
+@@ -3530,7 +3530,7 @@ internal static class GameStateService
+             selected_character_id = selectedCharacterId,
+             player_count = lobby?.Players.Count ?? 0,
+             max_players = lobby != null
+-                ? lobby.MaxPlayers > 0 ? lobby.MaxPlayers : lobby.Players.Count
++                ? lobby.Players.Count
+                 : 4,
+             players = lobby?.Players
+                 .OrderBy(player => player.slotId)
+@@ -3680,7 +3680,7 @@ internal static class GameStateService
+                 local_ready = localPlayer.isReady,
+                 is_waiting_for_players = waitingPanel?.Visible ?? false,
+                 player_count = lobby.Players.Count,
+-                max_players = lobby.MaxPlayers > 0 ? lobby.MaxPlayers : lobby.Players.Count,
++                max_players = lobby.Players.Count,
+                 ascension = lobby.Ascension,
+                 max_ascension = lobby.MaxAscension,
+                 seed = lobby.Seed,
+@@ -5159,7 +5159,8 @@ internal static class GameStateService
+         }
+     }
+ 
+-    private static CharacterSelectPlayerPayload BuildCharacterSelectPlayerPayload(LobbyPlayer player, ulong localPlayerId)
++    // v0.111 uses StartRunLobbyPlayer for character selection.
++    private static CharacterSelectPlayerPayload BuildCharacterSelectPlayerPayload(StartRunLobbyPlayer player, ulong localPlayerId)
+     {
+         return new CharacterSelectPlayerPayload
+         {
+@@ -5536,7 +5537,7 @@ internal static class GameStateService
+         return potion != null &&
+             !potion.IsQueued &&
+             !potion.Owner.Creature.IsDead &&
+-            player.CanRemovePotions;
++            player.CanUseOrRemovePotions;
+     }
+ 
+     public static bool PotionRequiresTarget(CombatState? combatState, PotionModel potion)
+@@ -6071,8 +6072,8 @@ internal static class GameStateService
+             return Array.Empty<ulong>();
+         }
+ 
+-        var connectedPlayerIds = RunManager.Instance.RunLobby?.ConnectedPlayerIds;
+-        if (connectedPlayerIds != null && connectedPlayerIds.Count > 0)
++        var connectedPlayerIds = RunManager.Instance.RunLobby?.PlayerIds.ToArray();
++        if (connectedPlayerIds != null && connectedPlayerIds.Length > 0)
+         {
+             return connectedPlayerIds;
+         }
+diff --git a/STS2AIMCP/Game/RoomRestartService.cs b/STS2AIMCP/Game/RoomRestartService.cs
+index 0151255..9b4e701 100644
+--- a/STS2AIMCP/Game/RoomRestartService.cs
++++ b/STS2AIMCP/Game/RoomRestartService.cs
+@@ -101,7 +101,7 @@ internal static class RoomRestartService
+             checkpoint = _checkpoint;
+         }
+ 
+-        await SaveManager.Instance.IncrementNumReloads(checkpoint, isMultiplayer: false);
++        await SaveManager.Instance.IncrementNumReloads(checkpoint, MegaCrit.Sts2.Core.Multiplayer.Game.NetGameType.Singleplayer, false);
+         return true;
+     }
+ 

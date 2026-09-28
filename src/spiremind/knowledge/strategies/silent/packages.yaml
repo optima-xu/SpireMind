@@ -1,0 +1,77 @@
+- id: silent_shiv
+  character: silent
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: shiv
+  strong_signals:
+  - accuracy
+  - phantom_blades
+  enablers:
+  - blade_dance
+  - cloak_and_dagger
+  - infinite_blades
+  payoffs:
+  - accuracy
+  - phantom_blades
+  goals:
+  - shiv
+  - survive_and_improve_deck
+  hard_rules:
+  - Apply useful damage multipliers before spending Shivs.
+  heuristics:
+  - Balance Shiv generation, damage multipliers, and defense.
+  anti_patterns:
+  - Do not force a pure Shiv deck.
+- id: silent_discard
+  character: silent
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: discard
+  strong_signals:
+  - tools_of_the_trade
+  - master_planner
+  enablers:
+  - prepared
+  - acrobatics
+  - dagger_throw
+  payoffs:
+  - reflex
+  - tactician
+  - sneaky_strike
+  - master_planner
+  goals:
+  - discard
+  - survive_and_improve_deck
+  hard_rules:
+  - Read Sly and discard trigger text before selecting discard targets.
+  heuristics:
+  - Balance discard enablers and payoffs, and filter curses/statuses when profitable.
+  anti_patterns:
+  - Do not always discard the lowest nominal value card.
+- id: silent_poison
+  character: silent
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: poison
+  strong_signals:
+  - noxious_fumes
+  - catalyst
+  enablers:
+  - deadly_poison
+  - bouncing_flask
+  - noxious_fumes
+  payoffs:
+  - catalyst
+  - noxious_fumes
+  goals:
+  - poison
+  - survive_and_improve_deck
+  hard_rules:
+  - Account for poison timing and enemy powers using live facts.
+  heuristics:
+  - Use poison as scaling while maintaining enough defense to survive.
+  anti_patterns:
+  - Do not add slow poison at the expense of immediate survival.

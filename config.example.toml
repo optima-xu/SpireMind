@@ -1,0 +1,24 @@
+# Generic OpenAI Chat Completions compatible endpoint. Keys stay in environment variables.
+[model]
+base_url = "https://api.openai.com/v1"
+model = "your-model-id"
+api_key_env = "OPENAI_API_KEY"
+json_mode = true
+require_exact_model = false
+
+[game]
+base_url = "http://127.0.0.1:8080"
+character = "ironclad"
+ascension = 0
+
+[runtime]
+context_tokens = 4000
+max_context_tokens = 16000
+max_steps = 3000
+max_total_tokens = 2000000
+max_seconds = 7200
+
+[strategy]
+combat_guards = true
+# Use a defensive potion on a heavy boss hit at this fraction of max HP.
+boss_potion_damage_fraction = 0.20

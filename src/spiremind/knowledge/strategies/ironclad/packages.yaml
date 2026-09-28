@@ -1,0 +1,78 @@
+- id: ironclad_exhaust
+  character: ironclad
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: exhaust
+  strong_signals:
+  - dark_embrace
+  - feel_no_pain
+  enablers:
+  - burning_pact
+  - second_wind
+  - stoke
+  - fiend_fire
+  payoffs:
+  - dark_embrace
+  - feel_no_pain
+  goals:
+  - exhaust
+  - survive_and_improve_deck
+  hard_rules:
+  - Protect essential setup before mass Exhaust; check hand space and remaining draw.
+  heuristics:
+  - Turn controlled Exhaust into deck compression and repeated draw/block payoff.
+  anti_patterns:
+  - Do not draft weak Exhaust cards without a payoff.
+- id: ironclad_strength
+  character: ironclad
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: strength
+  strong_signals:
+  - inflame
+  - demon_form
+  enablers:
+  - inflame
+  - demon_form
+  - bash
+  - dominate
+  payoffs:
+  - sword_boomerang
+  - heavy_blade
+  - twin_strike
+  goals:
+  - strength
+  - survive_and_improve_deck
+  hard_rules:
+  - Apply efficient Strength or Vulnerable setup before the attacks it improves.
+  heuristics:
+  - Invest in scaling for long fights; compare setup HP loss with immediate damage.
+  anti_patterns:
+  - Do not lose excessive HP setting up a fight that can end now.
+- id: ironclad_block
+  character: ironclad
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: block
+  strong_signals:
+  - barricade
+  - entrench
+  enablers:
+  - entrench
+  - expect_a_fight
+  - shrug_it_off
+  payoffs:
+  - body_slam
+  - barricade
+  goals:
+  - block
+  - survive_and_improve_deck
+  hard_rules:
+  - Check actual retained block and incoming intent before converting block.
+  heuristics:
+  - Build reliable block generation before taking block payoff cards.
+  anti_patterns:
+  - Do not assume block persists without the live mechanic.

@@ -1,0 +1,78 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "spiremind"
+version = "0.1.0"
+description = "Observable Slay the Spire 2 agent with bounded context and persistent strategy memory"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "SpireMind contributors" }]
+keywords = ["slay-the-spire-2", "agent", "llm", "openai-compatible", "game-ai"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Games/Entertainment :: Turn Based Strategy",
+]
+dependencies = ["httpx>=0.28,<1", "pydantic>=2.11,<3", "PyYAML>=6,<7"]
+
+[project.urls]
+Homepage = "https://github.com/optima-xu/SpireMind"
+Repository = "https://github.com/optima-xu/SpireMind.git"
+Issues = "https://github.com/optima-xu/SpireMind/issues"
+Changelog = "https://github.com/optima-xu/SpireMind/blob/main/CHANGELOG.md"
+
+[project.scripts]
+spiremind = "spiremind.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "pytest-asyncio>=0.25,<2", "ruff>=0.11,<1"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/spiremind"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "src",
+  "tests",
+  "scripts",
+  "patches",
+  ".github",
+  ".env.example",
+  ".gitignore",
+  "CHANGELOG.md",
+  "CONTRIBUTING.md",
+  "LICENSE",
+  "README.md",
+  "SECURITY.md",
+  "THIRD_PARTY_NOTICES.md",
+  "bridge.lock.json",
+  "config.example.toml",
+  "config.deepseek.example.toml",
+  "docs/ACCEPTANCE.md",
+  "docs/ARCHITECTURE_IMPROVEMENTS.md",
+  "docs/DEATH_REVIEW.md",
+  "docs/DEPLOYMENT.md",
+  "docs/ENEMY_BESTIARY_v0.111.0.md",
+  "docs/ENEMY_KNOWLEDGE.md",
+  "docs/mcp_notes.md",
+  "pyproject.toml",
+  "uv.lock",
+]

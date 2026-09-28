@@ -1,0 +1,54 @@
+- name: mass_exhaust_order
+  character: ironclad
+  game_version: 0.111.x
+  required_hand:
+  - fiend_fire
+  required_powers: []
+  instructions:
+  - Before mass Exhaust, check whether essential setup in hand must be played first;
+    preserve lethal lines.
+  confidence: 0.9
+  confirmed: true
+  source: Curated handoff tactical checklist; conditional on live card text; not a
+    learned win-rate claim
+- name: shiv_setup
+  character: silent
+  game_version: 0.111.x
+  required_hand:
+  - accuracy
+  - shiv
+  required_powers: []
+  instructions:
+  - If live Accuracy text boosts Shivs, compare setup then Shiv with immediate lethal;
+    check energy.
+  confidence: 0.9
+  confirmed: true
+  source: Curated handoff tactical checklist; conditional on live card text; not a
+    learned win-rate claim
+- name: first_attack
+  character: necrobinder
+  game_version: 0.111.x
+  required_hand:
+  - bury
+  required_powers:
+  - lethality
+  instructions:
+  - Read attacks_played. When zero, compare first-attack candidates using live bonus
+    text.
+  confidence: 0.9
+  confirmed: true
+  source: Curated handoff tactical checklist; conditional on live card text; not a
+    learned win-rate claim
+- name: discard_retrieval
+  character: defect
+  game_version: 0.111.x
+  required_hand:
+  - all_for_one
+  required_powers: []
+  instructions:
+  - Count retrievable cards in the visible discard pile and available hand slots before
+    retrieval.
+  confidence: 0.9
+  confirmed: true
+  source: Curated handoff tactical checklist; conditional on live card text; not a
+    learned win-rate claim

@@ -1,0 +1,68 @@
+- id: necrobinder_osty
+  character: necrobinder
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: osty
+  strong_signals:
+  - bodyguard
+  - unleash
+  enablers:
+  - bodyguard
+  - summon
+  payoffs:
+  - unleash
+  goals:
+  - osty
+  - survive_and_improve_deck
+  hard_rules:
+  - Compare summon-then-spend with immediate use based on actual Osty resources.
+  heuristics:
+  - Treat Osty as both a damage and defensive resource.
+  anti_patterns:
+  - Do not ignore the HP cost of spending Osty.
+- id: necrobinder_doom
+  character: necrobinder
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: doom
+  strong_signals:
+  - countdown
+  enablers:
+  - countdown
+  - doom
+  payoffs:
+  - countdown
+  goals:
+  - doom
+  - survive_and_improve_deck
+  hard_rules:
+  - Check Doom trigger timing, enemy powers, and survival before assuming a delayed
+    kill.
+  heuristics:
+  - Avoid excess damage on enemies already covered by a reliable Doom resolution.
+  anti_patterns:
+  - Do not treat Doom as immediate damage or skip necessary defense.
+- id: necrobinder_lethality
+  character: necrobinder
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: lethality
+  strong_signals:
+  - lethality
+  - bury
+  enablers:
+  - lethality
+  payoffs:
+  - bury
+  goals:
+  - lethality
+  - survive_and_improve_deck
+  hard_rules:
+  - If the live first-attack bonus is unused, avoid consuming it with a weak attack.
+  heuristics:
+  - Use non-attack setup before the best first attack when it is efficient.
+  anti_patterns:
+  - Do not infer first-attack availability from prior text; read attacks_played.

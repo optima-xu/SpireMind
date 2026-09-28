@@ -1,0 +1,30 @@
+# Alibaba Cloud Model Studio OpenAI-compatible example.
+# Copy to config.local.toml and replace YOUR-ENDPOINT with your deployment URL.
+[model]
+base_url = "https://YOUR-ENDPOINT/compatible-mode/v1"
+model = "deepseek-v4-flash-0731"
+api_key_env = "DASHSCOPE_API_KEY"
+require_exact_model = true
+json_mode = true
+temperature = 0.2
+timeout_seconds = 180
+max_completion_tokens = 8192
+
+[model.extra_body]
+enable_thinking = false
+
+[game]
+base_url = "http://127.0.0.1:8080"
+character = "ironclad"
+ascension = 0
+
+[runtime]
+context_tokens = 4000
+max_context_tokens = 16000
+max_steps = 3000
+max_total_tokens = 2000000
+max_seconds = 7200
+
+[strategy]
+combat_guards = true
+boss_potion_damage_fraction = 0.20

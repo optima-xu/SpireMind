@@ -1,0 +1,73 @@
+- id: regent_stars
+  character: regent
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: stars
+  strong_signals:
+  - seven_stars
+  - comet
+  enablers:
+  - gather_light
+  - glow
+  - astral_pulse
+  payoffs:
+  - seven_stars
+  - comet
+  - decisions_decisions
+  goals:
+  - stars
+  - survive_and_improve_deck
+  hard_rules:
+  - Check Star reserves and next-turn needs before a large spender.
+  heuristics:
+  - Balance Star generators and spenders; preserve a useful burst reserve.
+  anti_patterns:
+  - Do not spend Stars solely because they are available.
+- id: regent_big_cost
+  character: regent
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: big_cost
+  strong_signals:
+  - void_form
+  enablers:
+  - void_form
+  - gather_light
+  payoffs:
+  - comet
+  - seven_stars
+  goals:
+  - big_cost
+  - survive_and_improve_deck
+  hard_rules:
+  - Read live Void Form text and remaining free slots before playing low-cost cards.
+  heuristics:
+  - Prioritize valuable high effective cost plays when free-play opportunities exist.
+  anti_patterns:
+  - Do not waste scarce free-play slots on low-value naturally free cards.
+- id: regent_creation
+  character: regent
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: creation
+  strong_signals:
+  - pillar_of_creation
+  - quasar
+  enablers:
+  - quasar
+  - spectrum_shift
+  payoffs:
+  - pillar_of_creation
+  - sovereign_blade
+  goals:
+  - creation
+  - survive_and_improve_deck
+  hard_rules:
+  - Use live text to confirm create-card trigger timing.
+  heuristics:
+  - Balance creation payoffs with resource and hand-space limits.
+  anti_patterns:
+  - Do not import numerical effects from another game patch.

@@ -1,0 +1,71 @@
+- id: defect_orbs
+  character: defect
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: orbs
+  strong_signals:
+  - defragment
+  - hotfix
+  enablers:
+  - cold_snap
+  - ball_lightning
+  - darkness
+  payoffs:
+  - defragment
+  - hotfix
+  - dualcast
+  goals:
+  - orbs
+  - survive_and_improve_deck
+  hard_rules:
+  - Apply useful Focus before the orb triggers it improves.
+  heuristics:
+  - Balance orb generation, Focus, and evoke tools with current defense needs.
+  anti_patterns:
+  - Do not assume Dark orb timing or values without live facts.
+- id: defect_zero_cost
+  character: defect
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: zero_cost
+  strong_signals:
+  - all_for_one
+  enablers:
+  - hotfix
+  - turbo
+  - hologram
+  payoffs:
+  - all_for_one
+  goals:
+  - zero_cost
+  - survive_and_improve_deck
+  hard_rules:
+  - Check discard contents and hand space before All for One.
+  heuristics:
+  - Use valuable zero-cost cards before retrieving them when this improves the turn.
+  anti_patterns:
+  - Do not value retrieval from deck density alone; inspect the current discard pile.
+- id: defect_status
+  character: defect
+  game_version: 0.111.x
+  source: SpireMind handoff v1.1; qualitative guidance, corroborate mechanics with
+    live facts
+  archetype: status
+  strong_signals:
+  - smokestack
+  enablers:
+  - smokestack
+  - turbo
+  payoffs:
+  - smokestack
+  goals:
+  - status
+  - survive_and_improve_deck
+  hard_rules:
+  - Read the actual status payoff and future draw cost before generating statuses.
+  heuristics:
+  - Treat status generation as beneficial only with functioning payoffs.
+  anti_patterns:
+  - Do not classify every status as either always good or always bad.

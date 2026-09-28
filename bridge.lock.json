@@ -1,0 +1,12 @@
+{
+  "repository": "https://github.com/BMingSY/sts2-ai-mcp.git",
+  "commit": "5d1d36b24337d7dd27fe125682e4c51fb9f76aa0",
+  "patch": "patches/sts2-v0.111.0.patch",
+  "game_version": "v0.111.0",
+  "mod_version": "0.1.12",
+  "protocol_version": "2026-07-18-v2-draft",
+  "state_version": 16,
+  "decision_version": 7,
+  "engine_version": "4.5.1.m.14",
+  "scope": "Standard single-player; multiplayer, custom runs and room restart are unsupported"
+}

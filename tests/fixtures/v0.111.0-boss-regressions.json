@@ -1,0 +1,2675 @@
+[
+  {
+    "case": "shield",
+    "state": {
+      "scene": "combat",
+      "run": {
+        "id": "acceptance-boss",
+        "character": "ironclad",
+        "ascension": 0,
+        "act": null,
+        "floor": 17,
+        "hp": 76,
+        "max_hp": 102,
+        "gold": 190,
+        "deck": [],
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "stone_humidifier",
+            "name": "石炉加湿器",
+            "text": "每当你在[gold]休息处[/gold][gold]休息[/gold]时，将你的最大生命值提升[blue]5[/blue]点。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "war_paint",
+            "name": "战纹涂料",
+            "text": "拾起时，随机[gold]升级[/gold][blue]2[/blue]张技能牌。",
+            "slot": null,
+            "amount": 1
+          }
+        ],
+        "potions": [
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 0,
+            "amount": null
+          },
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 2,
+            "amount": null
+          }
+        ],
+        "boss": "墨影幻灵"
+      },
+      "combat": {
+        "energy": 3,
+        "stars": 0,
+        "focus": 0,
+        "block": 0,
+        "turn": 3,
+        "attacks_played": 0,
+        "hand": [
+          {
+            "id": "perfected_strike",
+            "ref": "card:PERFECTED_STRIKE:02179bf1",
+            "name": "完美打击",
+            "type": "attack",
+            "cost": 2,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成22点伤害。 你每有一张名字中含有“打击”的牌，伤害+2。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"CalculationBase\":6,\"ExtraDamage\":2,\"CalculatedDamage\":22}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "sword_boomerang",
+            "ref": "card:SWORD_BOOMERANG:02d47b7d",
+            "name": "飞剑回旋镖",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "随机对敌人造成3点伤害3次。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":3,\"Repeat\":3}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:0178576d",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得5点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":5}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:013b12d9",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成6点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":6}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:0313a9a1",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成6点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":6}"
+            },
+            "playable": true,
+            "count": 1
+          }
+        ],
+        "draw": {
+          "count": 1,
+          "cards": [
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            }
+          ]
+        },
+        "discard": {
+          "count": 11,
+          "cards": [
+            {
+              "id": "bash",
+              "ref": "",
+              "name": "痛击",
+              "type": "attack",
+              "cost": 2,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。 给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Vulnerable",
+                "易伤"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "iron_wave",
+              "ref": "",
+              "name": "铁斩波",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。 造成{Damage:diff()}点伤害。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "pommel_strike",
+              "ref": "",
+              "name": "剑柄打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。 抽{Cards:diff()}张牌。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "strike_ironclad",
+              "ref": "",
+              "name": "打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 3
+            },
+            {
+              "id": "taunt",
+              "ref": "",
+              "name": "挑衅+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。 给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Block",
+                "Vulnerable",
+                "易伤",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "thunderclap",
+              "ref": "",
+              "name": "闪电霹雳",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "对所有敌人造成{Damage:diff()}点伤害，给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Vulnerable",
+                "易伤"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "twin_strike",
+              "ref": "",
+              "name": "双重打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害两次。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            }
+          ]
+        },
+        "exhaust": {
+          "count": 0,
+          "cards": []
+        },
+        "powers": [],
+        "enemies": [
+          {
+            "id": "vantom",
+            "ref": "enemy:VANTOM:03802d79",
+            "name": "墨影幻灵",
+            "hp": 168,
+            "max_hp": 173,
+            "block": 0,
+            "powers": [
+              {
+                "id": "slippery_power",
+                "amount": 3.0,
+                "description": "[gold]{OwnerName}[/gold]下[blue]{Amount}[/blue]次要失去生命值时，只会失去[blue]1[/blue]点生命。"
+              },
+              {
+                "id": "vulnerable_power",
+                "amount": 2.0,
+                "description": "[blue]2[/blue]回合内，受到的攻击伤害增加[blue]50%[/blue]。"
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 26,
+                "hits": 1,
+                "text": "26"
+              },
+              {
+                "type": "StatusCard",
+                "damage": null,
+                "hits": null,
+                "text": "3"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "orbs": {
+          "encoded": "[]"
+        },
+        "turn_phase": "Play"
+      },
+      "map": null,
+      "choices": [],
+      "legal_actions": [
+        {
+          "id": "combat:discard_potion:0",
+          "decision_id": "case:shield",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:discard_potion:2",
+          "decision_id": "case:shield",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:end_turn",
+          "decision_id": "case:shield",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 26.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage"
+          ]
+        },
+        {
+          "id": "combat:play:0:enemy:0",
+          "decision_id": "case:shield",
+          "kind": "play_card",
+          "label": "Play 完美打击 on enemy:0",
+          "description": "造成22点伤害。 你每有一张名字中含有“打击”的牌，伤害+2。",
+          "card_id": "card:PERFECTED_STRIKE:02179bf1",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1",
+          "decision_id": "case:shield",
+          "kind": "play_card",
+          "label": "Play 飞剑回旋镖",
+          "description": "随机对敌人造成3点伤害3次。",
+          "card_id": "card:SWORD_BOOMERANG:02d47b7d",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2",
+          "decision_id": "case:shield",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得5点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:0178576d",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:3:enemy:0",
+          "decision_id": "case:shield",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成6点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:013b12d9",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:4:enemy:0",
+          "decision_id": "case:shield",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成6点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:0313a9a1",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:0:enemy:0",
+          "decision_id": "case:shield",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:2:enemy:0",
+          "decision_id": "case:shield",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ],
+      "revision": 19,
+      "decision_id": "case:shield",
+      "game_version": "v0.111.0",
+      "scene_facts": {
+        "encoded": "{}"
+      },
+      "victory": null
+    }
+  },
+  {
+    "case": "unused_energy",
+    "state": {
+      "scene": "combat",
+      "run": {
+        "id": "acceptance-boss",
+        "character": "ironclad",
+        "ascension": 0,
+        "act": null,
+        "floor": 17,
+        "hp": 30,
+        "max_hp": 102,
+        "gold": 190,
+        "deck": [],
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "stone_humidifier",
+            "name": "石炉加湿器",
+            "text": "每当你在[gold]休息处[/gold][gold]休息[/gold]时，将你的最大生命值提升[blue]5[/blue]点。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "war_paint",
+            "name": "战纹涂料",
+            "text": "拾起时，随机[gold]升级[/gold][blue]2[/blue]张技能牌。",
+            "slot": null,
+            "amount": 1
+          }
+        ],
+        "potions": [
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 0,
+            "amount": null
+          },
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 2,
+            "amount": null
+          }
+        ],
+        "boss": "墨影幻灵"
+      },
+      "combat": {
+        "energy": 2,
+        "stars": 0,
+        "focus": 0,
+        "block": 8,
+        "turn": 7,
+        "attacks_played": 0,
+        "hand": [
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:013b12d9",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成6点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":6}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:034c12c7",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成6点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":6}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "wound",
+            "ref": "card:WOUND:03fb2538",
+            "name": "伤口",
+            "type": "status",
+            "cost": -1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "不能被打出。",
+            "keywords": [
+              "Unplayable"
+            ],
+            "values": {
+              "encoded": "{}"
+            },
+            "playable": false,
+            "count": 1
+          },
+          {
+            "id": "wound",
+            "ref": "card:WOUND:03d44ef8",
+            "name": "伤口",
+            "type": "status",
+            "cost": -1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "不能被打出。",
+            "keywords": [
+              "Unplayable"
+            ],
+            "values": {
+              "encoded": "{}"
+            },
+            "playable": false,
+            "count": 1
+          }
+        ],
+        "draw": {
+          "count": 15,
+          "cards": [
+            {
+              "id": "bash",
+              "ref": "",
+              "name": "痛击",
+              "type": "attack",
+              "cost": 2,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。 给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Vulnerable",
+                "易伤"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 3
+            },
+            {
+              "id": "iron_wave",
+              "ref": "",
+              "name": "铁斩波",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。 造成{Damage:diff()}点伤害。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "perfected_strike",
+              "ref": "",
+              "name": "完美打击",
+              "type": "attack",
+              "cost": 2,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{CalculatedDamage:diff()}点伤害。 你每有一张名字中含有“打击”的牌，伤害+{ExtraDamage:diff()}。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "pommel_strike",
+              "ref": "",
+              "name": "剑柄打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。 抽{Cards:diff()}张牌。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "strike_ironclad",
+              "ref": "",
+              "name": "打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 3
+            },
+            {
+              "id": "sword_boomerang",
+              "ref": "",
+              "name": "飞剑回旋镖",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "随机对敌人造成{Damage:diff()}点伤害{Repeat:diff()}次。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "taunt",
+              "ref": "",
+              "name": "挑衅+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。 给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Block",
+                "Vulnerable",
+                "易伤",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "thunderclap",
+              "ref": "",
+              "name": "闪电霹雳",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "对所有敌人造成{Damage:diff()}点伤害，给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Vulnerable",
+                "易伤"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "twin_strike",
+              "ref": "",
+              "name": "双重打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害两次。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "wound",
+              "ref": "",
+              "name": "伤口",
+              "type": "status",
+              "cost": -1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "",
+              "keywords": [
+                "Unplayable"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            }
+          ]
+        },
+        "discard": {
+          "count": 1,
+          "cards": [
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            }
+          ]
+        },
+        "exhaust": {
+          "count": 0,
+          "cards": []
+        },
+        "powers": [],
+        "enemies": [
+          {
+            "id": "vantom",
+            "ref": "enemy:VANTOM:03802d79",
+            "name": "墨影幻灵",
+            "hp": 67,
+            "max_hp": 173,
+            "block": 0,
+            "powers": [
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。"
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 28,
+                "hits": 1,
+                "text": "28"
+              },
+              {
+                "type": "StatusCard",
+                "damage": null,
+                "hits": null,
+                "text": "3"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "orbs": {
+          "encoded": "[]"
+        },
+        "turn_phase": "Play"
+      },
+      "map": null,
+      "choices": [],
+      "legal_actions": [
+        {
+          "id": "combat:discard_potion:0",
+          "decision_id": "case:unused_energy",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:discard_potion:2",
+          "decision_id": "case:unused_energy",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:end_turn",
+          "decision_id": "case:unused_energy",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 28.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage"
+          ]
+        },
+        {
+          "id": "combat:play:0:enemy:0",
+          "decision_id": "case:unused_energy",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成6点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:013b12d9",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1:enemy:0",
+          "decision_id": "case:unused_energy",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成6点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:034c12c7",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:0:enemy:0",
+          "decision_id": "case:unused_energy",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:2:enemy:0",
+          "decision_id": "case:unused_energy",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ],
+      "revision": 38,
+      "decision_id": "case:unused_energy",
+      "game_version": "v0.111.0",
+      "scene_facts": {
+        "encoded": "{}"
+      },
+      "victory": null
+    }
+  },
+  {
+    "case": "fatal_one",
+    "state": {
+      "scene": "combat",
+      "run": {
+        "id": "acceptance-boss",
+        "character": "ironclad",
+        "ascension": 0,
+        "act": null,
+        "floor": 17,
+        "hp": 10,
+        "max_hp": 102,
+        "gold": 190,
+        "deck": [],
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "stone_humidifier",
+            "name": "石炉加湿器",
+            "text": "每当你在[gold]休息处[/gold][gold]休息[/gold]时，将你的最大生命值提升[blue]5[/blue]点。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "war_paint",
+            "name": "战纹涂料",
+            "text": "拾起时，随机[gold]升级[/gold][blue]2[/blue]张技能牌。",
+            "slot": null,
+            "amount": 1
+          }
+        ],
+        "potions": [
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 0,
+            "amount": null
+          },
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 2,
+            "amount": null
+          }
+        ],
+        "boss": "墨影幻灵"
+      },
+      "combat": {
+        "energy": 1,
+        "stars": 0,
+        "focus": 0,
+        "block": 0,
+        "turn": 9,
+        "attacks_played": 1,
+        "hand": [
+          {
+            "id": "sword_boomerang",
+            "ref": "card:SWORD_BOOMERANG:02d47b7d",
+            "name": "飞剑回旋镖",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "随机对敌人造成3点伤害3次。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":3,\"Repeat\":3}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:03d7da4e",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得5点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":5}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:0313a9a1",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成6点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":6}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "bash",
+            "ref": "card:BASH:02346d96",
+            "name": "痛击",
+            "type": "attack",
+            "cost": 2,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成8点伤害。 给予2层易伤。",
+            "keywords": [
+              "易伤"
+            ],
+            "values": {
+              "encoded": "{\"Damage\":8,\"VulnerablePower\":2}"
+            },
+            "playable": false,
+            "count": 1
+          }
+        ],
+        "draw": {
+          "count": 4,
+          "cards": [
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "strike_ironclad",
+              "ref": "",
+              "name": "打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "taunt",
+              "ref": "",
+              "name": "挑衅+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。 给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Block",
+                "Vulnerable",
+                "易伤",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "wound",
+              "ref": "",
+              "name": "伤口",
+              "type": "status",
+              "cost": -1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "",
+              "keywords": [
+                "Unplayable"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            }
+          ]
+        },
+        "discard": {
+          "count": 15,
+          "cards": [
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "iron_wave",
+              "ref": "",
+              "name": "铁斩波",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。 造成{Damage:diff()}点伤害。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "perfected_strike",
+              "ref": "",
+              "name": "完美打击",
+              "type": "attack",
+              "cost": 2,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{CalculatedDamage:diff()}点伤害。 你每有一张名字中含有“打击”的牌，伤害+{ExtraDamage:diff()}。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "pommel_strike",
+              "ref": "",
+              "name": "剑柄打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。 抽{Cards:diff()}张牌。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "strike_ironclad",
+              "ref": "",
+              "name": "打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 3
+            },
+            {
+              "id": "thunderclap",
+              "ref": "",
+              "name": "闪电霹雳",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "对所有敌人造成{Damage:diff()}点伤害，给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Vulnerable",
+                "易伤"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "twin_strike",
+              "ref": "",
+              "name": "双重打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害两次。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "wound",
+              "ref": "",
+              "name": "伤口",
+              "type": "status",
+              "cost": -1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "",
+              "keywords": [
+                "Unplayable"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 5
+            }
+          ]
+        },
+        "exhaust": {
+          "count": 0,
+          "cards": []
+        },
+        "powers": [],
+        "enemies": [
+          {
+            "id": "vantom",
+            "ref": "enemy:VANTOM:03802d79",
+            "name": "墨影幻灵",
+            "hp": 21,
+            "max_hp": 173,
+            "block": 0,
+            "powers": [
+              {
+                "id": "strength_power",
+                "amount": 4.0,
+                "description": "增加攻击牌造成的伤害值[blue]4[/blue]点。"
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 11,
+                "hits": 1,
+                "text": "11"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "orbs": {
+          "encoded": "[]"
+        },
+        "turn_phase": "Play"
+      },
+      "map": null,
+      "choices": [],
+      "legal_actions": [
+        {
+          "id": "combat:discard_potion:0",
+          "decision_id": "case:fatal_one",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:discard_potion:2",
+          "decision_id": "case:fatal_one",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:end_turn",
+          "decision_id": "case:fatal_one",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 11.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage",
+            "lethal"
+          ]
+        },
+        {
+          "id": "combat:play:0",
+          "decision_id": "case:fatal_one",
+          "kind": "play_card",
+          "label": "Play 飞剑回旋镖",
+          "description": "随机对敌人造成3点伤害3次。",
+          "card_id": "card:SWORD_BOOMERANG:02d47b7d",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1",
+          "decision_id": "case:fatal_one",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得5点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:03d7da4e",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2:enemy:0",
+          "decision_id": "case:fatal_one",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成6点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:0313a9a1",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:0:enemy:0",
+          "decision_id": "case:fatal_one",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:2:enemy:0",
+          "decision_id": "case:fatal_one",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ],
+      "revision": 46,
+      "decision_id": "case:fatal_one",
+      "game_version": "v0.111.0",
+      "scene_facts": {
+        "encoded": "{}"
+      },
+      "victory": null
+    }
+  },
+  {
+    "case": "fatal_zero",
+    "state": {
+      "scene": "combat",
+      "run": {
+        "id": "acceptance-boss",
+        "character": "ironclad",
+        "ascension": 0,
+        "act": null,
+        "floor": 17,
+        "hp": 10,
+        "max_hp": 102,
+        "gold": 190,
+        "deck": [],
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "stone_humidifier",
+            "name": "石炉加湿器",
+            "text": "每当你在[gold]休息处[/gold][gold]休息[/gold]时，将你的最大生命值提升[blue]5[/blue]点。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "war_paint",
+            "name": "战纹涂料",
+            "text": "拾起时，随机[gold]升级[/gold][blue]2[/blue]张技能牌。",
+            "slot": null,
+            "amount": 1
+          }
+        ],
+        "potions": [
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 0,
+            "amount": null
+          },
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 2,
+            "amount": null
+          }
+        ],
+        "boss": "墨影幻灵"
+      },
+      "combat": {
+        "energy": 0,
+        "stars": 0,
+        "focus": 0,
+        "block": 0,
+        "turn": 9,
+        "attacks_played": 2,
+        "hand": [
+          {
+            "id": "sword_boomerang",
+            "ref": "card:SWORD_BOOMERANG:02d47b7d",
+            "name": "飞剑回旋镖",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "随机对敌人造成3点伤害3次。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":3,\"Repeat\":3}"
+            },
+            "playable": false,
+            "count": 1
+          },
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:03d7da4e",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得5点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":5}"
+            },
+            "playable": false,
+            "count": 1
+          },
+          {
+            "id": "bash",
+            "ref": "card:BASH:02346d96",
+            "name": "痛击",
+            "type": "attack",
+            "cost": 2,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成8点伤害。 给予2层易伤。",
+            "keywords": [
+              "易伤"
+            ],
+            "values": {
+              "encoded": "{\"Damage\":8,\"VulnerablePower\":2}"
+            },
+            "playable": false,
+            "count": 1
+          }
+        ],
+        "draw": {
+          "count": 4,
+          "cards": [
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "strike_ironclad",
+              "ref": "",
+              "name": "打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "taunt",
+              "ref": "",
+              "name": "挑衅+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。 给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Block",
+                "Vulnerable",
+                "易伤",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "wound",
+              "ref": "",
+              "name": "伤口",
+              "type": "status",
+              "cost": -1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "",
+              "keywords": [
+                "Unplayable"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            }
+          ]
+        },
+        "discard": {
+          "count": 16,
+          "cards": [
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "iron_wave",
+              "ref": "",
+              "name": "铁斩波",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。 造成{Damage:diff()}点伤害。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "perfected_strike",
+              "ref": "",
+              "name": "完美打击",
+              "type": "attack",
+              "cost": 2,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{CalculatedDamage:diff()}点伤害。 你每有一张名字中含有“打击”的牌，伤害+{ExtraDamage:diff()}。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "pommel_strike",
+              "ref": "",
+              "name": "剑柄打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。 抽{Cards:diff()}张牌。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "strike_ironclad",
+              "ref": "",
+              "name": "打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 4
+            },
+            {
+              "id": "thunderclap",
+              "ref": "",
+              "name": "闪电霹雳",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "对所有敌人造成{Damage:diff()}点伤害，给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Vulnerable",
+                "易伤"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "twin_strike",
+              "ref": "",
+              "name": "双重打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害两次。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "wound",
+              "ref": "",
+              "name": "伤口",
+              "type": "status",
+              "cost": -1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "",
+              "keywords": [
+                "Unplayable"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 5
+            }
+          ]
+        },
+        "exhaust": {
+          "count": 0,
+          "cards": []
+        },
+        "powers": [],
+        "enemies": [
+          {
+            "id": "vantom",
+            "ref": "enemy:VANTOM:03802d79",
+            "name": "墨影幻灵",
+            "hp": 15,
+            "max_hp": 173,
+            "block": 0,
+            "powers": [
+              {
+                "id": "strength_power",
+                "amount": 4.0,
+                "description": "增加攻击牌造成的伤害值[blue]4[/blue]点。"
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 11,
+                "hits": 1,
+                "text": "11"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "orbs": {
+          "encoded": "[]"
+        },
+        "turn_phase": "Play"
+      },
+      "map": null,
+      "choices": [],
+      "legal_actions": [
+        {
+          "id": "combat:discard_potion:0",
+          "decision_id": "case:fatal_zero",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:discard_potion:2",
+          "decision_id": "case:fatal_zero",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:end_turn",
+          "decision_id": "case:fatal_zero",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 11.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage",
+            "lethal"
+          ]
+        },
+        {
+          "id": "combat:use_potion:0:enemy:0",
+          "decision_id": "case:fatal_zero",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:2:enemy:0",
+          "decision_id": "case:fatal_zero",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ],
+      "revision": 47,
+      "decision_id": "case:fatal_zero",
+      "game_version": "v0.111.0",
+      "scene_facts": {
+        "encoded": "{}"
+      },
+      "victory": null
+    }
+  },
+  {
+    "case": "enemy_strength",
+    "state": {
+      "scene": "combat",
+      "run": {
+        "id": "acceptance-boss",
+        "character": "ironclad",
+        "ascension": 0,
+        "act": null,
+        "floor": 17,
+        "hp": 10,
+        "max_hp": 102,
+        "gold": 190,
+        "deck": [],
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "stone_humidifier",
+            "name": "石炉加湿器",
+            "text": "每当你在[gold]休息处[/gold][gold]休息[/gold]时，将你的最大生命值提升[blue]5[/blue]点。",
+            "slot": null,
+            "amount": 1
+          },
+          {
+            "id": "war_paint",
+            "name": "战纹涂料",
+            "text": "拾起时，随机[gold]升级[/gold][blue]2[/blue]张技能牌。",
+            "slot": null,
+            "amount": 1
+          }
+        ],
+        "potions": [
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 0,
+            "amount": null
+          },
+          {
+            "id": "weak_potion",
+            "name": "虚弱药水",
+            "text": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+            "slot": 2,
+            "amount": null
+          }
+        ],
+        "boss": "墨影幻灵"
+      },
+      "combat": {
+        "energy": 2,
+        "stars": 0,
+        "focus": 0,
+        "block": 0,
+        "turn": 8,
+        "attacks_played": 1,
+        "hand": [
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:03b0f6b0",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得5点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":5}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "twin_strike",
+            "ref": "card:TWIN_STRIKE:01aca903",
+            "name": "双重打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成5点伤害两次。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":5}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "thunderclap",
+            "ref": "card:THUNDERCLAP:0205d349",
+            "name": "闪电霹雳",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "对所有敌人造成4点伤害，给予1层易伤。",
+            "keywords": [
+              "易伤"
+            ],
+            "values": {
+              "encoded": "{\"Damage\":4,\"VulnerablePower\":1}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "iron_wave",
+            "ref": "card:IRON_WAVE:0311f11d",
+            "name": "铁斩波",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得5点格挡。 造成5点伤害。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Damage\":5,\"Block\":5}"
+            },
+            "playable": true,
+            "count": 1
+          },
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:03a17a06",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成6点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":6}"
+            },
+            "playable": true,
+            "count": 1
+          }
+        ],
+        "draw": {
+          "count": 9,
+          "cards": [
+            {
+              "id": "bash",
+              "ref": "",
+              "name": "痛击",
+              "type": "attack",
+              "cost": 2,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。 给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Vulnerable",
+                "易伤"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 2
+            },
+            {
+              "id": "perfected_strike",
+              "ref": "",
+              "name": "完美打击",
+              "type": "attack",
+              "cost": 2,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{CalculatedDamage:diff()}点伤害。 你每有一张名字中含有“打击”的牌，伤害+{ExtraDamage:diff()}。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "strike_ironclad",
+              "ref": "",
+              "name": "打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 2
+            },
+            {
+              "id": "sword_boomerang",
+              "ref": "",
+              "name": "飞剑回旋镖",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "随机对敌人造成{Damage:diff()}点伤害{Repeat:diff()}次。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "taunt",
+              "ref": "",
+              "name": "挑衅+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。 给予{VulnerablePower:diff()}层易伤。",
+              "keywords": [
+                "Block",
+                "Vulnerable",
+                "易伤",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "wound",
+              "ref": "",
+              "name": "伤口",
+              "type": "status",
+              "cost": -1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "",
+              "keywords": [
+                "Unplayable"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            }
+          ]
+        },
+        "discard": {
+          "count": 9,
+          "cards": [
+            {
+              "id": "defend_ironclad",
+              "ref": "",
+              "name": "防御+",
+              "type": "skill",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": true,
+              "text": "获得{Block:diff()}点格挡。",
+              "keywords": [
+                "Block",
+                "格挡"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "pommel_strike",
+              "ref": "",
+              "name": "剑柄打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。 抽{Cards:diff()}张牌。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 1
+            },
+            {
+              "id": "strike_ironclad",
+              "ref": "",
+              "name": "打击",
+              "type": "attack",
+              "cost": 1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "造成{Damage:diff()}点伤害。",
+              "keywords": [],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 2
+            },
+            {
+              "id": "wound",
+              "ref": "",
+              "name": "伤口",
+              "type": "status",
+              "cost": -1,
+              "star_cost": 0,
+              "upgraded": false,
+              "text": "",
+              "keywords": [
+                "Unplayable"
+              ],
+              "values": {
+                "encoded": "{}"
+              },
+              "playable": null,
+              "count": 5
+            }
+          ]
+        },
+        "exhaust": {
+          "count": 0,
+          "cards": []
+        },
+        "powers": [],
+        "enemies": [
+          {
+            "id": "vantom",
+            "ref": "enemy:VANTOM:03802d79",
+            "name": "墨影幻灵",
+            "hp": 58,
+            "max_hp": 173,
+            "block": 0,
+            "powers": [
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。"
+              }
+            ],
+            "intents": [
+              {
+                "type": "Buff",
+                "damage": null,
+                "hits": null,
+                "text": ""
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "orbs": {
+          "encoded": "[]"
+        },
+        "turn_phase": "Play"
+      },
+      "map": null,
+      "choices": [],
+      "legal_actions": [
+        {
+          "id": "combat:discard_potion:0",
+          "decision_id": "case:enemy_strength",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:discard_potion:2",
+          "decision_id": "case:enemy_strength",
+          "kind": "other",
+          "label": "Discard potion 虚弱药水",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "irreversible"
+          ]
+        },
+        {
+          "id": "combat:end_turn",
+          "decision_id": "case:enemy_strength",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:0",
+          "decision_id": "case:enemy_strength",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得5点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:03b0f6b0",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1:enemy:0",
+          "decision_id": "case:enemy_strength",
+          "kind": "play_card",
+          "label": "Play 双重打击 on enemy:0",
+          "description": "造成5点伤害两次。",
+          "card_id": "card:TWIN_STRIKE:01aca903",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2",
+          "decision_id": "case:enemy_strength",
+          "kind": "play_card",
+          "label": "Play 闪电霹雳",
+          "description": "对所有敌人造成4点伤害，给予1层易伤。 | Keywords: 易伤",
+          "card_id": "card:THUNDERCLAP:0205d349",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:3:enemy:0",
+          "decision_id": "case:enemy_strength",
+          "kind": "play_card",
+          "label": "Play 铁斩波 on enemy:0",
+          "description": "获得5点格挡。 造成5点伤害。 | Keywords: 格挡",
+          "card_id": "card:IRON_WAVE:0311f11d",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:4:enemy:0",
+          "decision_id": "case:enemy_strength",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成6点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:03a17a06",
+          "target_id": "enemy:VANTOM:03802d79",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:0:enemy:0",
+          "decision_id": "case:enemy_strength",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:2:enemy:0",
+          "decision_id": "case:enemy_strength",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "2",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ],
+      "revision": 41,
+      "decision_id": "case:enemy_strength",
+      "game_version": "v0.111.0",
+      "scene_facts": {
+        "encoded": "{}"
+      },
+      "victory": null
+    }
+  }
+]
