@@ -31,7 +31,7 @@ SpireMind 把长任务拆成四个专业决策 Agent 和一个后台 Reflection 
 - 实现 Episode → 条件经验 → 证据校验 → 跨 seed 回归晋升 → 检索的学习闭环；支持反例停用、修订审计和恢复，将 686 条脱敏训练观察重建为可复核经验。
 - 落地有界 LRU、战斗计算复用、专用 SQLite worker、事务合并和有界日志管线；性能数字见下方最终实测描述。
 
-在 16 个固定公开局面、三次各 25 轮对照中，离线准备 P50 下降 68.9%，含异步存储的准备 P50 下降 39.9%，重复牌库查询减少 97.1%，战斗上下文估计 token 中位数减少 15.1%；175 项回归测试及隔离 wheel 演示通过。
+在 16 个固定公开局面、三次各 25 轮对照中，离线准备 P50 下降 67.4%，含异步存储的准备 P50 下降 30.0%，重复牌库查询减少 97.1%，战斗上下文估计 token 中位数减少 15.1%；176 项回归测试及隔离 wheel 演示通过。
 
 ## English resume bullets
 
@@ -41,6 +41,6 @@ SpireMind 把长任务拆成四个专业决策 Agent 和一个后台 Reflection 
 - Implemented episodic retrieval and conditional skill consolidation using SQLite FTS5/BM25; promoted lessons only after evidence validation across independent seed groups, with contradiction-based deactivation and revision history.
 - Integrated bounded LRU caches, shared combat assessments, a dedicated SQLite worker and transactional memory updates, plus a bounded producer/consumer logging pipeline with backpressure and cancellation drain.
 
-On a 16-state public offline suite repeated in three independent runs, reduced preparation P50 by 68.9% (39.9% including asynchronous storage), repeated card queries by 97.1%, and median estimated combat-context tokens by 15.1%; validated with 175 regression tests and an isolated wheel walkthrough.
+On a 16-state public offline suite repeated in three independent runs, reduced preparation P50 by 67.4% (30.0% including asynchronous storage), repeated card queries by 97.1%, and median estimated combat-context tokens by 15.1%; validated with 176 regression tests and an isolated wheel walkthrough.
 
 这些描述对应仓库可运行的功能。真实模型样本有限，未测游戏胜率；不应写成“训练模型提升胜率”或把本地毫秒收益当成模型端到端延迟收益。

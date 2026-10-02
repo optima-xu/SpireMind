@@ -28,6 +28,11 @@ All notable changes to this project will be documented in this file. The format 
 - Avoid an extra elite on identical downstream routes at low HP, and inspect affordable offers at a critical last shop without requiring a purchase.
 - Treat the v0.111.x Minion trait as non-damage-modifying when checking visible attack lethality.
 
+### Fixed
+
+- Settle flush requests queued during trace failure cleanup, including Python 3.11 scheduling.
+- Exclude nested run archives from source distributions and anchor the public environment template.
+
 ## [0.1.0] - 2026-09-28
 
 ### Added
