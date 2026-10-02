@@ -32,6 +32,7 @@ class Decision(BaseModel):
     model_name: str | None = None
     input_tokens: int = 0
     output_tokens: int = 0
+    calculations: list[dict[str, str]] = Field(default_factory=list)
     fallback: bool = False
     provider_error: str | None = None
     context_id: str | None = None

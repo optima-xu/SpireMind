@@ -2,11 +2,13 @@ import asyncio
 import copy
 import json
 import time
+from pathlib import Path
 
 import httpx
 import pytest
 
 from spiremind.config import GameConfig
+from spiremind.context.views import state_view
 from spiremind.environment.base import EnvironmentError, StaleDecision, TransitionPending
 from spiremind.environment.mcp import PROTOCOL, MCPEnvironment
 from spiremind.environment.normalize import normalize
@@ -39,6 +41,36 @@ def test_public_normalization(raw_decision):
     assert s.run.relics[0].trigger_progress.unpack()["primary"] == 7
     with pytest.raises(ValueError):
         s.run.hp = 2
+
+
+def test_live_affliction_and_target_damage_survive_public_normalization(raw_decision):
+    card = raw_decision["context"]["combat"]["hand"][0]
+    card.update(
+        card_type="Skill",
+        resolved_rules_text="Gain 5 Block. Gain 2 Tainted.",
+        dynamic_vars={"Block": {"preview_value": 5}},
+        target_dynamic_vars={"0": {"Block": {"preview_value": 4}}},
+        affliction_id="TAINTED",
+        affliction_amount=2,
+        affliction_description="Gain 2 Tainted when played.",
+        playable=False,
+        unplayable_reason="not_enough_energy",
+    )
+    raw_decision["context"]["combat"]["enemies"][0]["intents"][0]["total_damage"] = 13
+
+    state = normalize(raw_decision, 1, "v0.111.0")
+    normalized = state.combat.hand[0]
+    assert normalized.affliction_id == "tainted"
+    assert normalized.affliction_amount == 2
+    assert normalized.affliction_description == "Gain 2 Tainted when played."
+    assert normalized.unplayable_reason == "not_enough_energy"
+    assert normalized.target_values.unpack() == {"0": {"Block": 4}}
+    assert state.combat.enemies[0].intents[0].total_damage == 13
+    visible = state_view(state, "combat")
+    assert visible["combat"]["hand"][0]["affliction_id"] == "tainted"
+    assert visible["combat"]["hand"][0]["target_values"] == {"0": {"Block": 4}}
+    assert visible["combat"]["hand"][0]["unplayable_reason"] == "not_enough_energy"
+    assert visible["combat"]["enemies"][0]["intents"][0]["total_damage"] == 13
 
 
 def test_card_reward_claim_is_normalized_as_inspection(raw_decision):
@@ -356,6 +388,65 @@ async def test_prepared_journal_recovers_when_old_decision_is_still_current(raw_
     assert (await env.observe()).decision_id == raw_decision["decision_id"]
     assert calls == ["/v2/decision/current"]
     assert not path.exists()
+    await env.close()
+
+
+async def test_pending_journal_retries_transient_replace_lock(raw_decision, tmp_path, monkeypatch):
+    journal = tmp_path / "pending.json"
+    env = MCPEnvironment(GameConfig(), journal)
+    env._save_pending(normalize(raw_decision, 1, "v0.111.0").legal_actions[0])
+    original_replace = Path.replace
+    attempts = 0
+
+    def locked_replace(source, target):
+        nonlocal attempts
+        if target == journal:
+            attempts += 1
+            if attempts <= 2:
+                raise PermissionError("temporary file lock")
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", locked_replace)
+    monkeypatch.setattr("spiremind.environment.mcp.time.sleep", lambda _: None)
+    env._mark_dispatched()
+
+    assert attempts == 3
+    assert json.loads(journal.read_text())["phase"] == "dispatched"
+    await env.close()
+
+
+async def test_persistent_journal_lock_prevents_game_dispatch(raw_decision, tmp_path, monkeypatch):
+    journal = tmp_path / "pending.json"
+    requests = []
+
+    def handler(request):
+        requests.append(request)
+        return httpx.Response(200, json={})
+
+    env = MCPEnvironment(
+        GameConfig(),
+        journal,
+        httpx.AsyncClient(base_url="http://test", transport=httpx.MockTransport(handler)),
+    )
+    env.state = normalize(raw_decision, 1, "v0.111.0")
+    original_replace = Path.replace
+    attempts = 0
+
+    def locked_replace(source, target):
+        nonlocal attempts
+        if target == journal and json.loads(source.read_text())["phase"] == "dispatched":
+            attempts += 1
+            raise PermissionError("persistent file lock")
+        return original_replace(source, target)
+
+    monkeypatch.setattr(Path, "replace", locked_replace)
+    monkeypatch.setattr("spiremind.environment.mcp.time.sleep", lambda _: None)
+    with pytest.raises(PermissionError):
+        await env.execute(env.state.legal_actions[0])
+
+    assert attempts == 6
+    assert requests == []
+    assert json.loads(journal.read_text())["phase"] == "prepared"
     await env.close()
 
 

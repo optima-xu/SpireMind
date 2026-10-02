@@ -4,6 +4,7 @@ base_url = "https://api.openai.com/v1"
 model = "your-model-id"
 api_key_env = "OPENAI_API_KEY"
 json_mode = true
+calculator_mode = "required" # Set to "off" only for endpoints without function calling.
 require_exact_model = false
 
 [game]
@@ -15,8 +16,6 @@ ascension = 0
 context_tokens = 4000
 max_context_tokens = 16000
 max_steps = 3000
-max_total_tokens = 2000000
-max_seconds = 7200
 
 [strategy]
 combat_guards = true

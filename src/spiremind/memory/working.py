@@ -9,6 +9,9 @@ class WorkingMemory(BaseModel):
     assumptions: list[str] = Field(default_factory=list)
     rejected_options: list[str] = Field(default_factory=list)
     decision_context: str = ""
+    combat_floor: int | None = None
+    combat_turn: int | None = None
+    lost_hp_this_turn: bool = False
     revision: int = -1
 
     def invalidate_plan(self):

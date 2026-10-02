@@ -2,11 +2,22 @@ from collections import Counter
 
 from spiremind.core.state import Card, GameState
 
+from .route_horizon import route_options
+
 
 def card_view(card: Card):
-    return {
-        k: v for k, v in card.model_dump(exclude={"values"}, exclude_defaults=True).items() if v is not None
-    } | ({"values": card.values.unpack()} if card.values.unpack() else {})
+    view = {
+        k: v
+        for k, v in card.model_dump(exclude={"values", "target_values"}, exclude_defaults=True).items()
+        if v is not None
+    }
+    values = card.values.unpack()
+    target_values = card.target_values.unpack()
+    if values:
+        view["values"] = values
+    if target_values:
+        view["target_values"] = target_values
+    return view
 
 
 def progress_view(value):
@@ -98,6 +109,9 @@ def state_view(state: GameState, agent: str) -> dict:
         )
     if agent == "map" and state.map:
         result["map"] = state.map.model_dump()
+        horizon = route_options(state)
+        if horizon:
+            result["route_options"] = horizon
     if state.choices:
         result["choices"] = [
             x.model_dump(exclude_defaults=True, exclude={"card"})

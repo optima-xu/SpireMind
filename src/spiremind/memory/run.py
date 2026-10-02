@@ -12,6 +12,7 @@ class RunMemory(BaseModel):
     potion_policy: str = "Use potions when they prevent substantial HP loss; do not die hoarding them."
     gold_policy: str = "Reserve gold for a meaningful deck improvement."
     route_preferences: list[str] = Field(default_factory=list)
+    route_horizon: dict = Field(default_factory=dict)
     elite_readiness: float = 0
     derived_metrics: dict[str, float] = Field(default_factory=dict)
     key_decisions: list[str] = Field(default_factory=list)

@@ -1,6 +1,7 @@
 import os
 import tomllib
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -18,7 +19,9 @@ class ModelConfig(Settings):
     max_completion_tokens: int | None = Field(default=None, ge=128)
     attempts: int = Field(default=3, ge=1, le=5)
     temperature: float | None = Field(default=0.2, ge=0, le=2)
+    reasoning_effort: Literal["low", "medium", "high", "max"] | None = None
     json_mode: bool = True
+    calculator_mode: Literal["required", "auto", "off"] = "required"
     require_exact_model: bool = False
     extra_body: dict = Field(default_factory=dict)
 
@@ -49,9 +52,9 @@ class GameConfig(Settings):
 class RuntimeConfig(Settings):
     runs_dir: Path = Path("runs")
     max_steps: int = Field(default=3000, ge=1)
-    max_total_tokens: int = Field(default=2_000_000, ge=1)
+    max_total_tokens: int | None = Field(default=None, ge=1)
     max_errors: int = Field(default=6, ge=1)
-    max_seconds: float = Field(default=7200, gt=0)
+    max_seconds: float | None = Field(default=None, gt=0)
     context_tokens: int = Field(default=4000, ge=512)
     max_context_tokens: int = Field(default=16000, ge=1024)
 

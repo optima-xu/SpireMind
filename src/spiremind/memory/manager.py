@@ -1,10 +1,13 @@
+import re
 from dataclasses import dataclass
 from typing import Any
 
+from spiremind.context.route_horizon import chosen_route_horizon
 from spiremind.core.actions import Action
 from spiremind.core.decision import StrategyUpdate
 from spiremind.core.enums import Scene
 from spiremind.core.state import GameState
+from spiremind.knowledge.cards import CardDB
 
 from .run import RunMemory
 from .skills import Skill, SkillMemory
@@ -22,11 +25,20 @@ VIEWS = {
         "potion_policy",
         "gold_policy",
         "route_preferences",
+        "route_horizon",
         "elite_readiness",
         "derived_metrics",
         "key_decisions",
     ),
-    "map": ("needs", "boss_plan", "potion_policy", "gold_policy", "route_preferences", "elite_readiness"),
+    "map": (
+        "needs",
+        "boss_plan",
+        "potion_policy",
+        "gold_policy",
+        "route_preferences",
+        "route_horizon",
+        "elite_readiness",
+    ),
     "event": ("needs", "potion_policy", "gold_policy", "weaknesses"),
 }
 
@@ -49,8 +61,9 @@ class MemoryContext:
 
 
 class MemoryManager:
-    def __init__(self, store: MemoryStore, skills: SkillMemory | None = None):
+    def __init__(self, store: MemoryStore, skills: SkillMemory | None = None, cards: CardDB | None = None):
         self.store, self.skills = store, skills or SkillMemory()
+        self.cards = cards
         self.working = WorkingMemory()
         self.run: RunMemory | None = None
         self.last_scene: Scene | None = None
@@ -74,9 +87,25 @@ class MemoryManager:
             self.working = WorkingMemory()
             self.last_strategy_update = None
             self.store.persist(self.run)
+        if self.run.boss_plan and self._unsupported_strength_source(state, self.run.boss_plan):
+            self.run.boss_plan = ""
+            self.store.persist(self.run)
+        horizon = self.run.route_horizon
+        if horizon and (
+            horizon.get("act") != state.run.act
+            or state.run.floor > max(horizon.get("boss_game_floors") or [0])
+        ):
+            self.run.route_horizon = {}
+            self.store.persist(self.run)
         if self.working.revision != state.revision:
             self.working.invalidate_plan()
             self.working.revision = state.revision
+        if state.combat and (
+            self.working.combat_floor != state.run.floor or self.working.combat_turn != state.combat.turn
+        ):
+            self.working.combat_floor = state.run.floor
+            self.working.combat_turn = state.combat.turn
+            self.working.lost_hp_this_turn = False
 
     async def context_for(self, state: GameState, agent: str) -> MemoryContext:
         self.ensure_run(state)
@@ -120,6 +149,43 @@ class MemoryManager:
     def _clean_text(value: str) -> str:
         return " ".join(value.split())
 
+    def _unsupported_strength_source(self, state: GameState, plan: str) -> bool:
+        """Reject an explicit named-card Strength claim contradicted by static facts."""
+        if not self.cards:
+            return False
+        match = re.search(
+            r"(?:build|gain|stack|generate)\s+strength\s+(?:with|via|using|from)\s+(.+)",
+            plan,
+            flags=re.IGNORECASE,
+        )
+        if not match:
+            return False
+        source_phrase = match.group(1).lower()
+        named = []
+        for card in state.run.deck:
+            alias = card.id.replace("_", " ")
+            if re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", source_phrase) or (
+                card.name and card.name in match.group(1)
+            ):
+                named.append(card)
+        if not named:
+            return False  # No named owned card means the source cannot be checked.
+        facts = {
+            (fact.card_id, fact.upgraded): fact
+            for fact in self.cards.lookup({(card.id, card.upgraded) for card in named}, state.game_version)
+        }
+        for card in named:
+            fact = facts.get((card.id, card.upgraded))
+            if not fact:
+                return False  # Unknown facts cannot establish a contradiction.
+            values = fact.values.unpack()
+            if any("strength" in key.lower() and value for key, value in values.items()):
+                return False
+            text = re.sub(r"\[[^\]]+\]", "", fact.text).lower()
+            if re.search(r"(?:获得|gain).{0,24}(?:点力量|strength)", text):
+                return False
+        return True
+
     def _validated_update(self, state: GameState, proposal: StrategyUpdate) -> dict[str, Any]:
         proposed = proposal.model_dump(exclude_none=True)
         applied: dict[str, Any] = {}
@@ -146,6 +212,9 @@ class MemoryManager:
                     continue
                 if len(value) > UPDATE_LIMITS[key]:
                     rejected[key] = "too_long"
+                    continue
+                if key == "boss_plan" and self._unsupported_strength_source(state, value):
+                    rejected[key] = "unsupported_strength_source"
                     continue
             else:
                 value = [self._clean_text(item) for item in raw_value if self._clean_text(item)]
@@ -174,6 +243,15 @@ class MemoryManager:
         semantic_success: bool = True,
     ) -> dict[str, Any] | None:
         self.ensure_run(new_state)
+        if (
+            semantic_success
+            and old_state.combat
+            and new_state.combat
+            and old_state.run.floor == new_state.run.floor
+            and old_state.combat.turn == new_state.combat.turn
+            and new_state.run.hp < old_state.run.hp
+        ):
+            self.working.lost_hp_this_turn = True
         self.last_strategy_update = None
         if proposal:
             if semantic_success:
@@ -205,6 +283,13 @@ class MemoryManager:
             self.run.key_decisions = (
                 self.run.key_decisions + [f"Floor {old_state.run.floor}: {action.label or action.kind.value}"]
             )[-12:]
+        map_transition_observed = (
+            new_state.run.id == old_state.run.id
+            and new_state.run.act == old_state.run.act
+            and new_state.run.floor > old_state.run.floor
+        )
+        if old_state.scene == Scene.MAP and action.node_id and (semantic_success or map_transition_observed):
+            self.run.route_horizon = chosen_route_horizon(old_state, action) or {}
         old_in_combat = old_state.scene == Scene.COMBAT or (
             old_state.scene == Scene.CARD_SELECTION
             and (old_state.combat is not None or old_state.scene_facts.unpack().get("in_combat") is True)

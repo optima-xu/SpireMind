@@ -68,6 +68,9 @@ DASHSCOPE_API_KEY=replace-me
 
 示例默认关闭 `enable_thinking`。服务商不接受 `response_format` 时，将 `json_mode` 改为 `false`；
 模型返回内容仍须是合法 JSON。
+`calculator_mode="required"` 默认强制模型先通过标准 function tool 做一次成功计算，后续算术
+可继续调用；此模式需要兼容服务支持 `tools`、`tool_choice` 和工具结果消息。若接口不支持，
+可改为 `calculator_mode="off"`，但此时不再保证算术经过工具；`"auto"` 也不保证调用。
 
 ### 验证模型接口
 
@@ -76,7 +79,7 @@ uv run --env-file .env spiremind --config config.local.toml probe-model
 uv run --env-file .env spiremind --config config.local.toml run --environment mock
 ```
 
-`probe-model` 会检查模型名、JSON 解析和合法动作绑定，结果写入 `runs/model-probe.json`。它不会输出
+`probe-model` 会用 `48-11=37` 检查模型名、JSON 解析和合法动作绑定；启用计算器时还检查工具往返。结果写入 `runs/model-probe.json`。它不会输出
 或保存 API key。
 
 不使用 uv 启动时，请通过操作系统或进程环境设置同名密钥变量；程序不会自动读取 `.env`。

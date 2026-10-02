@@ -41,7 +41,12 @@ class Card(Snapshot):
     text: str = ""
     keywords: tuple[str, ...] = ()
     values: PublicFacts = Field(default_factory=PublicFacts)
+    target_values: PublicFacts = Field(default_factory=PublicFacts)
+    affliction_id: str = ""
+    affliction_amount: int | None = None
+    affliction_description: str = ""
     playable: bool | None = None
+    unplayable_reason: str = ""
     count: int = Field(default=1, ge=1)
 
 
@@ -49,6 +54,7 @@ class Intent(Snapshot):
     type: str
     damage: int | None = None
     hits: int | None = None
+    total_damage: int | None = None
     text: str = ""
 
 

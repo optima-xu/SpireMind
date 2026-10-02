@@ -115,6 +115,7 @@ class AgentRuntime:
                 ),
                 input_tokens=decision.input_tokens,
                 output_tokens=decision.output_tokens,
+                calculations=decision.calculations,
                 context_id=decision.context_id,
                 policy_rule=decision.policy_rule,
             )
@@ -196,7 +197,7 @@ class AgentRuntime:
         rt = self.config.runtime
         try:
             while self.steps < rt.max_steps:
-                if time.monotonic() - started > rt.max_seconds:
+                if rt.max_seconds is not None and time.monotonic() - started > rt.max_seconds:
                     outcome = "time_limit"
                     break
                 tokens = (
@@ -204,7 +205,7 @@ class AgentRuntime:
                     if self.provider
                     else self.used_tokens
                 )
-                if tokens >= rt.max_total_tokens:
+                if rt.max_total_tokens is not None and tokens >= rt.max_total_tokens:
                     outcome = "token_limit"
                     break
                 try:
@@ -280,6 +281,7 @@ class AgentRuntime:
             model_requested=self.config.model.model if self.provider else None,
             model_resolved=self.provider.last_model if self.provider else None,
             model_calls=self.provider.calls if self.provider else 0,
+            calculator_calls=self.provider.calculator_calls if self.provider else 0,
             input_tokens=self.provider.input_tokens if self.provider else 0,
             output_tokens=self.provider.output_tokens if self.provider else 0,
             reasoning_responses=self.provider.reasoning_responses if self.provider else 0,

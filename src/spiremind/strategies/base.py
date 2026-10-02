@@ -46,6 +46,7 @@ class LLMStrategy:
                 model_name=result.model,
                 input_tokens=result.input_tokens,
                 output_tokens=result.output_tokens,
+                calculations=list(result.calculations),
                 context_id=context.id,
             )
         except (ProviderError, ContextOverflow) as error:

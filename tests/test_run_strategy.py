@@ -1,8 +1,9 @@
 from spiremind.core.actions import Action
 from spiremind.core.enums import ActionKind, Scene
-from spiremind.core.state import GameState, RunState
+from spiremind.core.state import Card, GameState, PublicFacts, RunState
+from spiremind.knowledge.library import StrategyLibrary
 from spiremind.memory.manager import MemoryContext
-from spiremind.strategies.run import RunStrategy
+from spiremind.strategies.run import DeckAnalyzer, RunStrategy
 
 MEMORY = MemoryContext(snapshot_id="test", run={}, working={}, skills=())
 
@@ -67,3 +68,32 @@ def test_card_reward_task_distinguishes_inspection_from_selection() -> None:
 
     assert "only reveals the offered cards" in task
     assert "compare every card with skipping" in task
+
+
+def test_deck_analyzer_recognizes_power_and_explicit_energy_roles() -> None:
+    power = Card(
+        id="cruelty",
+        type="power",
+        text="Vulnerable enemies take 50% additional damage.",
+        values=PublicFacts.of({"CrueltyPower": 50}),
+    )
+    energy = Card(
+        id="bloodletting",
+        type="skill",
+        text="Lose 3 HP. Gain 2 Energy.",
+        values=PublicFacts.of({"HpLoss": 3, "Energy": 2}),
+    )
+    filler = Card(id="strike_ironclad", type="attack", count=8)
+    state = GameState(
+        scene=Scene.CARD_REWARD,
+        run=RunState(character="ironclad", hp=80, max_hp=80, deck=(power, energy, filler)),
+        revision=1,
+        decision_id="d",
+        game_version="v0.111.0",
+    )
+
+    analysis = DeckAnalyzer(StrategyLibrary()).analyze(state)
+
+    assert analysis["needs"]["scaling"] == 0
+    assert analysis["needs"]["energy"] == 0
+    assert {"scaling", "energy"} <= set(analysis["strengths"])

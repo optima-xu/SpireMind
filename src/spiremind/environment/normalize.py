@@ -71,6 +71,17 @@ def card(value: dict) -> Card:
         for name, v in (value.get("dynamic_vars") or {}).items()
         if isinstance(v, dict)
     }
+    target_values = {
+        str(target): {
+            name: preview
+            for name, item in variables.items()
+            if isinstance(item, dict)
+            and (preview := item.get("preview_value", item.get("base_value"))) is not None
+            and preview != values.get(name)
+        }
+        for target, variables in (value.get("target_dynamic_vars") or {}).items()
+        if isinstance(variables, dict)
+    }
     return Card(
         id=norm_id(value.get("card_id", "unknown")),
         ref=value.get("card_ref", ""),
@@ -82,7 +93,12 @@ def card(value: dict) -> Card:
         text=value.get("resolved_rules_text") or value.get("rules_text") or value.get("description") or "",
         keywords=tuple(value.get("keywords") or ()),
         values=PublicFacts.of(values),
+        target_values=PublicFacts.of({key: item for key, item in target_values.items() if item}),
+        affliction_id=norm_id(value.get("affliction_id") or ""),
+        affliction_amount=value.get("affliction_amount"),
+        affliction_description=value.get("affliction_description") or "",
         playable=value.get("playable"),
+        unplayable_reason=value.get("unplayable_reason") or "",
         count=value.get("count", 1),
     )
 
@@ -280,6 +296,7 @@ def normalize(payload: dict, revision: int, game_version: str) -> GameState:
                             type=y.get("intent_type", "unknown"),
                             damage=y.get("damage"),
                             hits=y.get("hits"),
+                            total_damage=y.get("total_damage"),
                             text=y.get("label") or "",
                         )
                         for y in x.get("intents", [])

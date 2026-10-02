@@ -1,6 +1,10 @@
+import re
+
+from spiremind.context.route_horizon import last_known_shop_before_boss
 from spiremind.core.decision import Decision
 from spiremind.core.enums import ActionKind, Scene
 from spiremind.core.state import GameState
+from spiremind.knowledge.cards import CardDB
 from spiremind.knowledge.library import StrategyLibrary
 
 from .base import LLMStrategy
@@ -20,13 +24,19 @@ class RunStrategy(LLMStrategy):
                 "Resolve combat rewards deliberately. An open_card_reward action only reveals the offered "
                 "cards and never adds one to the deck. Inspect those candidates first. Once concrete card "
                 "choices are visible, compare every card with skipping and choose skip_reward_cards when "
-                "none improves the deck. Never use reward:proceed to avoid inspecting an unopened card "
+                "none improves the deck. Check L4_deck_facts for the actual effects of cards already owned; "
+                "do not infer effects from names or claim that a card grants Strength without evidence. "
+                "For a Power card, estimate how many remaining turns and concrete deck triggers can repay "
+                "its setup energy; do not reject Powers as a class, and do not take one merely because it "
+                "is persistent. Treat explicit HpLoss as a resource cost and explicit Energy as its return. "
+                "Never use reward:proceed to avoid inspecting an unopened card "
                 "reward. Claim free material rewards before leaving."
             )
         if state.scene == Scene.SHOP:
-            return (
+            guidance = (
                 "Shopping is optional. Compare every purchase and removal against saving all gold for a "
-                "later shop; affordability or synergy alone does not justify spending. Never open the "
+                "later shop only when a later shop is visible or plausible; affordability or synergy "
+                "alone does not justify spending. Never open the "
                 "inventory or buy something merely because it is available. Buy only when the option's "
                 "marginal value clearly exceeds keeping the gold, and reassess after every purchase rather "
                 "than chaining purchases by default. If nothing clears that threshold, leave with no "
@@ -34,6 +44,15 @@ class RunStrategy(LLMStrategy):
                 "leave. A prior plan to buy one named item is complete once that item is owned; then prefer "
                 "leaving unless a separate exceptional purchase is independently justified."
             )
+            horizon = memory.run.get("route_horizon", {})
+            if last_known_shop_before_boss(state, horizon):
+                guidance += (
+                    " The visible route has no later shop before the boss. Do not reserve gold for a "
+                    "nonexistent later shop: evaluate immediate boss value of potions, cards, relics and "
+                    "removal, especially at low HP. Opening inventory only reveals legal purchases; it "
+                    "does not commit gold. Leaving is still correct if every offer is weak."
+                )
+            return guidance
         return self.task
 
     async def decide(self, state: GameState, memory) -> Decision:
@@ -51,14 +70,37 @@ class RunStrategy(LLMStrategy):
                 confidence=1,
                 policy_rule="inspect_card_reward_before_skip",
             )
+        if state.scene == Scene.SHOP and state.run.max_hp:
+            horizon = memory.run.get("route_horizon", {})
+            boss_floors = horizon.get("boss_game_floors", [])
+            affordable = any(
+                choice.price is not None and choice.price <= state.run.gold for choice in state.choices
+            )
+            open_shop = next(
+                (action for action in state.legal_actions if action.kind == ActionKind.OPEN_SHOP), None
+            )
+            if (
+                open_shop is not None
+                and state.run.hp / state.run.max_hp <= 0.35
+                and last_known_shop_before_boss(state, horizon)
+                and min(boss_floors) - state.run.floor <= 3
+                and (affordable or not state.choices)
+            ):
+                return Decision(
+                    action=open_shop,
+                    reason="Critical HP at the last visible shop before the boss; inspect affordable options",
+                    confidence=1,
+                    policy_rule="inspect_critical_last_shop",
+                )
         return await super().decide(state, memory)
 
 
 class DeckAnalyzer:
     """Transparent heuristic profile, recomputed from facts; not a learned value model."""
 
-    def __init__(self, library: StrategyLibrary):
+    def __init__(self, library: StrategyLibrary, cards: CardDB | None = None):
         self.library = library
+        self.cards = cards
 
     @staticmethod
     def _starter(card_id: str) -> bool:
@@ -67,20 +109,64 @@ class DeckAnalyzer:
 
     def analyze(self, state: GameState) -> dict:
         deck = state.run.deck
+        facts = (
+            {
+                (fact.card_id, fact.upgraded): fact
+                for fact in self.cards.lookup({(card.id, card.upgraded) for card in deck}, state.game_version)
+            }
+            if self.cards
+            else {}
+        )
         roles = {
-            "block": ("block", "defend", "shrug", "格挡"),
+            "block": ("defend", "shrug", "flame_barrier", "iron_wave"),
             "aoe": ("all enemies", "whirlwind", "cleave", "dagger_spray", "所有敌人"),
-            "draw": ("draw", "pommel_strike", "acrobatics", "burning_pact", "抽"),
-            "energy": ("gain energy", "offering", "turbo", "能量"),
-            "scaling": ("strength", "poison", "focus", "demon_form", "accuracy", "力量"),
+            "draw": ("pommel_strike", "acrobatics", "burning_pact"),
+            "energy": ("offering", "turbo"),
+            "scaling": ("inflame", "demon_form", "poison", "focus", "accuracy"),
         }
+
+        def matches(card, role, words):
+            fact = facts.get((card.id, card.upgraded))
+            text = re.sub(r"\[[^\]]+\]", "", card.text or (fact.text if fact else "")).lower()
+            values = card.values.unpack() or (fact.values.unpack() if fact else {})
+            identity = card.id.lower()
+            if any(word in identity for word in words):
+                return True
+            if role == "block":
+                return bool(values.get("Block", values.get("CalculatedBlock", 0))) or bool(
+                    re.search(r"(?:获得|gain).{0,24}(?:点格挡|block)", text)
+                )
+            if role == "aoe":
+                return "所有敌人" in text or "all enemies" in text
+            if role == "draw":
+                return bool(values.get("Cards", 0)) or bool(
+                    re.search(r"抽(?:\{[^}]+\}|\d+|[一二三两])张牌|draw (?:\d+|a|one) card", text)
+                )
+            if role == "energy":
+                return bool(values.get("Energy", 0)) or bool(
+                    re.search(r"(?:获得|gain).{0,24}(?:点能量|energy)", text)
+                )
+            if role == "scaling":
+                persistent_value = any(
+                    bool(value)
+                    and (
+                        str(key).lower().endswith("power")
+                        or str(key).lower() in {"strength", "dexterity", "focus"}
+                    )
+                    for key, value in values.items()
+                )
+                return (
+                    persistent_value
+                    or bool(values.get("StrengthPerVulnerable", 0))
+                    or bool(re.search(r"(?:获得|gain).{0,24}(?:点力量|strength)", text))
+                )
+            return False
+
         total_cards = sum(card.count for card in deck)
         densities = {}
         meaningful = {}
         for role, words in roles.items():
-            matching = [
-                card for card in deck if any(word in (card.id + " " + card.text).lower() for word in words)
-            ]
+            matching = [card for card in deck if matches(card, role, words)]
             meaningful[role] = sum(card.count for card in matching if not self._starter(card.id))
             # Starter Defends contribute to basic survival, but are not evidence
             # that the deck has built a block engine or solved its defense.

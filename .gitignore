@@ -11,6 +11,7 @@ htmlcov/
 dist/
 build/
 runs/
+save-recovery-*/
 references/
 config.local.toml
 config.deepseek.toml

@@ -83,13 +83,15 @@ async def execute(args):
             result = await provider.choose(
                 AgentContext(
                     "probe",
-                    "Return JSON only.",
-                    'Return {"action_id":"probe_ok","reason":"ok","confidence":1.0}.',
+                    "Use the calculate tool for arithmetic, then return one JSON decision.",
+                    "A target has 48 HP and takes 11 damage. Calculate remaining HP. "
+                    "Choose probe_ok if it is 37, otherwise probe_bad. Return JSON with "
+                    "action_id, reason and confidence.",
                     60,
                     (),
                     (),
                 ),
-                {"probe_ok"},
+                {"probe_ok", "probe_bad"},
             )
             report = dict(
                 requested_model=config.model.model,
@@ -98,6 +100,8 @@ async def execute(args):
                 reasoning_present=result.reasoning_present,
                 input_tokens=provider.input_tokens,
                 output_tokens=provider.output_tokens,
+                calculator_calls=provider.calculator_calls,
+                calculations=list(result.calculations),
             )
             (root / "model-probe.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
             return report
@@ -165,6 +169,7 @@ async def execute(args):
                     "max_completion_tokens": config.model.max_completion_tokens,
                     "temperature": config.model.temperature,
                     "json_mode": config.model.json_mode,
+                    "calculator_mode": config.model.calculator_mode,
                     "require_exact_model": config.model.require_exact_model,
                     "extra_body": safe_extra_body(config.model.extra_body),
                 },
@@ -222,9 +227,9 @@ async def execute(args):
             ]
             runtime = AgentRuntime(
                 env,
-                MemoryManager(store),
+                MemoryManager(store, cards=cards),
                 SceneRouter(*strategies),
-                DeckAnalyzer(library),
+                DeckAnalyzer(library, cards),
                 trace,
                 config,
                 provider,

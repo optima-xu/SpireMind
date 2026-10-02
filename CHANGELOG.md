@@ -6,6 +6,19 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
+### Added
+
+- Add a bounded arithmetic function tool with required Chat Completions tool-call round trips and per-decision calculation traces.
+- Summarize visible map paths and carry the chosen route horizon into shop decisions.
+
+### Changed
+
+- Account for the visible Plow stun threshold and Ringing card-play limit in bounded combat checks.
+- Use persistent boss potions earlier when their effects can still pay back over multiple turns.
+- Ground deck analysis and run decisions in exact-version card facts; reject unsupported named-card Strength plans.
+- Avoid an extra elite on identical downstream routes at low HP, and inspect affordable offers at a critical last shop without requiring a purchase.
+- Treat the v0.111.x Minion trait as non-damage-modifying when checking visible attack lethality.
+
 ## [0.1.0] - 2026-09-28
 
 ### Added

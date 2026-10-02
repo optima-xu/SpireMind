@@ -146,7 +146,16 @@ class MCPEnvironment:
             json.dump(self.pending, out)
             out.flush()
             os.fsync(out.fileno())
-        temporary.replace(self.journal)
+        # Windows can briefly deny replacement while another process holds the file.
+        # Retry only persistence; execute() must not dispatch until this succeeds.
+        for attempt in range(6):
+            try:
+                temporary.replace(self.journal)
+                break
+            except PermissionError:
+                if attempt == 5:
+                    raise
+                time.sleep(min(0.05 * 2**attempt, 0.4))
 
     def _save_pending(self, action: Action) -> None:
         self.pending = {

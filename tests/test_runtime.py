@@ -27,6 +27,16 @@ from spiremind.strategies.map import MapStrategy
 from spiremind.strategies.run import DeckAnalyzer, RunStrategy
 
 
+def test_total_token_budget_is_unlimited_by_default():
+    assert Config().runtime.max_total_tokens is None
+    assert Config.model_validate({"runtime": {"max_total_tokens": 100}}).runtime.max_total_tokens == 100
+
+
+def test_wall_clock_limit_is_unlimited_by_default():
+    assert Config().runtime.max_seconds is None
+    assert Config.model_validate({"runtime": {"max_seconds": 600}}).runtime.max_seconds == 600
+
+
 def test_forged_and_stale_commands(states):
     validator = ActionValidator()
     state = states[4]

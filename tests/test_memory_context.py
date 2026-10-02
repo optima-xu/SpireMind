@@ -38,6 +38,34 @@ async def test_memory_cross_scene_restart_and_run_isolation(states, tmp_path):
     store.close()
 
 
+async def test_working_memory_tracks_same_turn_hp_loss(states, tmp_path):
+    old = next(state for state in states if state.combat and state.legal_actions)
+    new = old.model_copy(
+        update={
+            "run": old.run.model_copy(update={"hp": old.run.hp - 3}),
+            "revision": old.revision + 1,
+            "decision_id": old.decision_id + ":after-loss",
+        }
+    )
+    store = MemoryStore(tmp_path / "turn-loss.sqlite")
+    memory = MemoryManager(store)
+    await memory.context_for(old, "combat")
+
+    await memory.update(old, old.legal_actions[0], new)
+    context = await memory.context_for(new, "combat")
+
+    assert context.working["lost_hp_this_turn"] is True
+    next_turn = new.model_copy(
+        update={
+            "combat": new.combat.model_copy(update={"turn": new.combat.turn + 1}),
+            "revision": new.revision + 1,
+            "decision_id": new.decision_id + ":next-turn",
+        }
+    )
+    assert (await memory.context_for(next_turn, "combat")).working["lost_hp_this_turn"] is False
+    store.close()
+
+
 async def test_context_views_budget_and_version_facts(states, tmp_path):
     store, db = MemoryStore(tmp_path / "m.sqlite"), CardDB(tmp_path / "c.sqlite")
     db.put(CardFact(card_id="strike", game_version="v0.1", source_version="old", text="STALE_FACT"))
@@ -345,5 +373,117 @@ async def test_context_uses_upgraded_fact_and_preserves_needs_when_trimming(stat
     assert payload["L2_run_strategy"]["needs"] == {"block": 0.8}
     assert "BASE_FACT" not in context.user
     assert "L2_run_strategy" in context.dropped_layers  # lower-priority history was trimmed item-wise
+    db.close()
+    store.close()
+
+
+async def test_deck_facts_ground_roles_and_reject_false_strength_plan(states, tmp_path):
+    """A saved boss plan cannot turn the actual Breakthrough/Molten Fist into Strength cards."""
+    db = CardDB(tmp_path / "cards.sqlite")
+    version = states[3].game_version
+    db.put_many(
+        [
+            CardFact(
+                card_id="breakthrough",
+                game_version=version,
+                source_version="live",
+                type="attack",
+                cost=1,
+                text="失去1点生命。对所有敌人造成9点伤害。",
+                values=PublicFacts.of({"Damage": 9, "HpLoss": 1}),
+            ),
+            CardFact(
+                card_id="molten_fist",
+                game_version=version,
+                source_version="live",
+                type="attack",
+                cost=1,
+                text="造成10点伤害。将该敌人身上的易伤层数翻倍。",
+                values=PublicFacts.of({"Damage": 10}),
+            ),
+            CardFact(
+                card_id="dominate",
+                game_version=version,
+                source_version="live",
+                type="skill",
+                cost=1,
+                text="给予易伤。敌人身上每有一层易伤，就获得1点力量。",
+                values=PublicFacts.of({"StrengthPerVulnerable": 1}),
+            ),
+            CardFact(
+                card_id="inflame",
+                game_version=version,
+                source_version="live",
+                type="power",
+                cost=1,
+                text="获得[blue]2[/blue]点[gold]力量[/gold]。",
+            ),
+            CardFact(
+                card_id="barricade",
+                game_version=version,
+                source_version="live",
+                type="power",
+                cost=3,
+                text="格挡不再在你的回合开始时消失。",
+            ),
+        ]
+    )
+    deck = tuple(
+        Card(id=card_id, name=name)
+        for card_id, name in (
+            ("breakthrough", "突破"),
+            ("molten_fist", "熔融之拳"),
+            ("dominate", "主宰"),
+            ("inflame", "燃烧"),
+            ("barricade", "壁垒"),
+        )
+    )
+    state = states[3].model_copy(update={"run": states[3].run.model_copy(update={"deck": deck})})
+    analysis = DeckAnalyzer(StrategyLibrary(), db).analyze(state)
+    assert analysis["needs"]["aoe"] == 0
+    assert analysis["needs"]["scaling"] == 0
+    assert analysis["needs"]["block"] == 1  # Barricade retains block; it creates none.
+
+    store = MemoryStore(tmp_path / "memory.sqlite")
+    memory = MemoryManager(store, cards=db)
+    context = await memory.context_for(state, "run")
+    compiled = await ContextCompiler(StrategyLibrary(), db, ContextBudget(4000, 16000)).build(
+        state, "run", context, "choose a boss plan"
+    )
+    deck_facts = {fact["id"]: fact for fact in json.loads(compiled.user)["L4_deck_facts"]}
+    assert "力量" not in deck_facts["breakthrough"]["text"]
+    assert deck_facts["dominate"]["values"]["StrengthPerVulnerable"] == 1
+
+    wrong = await memory.update(
+        state,
+        state.legal_actions[0],
+        state.model_copy(update={"revision": state.revision + 1}),
+        StrategyUpdate(
+            boss_plan="Use Barricade to retain block, build strength with Breakthrough and Molten Fist."
+        ),
+    )
+    assert wrong["rejected"] == {"boss_plan": "unsupported_strength_source"}
+    assert memory.run.boss_plan == ""
+
+    sound = await memory.update(
+        state,
+        state.legal_actions[0],
+        state.model_copy(update={"revision": state.revision + 2}),
+        StrategyUpdate(boss_plan="Build strength with Dominate."),
+    )
+    assert sound["applied"] == {"boss_plan": "Build strength with Dominate."}
+    markup = await memory.update(
+        state,
+        state.legal_actions[0],
+        state.model_copy(update={"revision": state.revision + 3}),
+        StrategyUpdate(boss_plan="Build strength with Inflame."),
+    )
+    assert markup["applied"] == {"boss_plan": "Build strength with Inflame."}
+
+    memory.run.boss_plan = "Build strength with Breakthrough and Molten Fist."
+    store.persist(memory.run)
+    restored = MemoryManager(store, cards=db)
+    assert (await restored.context_for(state, "combat")).run["boss_plan"] == ""
+    assert store.load(state.run.id, state.game_version).boss_plan == ""
     db.close()
     store.close()
