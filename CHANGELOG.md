@@ -4,15 +4,24 @@ All notable changes to this project will be documented in this file. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.0] - 2026-10-02
 
 ### Added
 
-- Add a bounded arithmetic function tool with required Chat Completions tool-call round trips and per-decision calculation traces.
-- Summarize visible map paths and carry the chosen route horizon into shop decisions.
+- Agent-private working scopes, owned shared policies, version checks and structured handoffs.
+- Evidence-backed episodes, FTS5/BM25 retrieval, offline/model reflection, promotion and contradiction audits.
+- Reproducible offline/model benchmark CLI and deidentified training/holdout fixtures.
+- Dedicated SQLite worker, bounded asynchronous trace pipeline and per-request budget accounting.
+- Bounded arithmetic function tool with required Chat Completions tool-call round trips and per-decision calculation traces.
+- Visible map path summaries and selected route horizons carried into shop decisions.
 
 ### Changed
 
+- Reuse bounded combat assessments and parsed facts across guards, prompts and fallback.
+- Cache exact-version card facts, deck profiles and experience retrieval with bounded LRU policies.
+- Merge memory, snapshot and transition evidence in one rollback-safe transaction.
+- Reuse calculator results for a single JSON repair; support jitter and Retry-After.
+- Exercise installed wheel runtime and benchmark behavior in Windows/Linux CI.
 - Account for the visible Plow stun threshold and Ringing card-play limit in bounded combat checks.
 - Use persistent boss potions earlier when their effects can still pay back over multiple turns.
 - Ground deck analysis and run decisions in exact-version card facts; reject unsupported named-card Strength plans.
@@ -37,5 +46,5 @@ All notable changes to this project will be documented in this file. The format 
 - API keys remain in environment variables and are excluded from manifests and traces.
 - Local configs, runs, saves, databases and bridge checkouts are excluded from source control.
 
-[Unreleased]: https://github.com/optima-xu/SpireMind/compare/v0.1.0...HEAD
+[0.2.0]: https://github.com/optima-xu/SpireMind/compare/v0.1.0...main
 [0.1.0]: https://github.com/optima-xu/SpireMind/releases/tag/v0.1.0

@@ -1,0 +1,82 @@
+{
+  "budget": {
+    "requests": 8,
+    "tokens": 25914,
+    "reserved": 0,
+    "max_requests": 8,
+    "max_tokens": 40000
+  },
+  "completed_jobs": 4,
+  "accepted": 0,
+  "rejected": 5,
+  "requests": [
+    {
+      "request": 1,
+      "status": "IncompleteModelResponse",
+      "tokens": 4053,
+      "estimated_reservation": 3889,
+      "latency_ms": 29154.963300097734
+    },
+    {
+      "request": 2,
+      "status": "IncompleteModelResponse",
+      "tokens": 4226,
+      "estimated_reservation": 4028,
+      "latency_ms": 27267.623899970204
+    },
+    {
+      "request": 3,
+      "status": "IncompleteModelResponse",
+      "tokens": 4168,
+      "estimated_reservation": 3976,
+      "latency_ms": 28145.053299958818
+    },
+    {
+      "request": 1,
+      "status": "ok",
+      "tokens": 1383,
+      "estimated_reservation": 7075,
+      "latency_ms": 10060.237400000915
+    },
+    {
+      "request": 2,
+      "status": "ok",
+      "tokens": 717,
+      "estimated_reservation": 7144,
+      "latency_ms": 1940.1261999737471
+    },
+    {
+      "request": 6,
+      "status": "ledger_recovery_conservative_estimate",
+      "tokens": 9000,
+      "reason": "response shape failure before checkpoint; usage unavailable"
+    },
+    {
+      "request": 1,
+      "status": "ok",
+      "tokens": 1688,
+      "estimated_reservation": 7075,
+      "latency_ms": 12572.39300000947
+    },
+    {
+      "request": 2,
+      "status": "ok",
+      "tokens": 679,
+      "estimated_reservation": 7144,
+      "latency_ms": 1948.990200064145
+    }
+  ],
+  "memory": {
+    "episodes": {
+      "train": 686
+    },
+    "lessons": {
+      "active": 2
+    },
+    "reflection_jobs": {}
+  },
+  "notes": [
+    "One response-shape failure occurred before its checkpoint; that request is conservatively charged 9000 tokens. Later requests persist reservations and usage before/after each HTTP call.",
+    "No model-generated lesson passed proposal validation; the two active lessons were derived offline."
+  ]
+}

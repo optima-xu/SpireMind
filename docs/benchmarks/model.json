@@ -1,0 +1,1020 @@
+{
+  "schema_version": 1,
+  "mode": "model",
+  "source_sha256": "37013404e519ea906db7d8b89e08d3acd02d6e6202a304ae6eb523ae62e69d89",
+  "dataset_sha256": "0e92bab88ae12de7846b385d2c173a844236f0996a7458d6e2b1d8dc832e2d6d",
+  "config_sha256": "b8a17fbd71ec8bbfb1e146420eafe1521d280a82ad8b60886d2ad2ebc4c1dfa2",
+  "cases": 16,
+  "rounds": 25,
+  "platform": "win32",
+  "python": "3.13.13",
+  "notes": [
+    "Local preparation excludes HTTP and game execution. Cold means cleared fact/deck/retrieval caches.",
+    "All included historical observations belong to holdout lineages; learning reads train only.",
+    "Measured before final serialization, scoring-cache and storage refinements; paired model contexts retained their recorded source fingerprint."
+  ],
+  "frozen_memory_sha256": "cd24e64c5f28442ace2f8dc181cb1f60d19b8606871fe4b2bb32b3755871e4e7",
+  "arms": {
+    "A": {
+      "source_sha256": "1d70310c3a431b044d38ad911dfe5141fcfb1bf71eb8374d9c5573756b2d7da1",
+      "local_ms": {
+        "cold": {
+          "p50": 10.532900000000001,
+          "p95": 17.5418,
+          "n": 16
+        },
+        "warm": {
+          "p50": 3.74295,
+          "p95": 8.7485,
+          "n": 400
+        }
+      },
+      "scenes_ms": {
+        "combat": {
+          "p50": 5.12895,
+          "p95": 7.4244,
+          "n": 150
+        },
+        "card_reward": {
+          "p50": 4.68295,
+          "p95": 12.3505,
+          "n": 50
+        },
+        "shop": {
+          "p50": 4.1627,
+          "p95": 6.3678,
+          "n": 50
+        },
+        "map": {
+          "p50": 3.30335,
+          "p95": 4.6909,
+          "n": 50
+        },
+        "event": {
+          "p50": 1.83865,
+          "p95": 2.5317,
+          "n": 50
+        },
+        "rest": {
+          "p50": 2.153,
+          "p95": 3.0746,
+          "n": 25
+        },
+        "card_selection": {
+          "p50": 2.2266,
+          "p95": 2.7364,
+          "n": 25
+        }
+      },
+      "sql": {
+        "queries": 547,
+        "transactions": 33
+      },
+      "card_queries": 546,
+      "synchronous_log_1000_ms": 362.7220999915153,
+      "caches": {}
+    },
+    "B": {
+      "source_sha256": "37013404e519ea906db7d8b89e08d3acd02d6e6202a304ae6eb523ae62e69d89",
+      "local_ms": {
+        "cold": {
+          "p50": 9.2818,
+          "p95": 11.9924,
+          "n": 16
+        },
+        "warm": {
+          "p50": 1.91205,
+          "p95": 4.5764,
+          "n": 400
+        }
+      },
+      "scenes_ms": {
+        "combat": {
+          "p50": 2.7573999999999996,
+          "p95": 5.291,
+          "n": 150
+        },
+        "card_reward": {
+          "p50": 1.0456500000000002,
+          "p95": 1.49,
+          "n": 50
+        },
+        "shop": {
+          "p50": 2.3089500000000003,
+          "p95": 3.658,
+          "n": 50
+        },
+        "map": {
+          "p50": 1.999,
+          "p95": 4.5266,
+          "n": 50
+        },
+        "event": {
+          "p50": 0.6396999999999999,
+          "p95": 1.1695,
+          "n": 50
+        },
+        "rest": {
+          "p50": 0.8538,
+          "p95": 1.5099,
+          "n": 25
+        },
+        "card_selection": {
+          "p50": 1.2257,
+          "p95": 2.016,
+          "n": 25
+        }
+      },
+      "sql": {
+        "queries": 450,
+        "transactions": 16
+      },
+      "card_queries": 16,
+      "synchronous_log_1000_ms": 436.33880000561476,
+      "caches": {
+        "cards": {
+          "hits": 1872,
+          "misses": 246,
+          "size": 12,
+          "capacity": 1024
+        },
+        "deck": {
+          "hits": 400,
+          "misses": 16,
+          "size": 1,
+          "capacity": 128
+        }
+      }
+    },
+    "C": {
+      "source_sha256": "37013404e519ea906db7d8b89e08d3acd02d6e6202a304ae6eb523ae62e69d89",
+      "local_ms": {
+        "cold": {
+          "p50": 14.18285,
+          "p95": 21.5818,
+          "n": 16
+        },
+        "warm": {
+          "p50": 2.5121,
+          "p95": 4.9697,
+          "n": 400
+        }
+      },
+      "scenes_ms": {
+        "combat": {
+          "p50": 3.0375,
+          "p95": 3.996,
+          "n": 150
+        },
+        "card_reward": {
+          "p50": 1.7527,
+          "p95": 2.757,
+          "n": 50
+        },
+        "shop": {
+          "p50": 3.59895,
+          "p95": 6.7663,
+          "n": 50
+        },
+        "map": {
+          "p50": 3.3414,
+          "p95": 4.4537,
+          "n": 50
+        },
+        "event": {
+          "p50": 0.8271,
+          "p95": 1.3935,
+          "n": 50
+        },
+        "rest": {
+          "p50": 1.0932,
+          "p95": 1.5607,
+          "n": 25
+        },
+        "card_selection": {
+          "p50": 1.0025,
+          "p95": 1.5863,
+          "n": 25
+        }
+      },
+      "sql": {
+        "queries": 450,
+        "transactions": 16
+      },
+      "card_queries": 16,
+      "synchronous_log_1000_ms": 565.653899917379,
+      "caches": {
+        "cards": {
+          "hits": 1872,
+          "misses": 246,
+          "size": 12,
+          "capacity": 1024
+        },
+        "deck": {
+          "hits": 400,
+          "misses": 16,
+          "size": 1,
+          "capacity": 128
+        },
+        "retrieval": {
+          "hits": 400,
+          "misses": 16,
+          "size": 1,
+          "capacity": 256
+        }
+      }
+    }
+  },
+  "context_tokens": {
+    "A": {
+      "combat-1": 7171,
+      "combat-2": 5734,
+      "combat-3": 7465,
+      "combat-4": 7295,
+      "combat-5": 5723,
+      "combat-6": 6125,
+      "card_reward-1": 2424,
+      "card_reward-2": 3976,
+      "shop-1": 2830,
+      "shop-2": 4356,
+      "map-1": 3455,
+      "map-2": 3858,
+      "event-1": 1784,
+      "event-2": 2020,
+      "rest-1": 2545,
+      "card_selection-1": 2892
+    },
+    "B": {
+      "combat-1": 6170,
+      "combat-2": 4733,
+      "combat-3": 6464,
+      "combat-4": 6294,
+      "combat-5": 4722,
+      "combat-6": 5124,
+      "card_reward-1": 2247,
+      "card_reward-2": 3901,
+      "shop-1": 2653,
+      "shop-2": 4179,
+      "map-1": 3278,
+      "map-2": 3681,
+      "event-1": 1607,
+      "event-2": 1843,
+      "rest-1": 2368,
+      "card_selection-1": 2683
+    },
+    "C": {
+      "combat-1": 6270,
+      "combat-2": 4815,
+      "combat-3": 6474,
+      "combat-4": 6370,
+      "combat-5": 4925,
+      "combat-6": 5224,
+      "card_reward-1": 2600,
+      "card_reward-2": 3901,
+      "shop-1": 2750,
+      "shop-2": 4179,
+      "map-1": 3435,
+      "map-2": 3838,
+      "event-1": 1791,
+      "event-2": 2027,
+      "rest-1": 2547,
+      "card_selection-1": 2867
+    }
+  },
+  "production_async_preparation": {
+    "warm_ms": {
+      "p50": 3.073450003284961,
+      "p95": 4.992599948309362,
+      "n": 80
+    },
+    "storage": {
+      "thread_id": 180744,
+      "transactions": 16,
+      "card_queries": 5,
+      "card_cache": {
+        "hits": 629,
+        "misses": 49,
+        "size": 49,
+        "capacity": 1024
+      },
+      "deck_cache": {
+        "hits": 80,
+        "misses": 16,
+        "size": 16,
+        "capacity": 128
+      },
+      "retrieval_cache": {
+        "hits": 0,
+        "misses": 0,
+        "size": 0,
+        "capacity": 256
+      }
+    }
+  },
+  "improvements": {
+    "warm_p50_fraction": 0.4891596200857612,
+    "card_query_fraction": 0.9706959706959707,
+    "combat_context_median_fraction": 0.15150929338406682
+  },
+  "targets_passed": {
+    "warm_p50": true,
+    "card_queries": true,
+    "combat_context": true
+  },
+  "async_log_1000_including_drain_ms": 255.64520002808422,
+  "async_log_batches": 500,
+  "model": {
+    "planned_decisions": 24,
+    "planned_groups": 8,
+    "records": [
+      {
+        "case": "combat-1",
+        "repeat": 0,
+        "arm": "A",
+        "valid": true,
+        "complete": true,
+        "action_id": "combat:play:5:enemy:0",
+        "reason": "HP 11 无法承受 30 点受击，手中无药水且最高格挡仅 5，本轮必死；打出最高单发伤害拆卸+（10 点）以最大化推进。",
+        "calculator_calls": 8,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "known_self_lethal": false,
+        "latency_ms": 31503.63389996346,
+        "input_tokens": 27188,
+        "output_tokens": 2850,
+        "requests": 4
+      },
+      {
+        "case": "combat-1",
+        "repeat": 0,
+        "arm": "B",
+        "valid": true,
+        "complete": true,
+        "action_id": "combat:play:5:enemy:0",
+        "reason": "With 1 energy, 11 HP, 0 block and an incoming 30-damage attack, no play can reach the needed 20 block, so all options are lethal and I choose the highest-damage terminal play (拆卸+ deals 10).",
+        "calculator_calls": 4,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "known_self_lethal": false,
+        "latency_ms": 34278.22209999431,
+        "input_tokens": 12100,
+        "output_tokens": 3666,
+        "requests": 2
+      },
+      {
+        "case": "combat-1",
+        "repeat": 0,
+        "arm": "C",
+        "valid": true,
+        "complete": true,
+        "action_id": "combat:play:5:enemy:0",
+        "reason": "Survival is impossible this turn (max block 5 cannot cover 30 incoming plus 7 end-turn disintegration from 11 HP), so I play Dismantle+ to maximize damage dealt for run progress.",
+        "calculator_calls": 9,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "known_self_lethal": false,
+        "latency_ms": 48469.49260006659,
+        "input_tokens": 18823,
+        "output_tokens": 4955,
+        "requests": 3
+      },
+      {
+        "case": "combat-2",
+        "repeat": 0,
+        "arm": "A",
+        "valid": true,
+        "complete": true,
+        "action_id": "combat:play:1:enemy:0",
+        "reason": "Vulnerable via Bash compounds damage across this 139-HP boss; I survive comfortably regardless, and Defend afterward covers the swift intent and triggers juggernaut.",
+        "calculator_calls": 13,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "known_self_lethal": false,
+        "latency_ms": 91375.0559000764,
+        "input_tokens": 28539,
+        "output_tokens": 8865,
+        "requests": 5
+      },
+      {
+        "case": "combat-2",
+        "repeat": 0,
+        "arm": "B",
+        "valid": true,
+        "complete": true,
+        "action_id": "combat:play:2:enemy:0",
+        "reason": "Perfected Strike delivers the highest single-card damage (21, post-Weak/Strength) against the 139-HP boss while survival is already secure with 67 HP and only 9 incoming damage.",
+        "calculator_calls": 11,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "known_self_lethal": false,
+        "latency_ms": 128957.07610005047,
+        "input_tokens": 30473,
+        "output_tokens": 11920,
+        "requests": 6
+      },
+      {
+        "case": "combat-2",
+        "repeat": 0,
+        "arm": "C",
+        "valid": true,
+        "complete": true,
+        "action_id": "combat:play:0",
+        "reason": "Playing 防御, which with 5 block and Juggernaut's 6 damage reduces incoming damage from 9 to 4 while converting that block to 6 offense (139→127) at only 1 energy, keeps 2 energy for the strikes, which is the best survival-plus-damage on this multi-hit turn; end-turn leaves full 9 damage on you for no benefit.",
+        "calculator_calls": 9,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "known_self_lethal": false,
+        "latency_ms": 52533.943100017495,
+        "input_tokens": 15097,
+        "output_tokens": 5025,
+        "requests": 3
+      },
+      {
+        "case": "shop-1",
+        "repeat": 0,
+        "arm": "A",
+        "valid": true,
+        "complete": true,
+        "action_id": "shop:open_inventory",
+        "reason": "突破 provides the critical missing AOE for the multi-enemy Slime Gang boss at a modest cost, clearly worth the gold.",
+        "calculator_calls": 6,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "latency_ms": 38895.96300001722,
+        "input_tokens": 14409,
+        "output_tokens": 3026,
+        "requests": 5
+      },
+      {
+        "case": "shop-1",
+        "repeat": 0,
+        "arm": "B",
+        "valid": true,
+        "complete": true,
+        "action_id": "shop:open_inventory",
+        "reason": "Open inventory to purchase Breakthrough (49g), the cheap AOE that fills the run's top-priority need while keeping most gold for later.",
+        "calculator_calls": 5,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "latency_ms": 34189.993100007996,
+        "input_tokens": 8116,
+        "output_tokens": 3031,
+        "requests": 3
+      },
+      {
+        "case": "shop-1",
+        "repeat": 0,
+        "arm": "C",
+        "valid": true,
+        "complete": true,
+        "action_id": "shop:open_inventory",
+        "reason": "Breakthrough (49g) provides the needed AOE against the multi-enemy boss 同族小队 at low cost while leaving 93 gold reserved, clearly exceeding the marginal value of hoarding gold for an unseen shop.",
+        "calculator_calls": 6,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "latency_ms": 38914.50760001317,
+        "input_tokens": 8301,
+        "output_tokens": 3925,
+        "requests": 3
+      },
+      {
+        "case": "map-1",
+        "repeat": 0,
+        "arm": "A",
+        "valid": true,
+        "complete": true,
+        "action_id": "map:choose:1:3:1",
+        "reason": "Both branches merge at 4,0 with identical shop/rest access, so choosing the predictable Monster (3,1) yields a reliable card reward to build AOE while avoiding an Unknown node's potential elite risk at 69/80 HP.",
+        "calculator_calls": 9,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "latency_ms": 40368.84940008167,
+        "input_tokens": 28172,
+        "output_tokens": 3190,
+        "requests": 7
+      },
+      {
+        "case": "map-1",
+        "repeat": 0,
+        "arm": "B",
+        "valid": true,
+        "complete": true,
+        "action_id": "map:choose:0:3:0",
+        "reason": "Route A (Unknown, 3,0) has one fewer monster on every path than Route B while sharing identical shops, rests, and elite range, reducing combat risk for a deck with no block cards and no potions.",
+        "calculator_calls": 9,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "latency_ms": 30278.725999989547,
+        "input_tokens": 19031,
+        "output_tokens": 2564,
+        "requests": 5
+      },
+      {
+        "case": "map-1",
+        "repeat": 0,
+        "arm": "C",
+        "valid": true,
+        "complete": true,
+        "action_id": "map:choose:0:3:0",
+        "reason": "Both options lead to all boss paths and share the same downstream shops/rests, but choosing the Unknown node (3,0) reaches the boss with 2 minimum monsters instead of 3, reducing HP risk given our low 69/80 HP with no potion supply.",
+        "calculator_calls": 5,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "latency_ms": 23114.74620003719,
+        "input_tokens": 15684,
+        "output_tokens": 2086,
+        "requests": 4
+      },
+      {
+        "case": "combat-1",
+        "repeat": 1,
+        "arm": "C",
+        "valid": true,
+        "complete": true,
+        "action_id": "combat:play:5:enemy:0",
+        "reason": "Only 1 energy is available, making 20-block survival impossible, so play the highest-damage playable card (拆卸+ deals 10) to progress the kill before the Knowledge Demon's healing turn; end-turn just deals no damage and also dies.",
+        "calculator_calls": 13,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "known_self_lethal": false,
+        "latency_ms": 35699.068299960345,
+        "input_tokens": 25394,
+        "output_tokens": 3598,
+        "requests": 4
+      },
+      {
+        "case": "combat-1",
+        "repeat": 1,
+        "arm": "B",
+        "valid": true,
+        "complete": true,
+        "action_id": "combat:play:5:enemy:0",
+        "reason": "Death this turn is unavoidable regardless of choice (7 disintegration then 30 from boss exceeds all block), so I take the highest-damage attack to maximize progress.",
+        "calculator_calls": 7,
+        "resolved_model": "deepseek-v4-flash-0731",
+        "known_self_lethal": false,
+        "latency_ms": 20266.16360002663,
+        "input_tokens": 18373,
+        "output_tokens": 2099,
+        "requests": 3
+      },
+      {
+        "case": "combat-1",
+        "repeat": 1,
+        "arm": "A",
+        "valid": false,
+        "complete": false,
+        "error": "budget_exhausted",
+        "latency_ms": 18300.14880001545,
+        "input_tokens": 13293,
+        "output_tokens": 1982,
+        "requests": 2
+      }
+    ],
+    "budget": {
+      "requests": 59,
+      "tokens": 345775,
+      "reserved": 0,
+      "max_requests": 72,
+      "max_tokens": 360000
+    },
+    "requests": [
+      {
+        "request": 1,
+        "status": "ok",
+        "tokens": 8040,
+        "estimated_reservation": 20781,
+        "latency_ms": 12181.932199979201
+      },
+      {
+        "request": 2,
+        "status": "ok",
+        "tokens": 7656,
+        "estimated_reservation": 20978,
+        "latency_ms": 12526.967300102115
+      },
+      {
+        "request": 3,
+        "status": "ok",
+        "tokens": 7107,
+        "estimated_reservation": 21314,
+        "latency_ms": 3424.768300028518
+      },
+      {
+        "request": 4,
+        "status": "ok",
+        "tokens": 7235,
+        "estimated_reservation": 21602,
+        "latency_ms": 3334.1787999961525
+      },
+      {
+        "request": 5,
+        "status": "ok",
+        "tokens": 8033,
+        "estimated_reservation": 19278,
+        "latency_ms": 15890.297399950214
+      },
+      {
+        "request": 6,
+        "status": "ok",
+        "tokens": 7733,
+        "estimated_reservation": 19523,
+        "latency_ms": 18370.929799973965
+      },
+      {
+        "request": 7,
+        "status": "ok",
+        "tokens": 8572,
+        "estimated_reservation": 19452,
+        "latency_ms": 19117.214199970476
+      },
+      {
+        "request": 8,
+        "status": "ok",
+        "tokens": 7376,
+        "estimated_reservation": 19691,
+        "latency_ms": 13339.244499919005
+      },
+      {
+        "request": 9,
+        "status": "ok",
+        "tokens": 7830,
+        "estimated_reservation": 20073,
+        "latency_ms": 15964.567400049418
+      },
+      {
+        "request": 10,
+        "status": "ok",
+        "tokens": 9154,
+        "estimated_reservation": 18374,
+        "latency_ms": 28439.38709993381
+      },
+      {
+        "request": 11,
+        "status": "ok",
+        "tokens": 8408,
+        "estimated_reservation": 18632,
+        "latency_ms": 35443.046100088395
+      },
+      {
+        "request": 12,
+        "status": "ok",
+        "tokens": 6488,
+        "estimated_reservation": 19041,
+        "latency_ms": 9069.972299970686
+      },
+      {
+        "request": 13,
+        "status": "ok",
+        "tokens": 6783,
+        "estimated_reservation": 19226,
+        "latency_ms": 11686.487599974498
+      },
+      {
+        "request": 14,
+        "status": "ok",
+        "tokens": 6571,
+        "estimated_reservation": 19626,
+        "latency_ms": 6691.11380004324
+      },
+      {
+        "request": 15,
+        "status": "ok",
+        "tokens": 8420,
+        "estimated_reservation": 16872,
+        "latency_ms": 29589.2404000042
+      },
+      {
+        "request": 16,
+        "status": "ok",
+        "tokens": 6459,
+        "estimated_reservation": 17103,
+        "latency_ms": 19163.68789994158
+      },
+      {
+        "request": 17,
+        "status": "ok",
+        "tokens": 7492,
+        "estimated_reservation": 17285,
+        "latency_ms": 28586.15920005832
+      },
+      {
+        "request": 18,
+        "status": "ok",
+        "tokens": 8723,
+        "estimated_reservation": 17469,
+        "latency_ms": 42275.468899984844
+      },
+      {
+        "request": 19,
+        "status": "ok",
+        "tokens": 5585,
+        "estimated_reservation": 17939,
+        "latency_ms": 3799.02909998782
+      },
+      {
+        "request": 20,
+        "status": "ok",
+        "tokens": 5714,
+        "estimated_reservation": 18090,
+        "latency_ms": 4309.428700013086
+      },
+      {
+        "request": 21,
+        "status": "ok",
+        "tokens": 6905,
+        "estimated_reservation": 17015,
+        "latency_ms": 15306.04079994373
+      },
+      {
+        "request": 22,
+        "status": "ok",
+        "tokens": 7909,
+        "estimated_reservation": 17244,
+        "latency_ms": 34746.69420009013
+      },
+      {
+        "request": 23,
+        "status": "ok",
+        "tokens": 5308,
+        "estimated_reservation": 17513,
+        "latency_ms": 2454.49140004348
+      },
+      {
+        "request": 24,
+        "status": "ok",
+        "tokens": 4278,
+        "estimated_reservation": 13569,
+        "latency_ms": 20393.129299976863
+      },
+      {
+        "request": 25,
+        "status": "ok",
+        "tokens": 3672,
+        "estimated_reservation": 13754,
+        "latency_ms": 11071.517299977131
+      },
+      {
+        "request": 26,
+        "status": "ok",
+        "tokens": 3084,
+        "estimated_reservation": 14054,
+        "latency_ms": 2338.06950005237
+      },
+      {
+        "request": 27,
+        "status": "ok",
+        "tokens": 3122,
+        "estimated_reservation": 14240,
+        "latency_ms": 1804.7940999967977
+      },
+      {
+        "request": 28,
+        "status": "ok",
+        "tokens": 3279,
+        "estimated_reservation": 14393,
+        "latency_ms": 3243.750700028613
+      },
+      {
+        "request": 29,
+        "status": "ok",
+        "tokens": 3191,
+        "estimated_reservation": 13304,
+        "latency_ms": 4412.240999983624
+      },
+      {
+        "request": 30,
+        "status": "ok",
+        "tokens": 4199,
+        "estimated_reservation": 13514,
+        "latency_ms": 18622.816300019622
+      },
+      {
+        "request": 31,
+        "status": "ok",
+        "tokens": 3757,
+        "estimated_reservation": 13980,
+        "latency_ms": 11126.39400002081
+      },
+      {
+        "request": 32,
+        "status": "ok",
+        "tokens": 4863,
+        "estimated_reservation": 13466,
+        "latency_ms": 18718.68229995016
+      },
+      {
+        "request": 33,
+        "status": "ok",
+        "tokens": 3672,
+        "estimated_reservation": 13650,
+        "latency_ms": 10280.563700012863
+      },
+      {
+        "request": 34,
+        "status": "ok",
+        "tokens": 3691,
+        "estimated_reservation": 13892,
+        "latency_ms": 9887.50519999303
+      },
+      {
+        "request": 35,
+        "status": "ok",
+        "tokens": 4285,
+        "estimated_reservation": 14879,
+        "latency_ms": 4055.0055999774486
+      },
+      {
+        "request": 36,
+        "status": "ok",
+        "tokens": 4331,
+        "estimated_reservation": 15053,
+        "latency_ms": 6460.519300075248
+      },
+      {
+        "request": 37,
+        "status": "ok",
+        "tokens": 4658,
+        "estimated_reservation": 15207,
+        "latency_ms": 9205.955099896528
+      },
+      {
+        "request": 38,
+        "status": "ok",
+        "tokens": 4461,
+        "estimated_reservation": 15594,
+        "latency_ms": 5335.406900034286
+      },
+      {
+        "request": 39,
+        "status": "ok",
+        "tokens": 4651,
+        "estimated_reservation": 15774,
+        "latency_ms": 6798.290099948645
+      },
+      {
+        "request": 40,
+        "status": "ok",
+        "tokens": 4461,
+        "estimated_reservation": 15879,
+        "latency_ms": 3760.969200055115
+      },
+      {
+        "request": 41,
+        "status": "ok",
+        "tokens": 4515,
+        "estimated_reservation": 16058,
+        "latency_ms": 3484.091099933721
+      },
+      {
+        "request": 42,
+        "status": "ok",
+        "tokens": 4109,
+        "estimated_reservation": 14613,
+        "latency_ms": 4007.0219000335783
+      },
+      {
+        "request": 43,
+        "status": "ok",
+        "tokens": 4082,
+        "estimated_reservation": 14786,
+        "latency_ms": 5043.356499983929
+      },
+      {
+        "request": 44,
+        "status": "ok",
+        "tokens": 4814,
+        "estimated_reservation": 14967,
+        "latency_ms": 12237.595000071451
+      },
+      {
+        "request": 45,
+        "status": "ok",
+        "tokens": 4198,
+        "estimated_reservation": 15173,
+        "latency_ms": 3967.5099999876693
+      },
+      {
+        "request": 46,
+        "status": "ok",
+        "tokens": 4392,
+        "estimated_reservation": 15350,
+        "latency_ms": 4974.717200035229
+      },
+      {
+        "request": 47,
+        "status": "ok",
+        "tokens": 4321,
+        "estimated_reservation": 14873,
+        "latency_ms": 4248.118199990131
+      },
+      {
+        "request": 48,
+        "status": "ok",
+        "tokens": 4211,
+        "estimated_reservation": 15050,
+        "latency_ms": 4469.011600012891
+      },
+      {
+        "request": 49,
+        "status": "ok",
+        "tokens": 4758,
+        "estimated_reservation": 15225,
+        "latency_ms": 8861.977700027637
+      },
+      {
+        "request": 50,
+        "status": "ok",
+        "tokens": 4480,
+        "estimated_reservation": 15377,
+        "latency_ms": 5392.073199967854
+      },
+      {
+        "request": 51,
+        "status": "ok",
+        "tokens": 8125,
+        "estimated_reservation": 19452,
+        "latency_ms": 15036.305099958554
+      },
+      {
+        "request": 52,
+        "status": "ok",
+        "tokens": 7060,
+        "estimated_reservation": 19763,
+        "latency_ms": 10229.572399985045
+      },
+      {
+        "request": 53,
+        "status": "ok",
+        "tokens": 6963,
+        "estimated_reservation": 19971,
+        "latency_ms": 6971.159500069916
+      },
+      {
+        "request": 54,
+        "status": "ok",
+        "tokens": 6844,
+        "estimated_reservation": 20390,
+        "latency_ms": 3425.2293999306858
+      },
+      {
+        "request": 55,
+        "status": "ok",
+        "tokens": 7308,
+        "estimated_reservation": 19278,
+        "latency_ms": 10209.897000109777
+      },
+      {
+        "request": 56,
+        "status": "ok",
+        "tokens": 6586,
+        "estimated_reservation": 19514,
+        "latency_ms": 6096.282799961045
+      },
+      {
+        "request": 57,
+        "status": "ok",
+        "tokens": 6578,
+        "estimated_reservation": 19850,
+        "latency_ms": 3930.331900017336
+      },
+      {
+        "request": 58,
+        "status": "ok",
+        "tokens": 7846,
+        "estimated_reservation": 20781,
+        "latency_ms": 9455.037600011565
+      },
+      {
+        "request": 59,
+        "status": "ok",
+        "tokens": 7429,
+        "estimated_reservation": 20958,
+        "latency_ms": 8824.876299942844
+      }
+    ],
+    "complete_groups": 4,
+    "complete": false,
+    "transport": "common optimized transport; baseline/current contexts isolate prompt and memory changes",
+    "configuration": {
+      "model": "deepseek-v4-flash-0731",
+      "extra_body": {
+        "enable_thinking": true
+      },
+      "calculator": "required",
+      "max_completion_tokens": 8192
+    },
+    "paired_summary": {
+      "A": {
+        "n": 4,
+        "valid_actions": 4,
+        "median_latency_ms": 39632.406200049445,
+        "input_tokens": 98308,
+        "output_tokens": 17931
+      },
+      "B": {
+        "n": 4,
+        "valid_actions": 4,
+        "median_latency_ms": 34234.10760000115,
+        "input_tokens": 69720,
+        "output_tokens": 21181
+      },
+      "C": {
+        "n": 4,
+        "valid_actions": 4,
+        "median_latency_ms": 43692.00010003988,
+        "input_tokens": 57905,
+        "output_tokens": 15991
+      }
+    }
+  },
+  "baseline_git_commit": "dfc5216c07b8699ad4f0c2b3805350cb3c6f57a4",
+  "current_git_commit": "8795cf7"
+}

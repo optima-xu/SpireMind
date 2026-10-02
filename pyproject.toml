@@ -49,13 +49,14 @@ select = ["E", "F", "I", "UP", "B", "ASYNC"]
 packages = ["src/spiremind"]
 
 [tool.hatch.build.targets.sdist]
+exclude = ["/runs/**", "/.uv-cache/**", "/.venv/**", "/save-recovery-*/**"]
 include = [
   "src",
   "tests",
   "scripts",
   "patches",
   ".github",
-  ".env.example",
+  "/.env.example",
   ".gitignore",
   "CHANGELOG.md",
   "CONTRIBUTING.md",

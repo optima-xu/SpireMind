@@ -1,0 +1,328 @@
+{
+  "schema_version": 1,
+  "mode": "offline",
+  "source_sha256": "d530bcc9fd229dd6210f9c77c078c7e896485d14a033c4b70a46e8f696535296",
+  "dataset_sha256": "0e92bab88ae12de7846b385d2c173a844236f0996a7458d6e2b1d8dc832e2d6d",
+  "config_sha256": "72629c1f269d76771a24c00e6a15cb5973f6bc16d0fa8c37e07ea81ea680a89b",
+  "cases": 16,
+  "rounds": 25,
+  "platform": "win32",
+  "python": "3.13.13",
+  "notes": [
+    "Local preparation excludes HTTP and game execution. Cold means cleared fact/deck/retrieval caches.",
+    "All included historical observations belong to holdout lineages; learning reads train only."
+  ],
+  "frozen_memory_sha256": "cd24e64c5f28442ace2f8dc181cb1f60d19b8606871fe4b2bb32b3755871e4e7",
+  "arms": {
+    "A": {
+      "source_sha256": "1d70310c3a431b044d38ad911dfe5141fcfb1bf71eb8374d9c5573756b2d7da1",
+      "local_ms": {
+        "cold": {
+          "p50": 12.8387,
+          "p95": 28.7985,
+          "n": 16
+        },
+        "warm": {
+          "p50": 4.1770499999999995,
+          "p95": 8.7762,
+          "n": 400
+        }
+      },
+      "scenes_ms": {
+        "combat": {
+          "p50": 4.718249999999999,
+          "p95": 9.0685,
+          "n": 150
+        },
+        "card_reward": {
+          "p50": 5.12695,
+          "p95": 8.875,
+          "n": 50
+        },
+        "shop": {
+          "p50": 4.4232,
+          "p95": 7.5551,
+          "n": 50
+        },
+        "map": {
+          "p50": 4.51595,
+          "p95": 6.9756,
+          "n": 50
+        },
+        "event": {
+          "p50": 2.3356500000000002,
+          "p95": 3.2784,
+          "n": 50
+        },
+        "rest": {
+          "p50": 2.6782,
+          "p95": 3.3374,
+          "n": 25
+        },
+        "card_selection": {
+          "p50": 3.0174,
+          "p95": 3.7357,
+          "n": 25
+        }
+      },
+      "sql": {
+        "queries": 547,
+        "transactions": 33
+      },
+      "card_queries": 546,
+      "synchronous_log_1000_ms": 548.3173000393435,
+      "caches": {}
+    },
+    "B": {
+      "source_sha256": "d530bcc9fd229dd6210f9c77c078c7e896485d14a033c4b70a46e8f696535296",
+      "local_ms": {
+        "cold": {
+          "p50": 8.64125,
+          "p95": 13.9689,
+          "n": 16
+        },
+        "warm": {
+          "p50": 1.5889,
+          "p95": 3.0824,
+          "n": 400
+        }
+      },
+      "scenes_ms": {
+        "combat": {
+          "p50": 2.0056000000000003,
+          "p95": 3.1437,
+          "n": 150
+        },
+        "card_reward": {
+          "p50": 1.4989,
+          "p95": 2.699,
+          "n": 50
+        },
+        "shop": {
+          "p50": 1.07505,
+          "p95": 1.8063,
+          "n": 50
+        },
+        "map": {
+          "p50": 2.67,
+          "p95": 3.2437,
+          "n": 50
+        },
+        "event": {
+          "p50": 0.5709,
+          "p95": 1.063,
+          "n": 50
+        },
+        "rest": {
+          "p50": 0.8611,
+          "p95": 1.2137,
+          "n": 25
+        },
+        "card_selection": {
+          "p50": 0.8025,
+          "p95": 1.4804,
+          "n": 25
+        }
+      },
+      "sql": {
+        "queries": 450,
+        "transactions": 16
+      },
+      "card_queries": 16,
+      "synchronous_log_1000_ms": 445.6476999912411,
+      "caches": {
+        "cards": {
+          "hits": 1872,
+          "misses": 246,
+          "size": 12,
+          "capacity": 1024
+        },
+        "deck": {
+          "hits": 400,
+          "misses": 16,
+          "size": 1,
+          "capacity": 128
+        }
+      }
+    },
+    "C": {
+      "source_sha256": "d530bcc9fd229dd6210f9c77c078c7e896485d14a033c4b70a46e8f696535296",
+      "local_ms": {
+        "cold": {
+          "p50": 11.053650000000001,
+          "p95": 19.5255,
+          "n": 16
+        },
+        "warm": {
+          "p50": 1.4482,
+          "p95": 2.599,
+          "n": 400
+        }
+      },
+      "scenes_ms": {
+        "combat": {
+          "p50": 1.7404000000000002,
+          "p95": 2.6238,
+          "n": 150
+        },
+        "card_reward": {
+          "p50": 0.92065,
+          "p95": 1.6868,
+          "n": 50
+        },
+        "shop": {
+          "p50": 1.2156500000000001,
+          "p95": 1.8949,
+          "n": 50
+        },
+        "map": {
+          "p50": 2.14665,
+          "p95": 3.2688,
+          "n": 50
+        },
+        "event": {
+          "p50": 0.60495,
+          "p95": 1.009,
+          "n": 50
+        },
+        "rest": {
+          "p50": 1.0497,
+          "p95": 1.2867,
+          "n": 25
+        },
+        "card_selection": {
+          "p50": 0.9367,
+          "p95": 1.4509,
+          "n": 25
+        }
+      },
+      "sql": {
+        "queries": 450,
+        "transactions": 16
+      },
+      "card_queries": 16,
+      "synchronous_log_1000_ms": 408.88459992129356,
+      "caches": {
+        "cards": {
+          "hits": 1872,
+          "misses": 246,
+          "size": 12,
+          "capacity": 1024
+        },
+        "deck": {
+          "hits": 400,
+          "misses": 16,
+          "size": 1,
+          "capacity": 128
+        },
+        "retrieval": {
+          "hits": 400,
+          "misses": 16,
+          "size": 1,
+          "capacity": 256
+        }
+      }
+    }
+  },
+  "context_tokens": {
+    "A": {
+      "combat-1": 7171,
+      "combat-2": 5734,
+      "combat-3": 7465,
+      "combat-4": 7295,
+      "combat-5": 5723,
+      "combat-6": 6125,
+      "card_reward-1": 2424,
+      "card_reward-2": 3976,
+      "shop-1": 2830,
+      "shop-2": 4356,
+      "map-1": 3455,
+      "map-2": 3858,
+      "event-1": 1784,
+      "event-2": 2020,
+      "rest-1": 2545,
+      "card_selection-1": 2892
+    },
+    "B": {
+      "combat-1": 6170,
+      "combat-2": 4733,
+      "combat-3": 6464,
+      "combat-4": 6294,
+      "combat-5": 4722,
+      "combat-6": 5124,
+      "card_reward-1": 2247,
+      "card_reward-2": 3901,
+      "shop-1": 2653,
+      "shop-2": 4179,
+      "map-1": 3278,
+      "map-2": 3681,
+      "event-1": 1607,
+      "event-2": 1843,
+      "rest-1": 2368,
+      "card_selection-1": 2683
+    },
+    "C": {
+      "combat-1": 6270,
+      "combat-2": 4815,
+      "combat-3": 6474,
+      "combat-4": 6370,
+      "combat-5": 4925,
+      "combat-6": 5224,
+      "card_reward-1": 2600,
+      "card_reward-2": 3901,
+      "shop-1": 2750,
+      "shop-2": 4179,
+      "map-1": 3435,
+      "map-2": 3838,
+      "event-1": 1791,
+      "event-2": 2027,
+      "rest-1": 2547,
+      "card_selection-1": 2867
+    }
+  },
+  "production_async_preparation": {
+    "warm_ms": {
+      "p50": 2.6641999720595777,
+      "p95": 3.7060000468045473,
+      "n": 80
+    },
+    "storage": {
+      "thread_id": 172500,
+      "transactions": 16,
+      "card_queries": 5,
+      "card_cache": {
+        "hits": 629,
+        "misses": 49,
+        "size": 49,
+        "capacity": 1024
+      },
+      "deck_cache": {
+        "hits": 80,
+        "misses": 16,
+        "size": 16,
+        "capacity": 128
+      },
+      "retrieval_cache": {
+        "hits": 0,
+        "misses": 0,
+        "size": 0,
+        "capacity": 256
+      }
+    }
+  },
+  "improvements": {
+    "warm_p50_fraction": 0.6196119270777223,
+    "card_query_fraction": 0.9706959706959707,
+    "combat_context_median_fraction": 0.15150929338406682
+  },
+  "targets_passed": {
+    "warm_p50": true,
+    "card_queries": true,
+    "combat_context": true
+  },
+  "async_log_1000_including_drain_ms": 227.71190002094954,
+  "async_log_batches": 637,
+  "baseline_git_commit": "dfc5216c07b8699ad4f0c2b3805350cb3c6f57a4",
+  "current_stage": "final offline code; see source_sha256",
+  "current_git_commit": "0f92f5d7a4f978207ad1dd12bb073d8fbf45aa8b"
+}

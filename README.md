@@ -1,180 +1,116 @@
 # SpireMind
 
 [![CI](https://github.com/optima-xu/SpireMind/actions/workflows/test.yml/badge.svg)](https://github.com/optima-xu/SpireMind/actions/workflows/test.yml)
-[![Release](https://img.shields.io/github/v/release/optima-xu/SpireMind)](https://github.com/optima-xu/SpireMind/releases)
 [![Python](https://img.shields.io/badge/python-3.11--3.13-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/code%20license-MIT-green.svg)](LICENSE)
+[![MIT](https://img.shields.io/badge/code-MIT-green.svg)](LICENSE)
 
-通过结构化游戏桥接接口自主游玩《杀戮尖塔 2》的 Python Agent。采用 Environment、Memory、Strategy 分层，支持 OpenAI-compatible Chat Completions、按场景检索攻略、SQLite 记忆和逐步动作审计。
+**面向长任务的多 Agent 决策系统：专业分工、分层记忆、经验检索与可靠执行。**
 
-An observable, auditable Python agent for Slay the Spire 2 with an OpenAI-compatible model interface.
+《杀戮尖塔 2》提供了一个具体问题：战斗、选牌、商店和地图需要不同的推理方式，却共同影响一局游戏。模型会重复计算、忘记先前计划，也可能把不确定的执行结果记成成功。SpireMind 让四个决策 Agent 按场景协作，由独立 Reflection Agent 提炼有证据的经验，Coordinator 统一负责动作校验、执行与恢复。
 
-当前首个实机支持目标：Windows / STS2 **v0.111.0** / 标准单人铁甲战士 A0。其他四个角色已有策略包与通用状态接口，实机覆盖范围见 [验收报告](docs/ACCEPTANCE.md)。这是一套可迭代的 v1 框架；单局运行不能证明高胜率。
+An observable multi-agent runtime for long-horizon decisions, with scoped memory, evidence-backed experience learning, bounded asynchronous I/O and reproducible offline benchmarks.
 
-当前验收结论：定向功能、策略回归、发布包隔离安装和从主菜单到终局的完整生命周期已通过；最新完整实机局在第 33 层 Boss 死亡，因此高胜率与五角色稳定性仍需多 seed 验收。状态识别与死亡原因的实证分析见 [死亡复盘](docs/DEATH_REVIEW.md)，本轮控制面改造见 [架构改进](docs/ARCHITECTURE_IMPROVEMENTS.md)。
+当前实机适配目标是 Windows / STS2 v0.111.0 / 铁甲战士 A0；其余角色有通用接口与策略包。此次改造使用历史公开状态和离线回归，**没有操作真实游戏，也没有证明胜率提高**。既有局面的实机范围见 [验收记录](docs/ACCEPTANCE.md)。
 
-## 主要能力
-
-- 只执行当前状态提供并绑定 `decision_id` 的合法动作。
-- 每次动作后重新观察和核验；超时或重启后先对账，不盲目重发。
-- Working / Run / Skill 三层记忆，按整局隔离并持久化到 SQLite。
-- 通用 OpenAI-compatible `/chat/completions` 接口，密钥只从环境变量读取。
-- 模型算术经有界 `calculate` 函数工具执行，表达式和结果随决策留痕。
-- 地图路线展望跨场景传到商店；低血量的等后续路线避开额外精英。
-- 版本匹配的卡牌资料、115 条本地敌人知识及有界战斗安全搜索。
-- 完整 trace、离线 replay、Provider 诊断和 Windows/Linux CI。
-
-完整安装、模型配置、实机桥接和故障排查见 [部署与使用指南](docs/DEPLOYMENT.md)。
-
-## 快速开始
-
-需要 Git、Python 3.11–3.13 和 [uv](https://docs.astral.sh/uv/)。
+## 先看演示
 
 ```powershell
 git clone https://github.com/optima-xu/SpireMind.git
 Set-Location SpireMind
 uv sync --locked
 uv run spiremind run --environment mock --policy rules
+uv run spiremind benchmark --rounds 5
 ```
 
-Mock 是固定场景序列，用于离线验证控制流程；它不是游戏模拟器。
+无需 API key。Mock 是固定场景序列，覆盖主菜单到终局的 10 个已核验动作，用于验证控制链；它不是胜率模拟器。`benchmark` 默认离线，只有显式 `--use-model` 才发出模型请求。
 
-## 模型配置
-
-通用服务复制 `config.example.toml`，阿里云 Model Studio / DashScope 兼容服务复制
-`config.deepseek.example.toml`：
+从公开训练观察重建经验库：
 
 ```powershell
-Copy-Item .env.example .env
-Copy-Item config.example.toml config.local.toml
-# 或：Copy-Item config.deepseek.example.toml config.local.toml
+uv run spiremind memory --database runs/demo-memory.sqlite import src/spiremind/knowledge/benchmarks/training_evidence.json
+uv run spiremind memory --database runs/demo-memory.sqlite consolidate
+uv run spiremind memory --database runs/demo-memory.sqlite inspect
+uv run spiremind benchmark --memory-db runs/demo-memory.sqlite --rounds 5
 ```
 
-在 `.env` 中填写与 `api_key_env` 对应的密钥，在 `config.local.toml` 中填写自己的 `base_url` 和
-`model`。实际 `.env`、本地配置与 endpoint 均不会进入 Git。
+686 条脱敏训练观察能重建两条有跨局支持的条件经验：特定条件下防御牌的格挡变化，以及一次选牌后的牌组数量变化。它们是可检查的局部观察，不能据此判断某张牌值得购买，或某个动作最优。完整历史导入可使用 `memory import runs`；同一份材料重复导入不会重复计数。
+
+## 实测收益
+
+三次独立测量的摘要：离线准备 P50 **4.108 → 1.277 ms（下降 68.9%）**；包含 SQLite worker 调度的 P50 为 **2.470 ms（较基线下降 39.9%）**。重复牌库查询 **546 → 16（下降 97.1%）**；战斗上下文估计 token 中位数 **6648 → 5647（下降 15.1%）**。这些是本地固定数据集结果。
+
+固定 16 个公开局面覆盖战斗、奖励、商店、地图、事件、休息和选牌。性能报告区分准备计算、异步线程调度、经验检索、日志排空和模型 HTTP 耗时。每份结果都有源码、数据集、配置和冻结记忆指纹。具体样本、三次重复测量、预算与模型对照见 [性能报告](docs/PERFORMANCE.md)。
+
+## 多 Agent 如何协作
+
+```mermaid
+flowchart LR
+    State[实时公开状态] --> Coordinator[Coordinator / Runtime]
+    Coordinator --> Combat[Combat Agent]
+    Coordinator --> Run[Run / Deck Agent]
+    Coordinator --> Map[Map Agent]
+    Coordinator --> Event[Event Agent]
+    Combat & Run & Map & Event --> Validate[合法动作校验 / 执行 / 对账]
+    Validate --> Memory[SQLite 分层记忆与证据]
+    Memory --> Reflection[后台 Reflection Agent]
+    Reflection --> Learned[候选经验 / 回归 / 晋升 / 停用]
+    Learned --> Retrieval[按角色与场景检索]
+    Retrieval --> Combat & Run & Map & Event
+```
+
+每次决策只路由一个主 Agent；场景切换的交接由代码生成，不增加一轮决策模型调用。模型客户端可以共享，Agent 的任务、可见记忆与写入权限分别定义。后台复盘与当前决策异步协作，游戏动作由单一执行链提交。
+
+| 层级 | 作用与边界 |
+| --- | --- |
+| Working | 按实际对局实例、Agent、任务隔离；旧 revision 的行动计划失效。战斗内选牌延续 Combat 的目标。 |
+| Run | 整局共享但按角色投影；Run 管 boss / gold / potion 策略，Map 管路线偏好；路线展望由代码计算。 |
+| Episode | 保存可核验的局部前后变化及生产者、消费者、交接证据；区分执行成功与策略价值。 |
+| Skill | 人工规则与学习经验分开；候选经验默认不注入，跨至少三个独立种子组支持并通过确定性回归后才激活。 |
+
+相同 seed 的新开局使用新的实例 UUID；续跑保留实例。共享更新带生产者和策略版本，未授权或过期更新进入审计。出现已验证反例时停用经验，并保存历史版本。
+
+检索采用 SQLite FTS5/BM25 与版本、角色、Agent、场景等过滤，最多两条 Episode、三条激活 Skill，总上限 600 个估计 token。旧局的 action_id 和执行参数不会作为可执行动作注入；当前合法动作来自实时状态。详见 [记忆与协作设计](docs/MULTI_AGENT_MEMORY.md)。
+
+## 真正接入执行链的技术
+
+- **有界 LRU**：牌库 1,024 条、牌组分析与策略适配各 128 条、经验检索 256 条；版本、升级、牌组、遗物和知识变化进入键或失效条件。HP readiness 每次重算。
+- **计算复用**：效果解析、搜索、评估分别维护；每个战斗决策只做一份评估，供安全规则、提示词和回退共用。公开事实解码仍返回独立数据。
+- **异步存储与事务**：SQLite 在专用单线程内创建、访问和关闭；Run、Working、快照、更新审计和对应经验提交在同一事务中。旧库使用增量迁移。
+- **生产者—消费者**：日志队列容量 256，单消费者复用句柄，每批最多 32 条；背压、失败传播、退出和取消排空均有回归覆盖。
+- **可靠动作与预算**：关键 pending 记录先持久化再发送；超时先对账；每个 HTTP 请求前预留预算，缺失 usage 时保守计费。无效最终 JSON 最多修复一次，复用已有计算器结果。
+
+这些设计的具体取舍、常见面试追问及中英文简历描述见 [面试说明](docs/INTERVIEW.md)。
+
+## 配置与运行
+
+复制 `config.example.toml` 或 `config.deepseek.example.toml` 到 `config.local.toml`，把密钥放在配置指定的环境变量中。OpenAI-compatible `/chat/completions` 支持 `calculate` function calling；表达式只由有界算术解释器执行。
 
 ```powershell
 uv run --env-file .env spiremind --config config.local.toml probe-model
-uv run --env-file .env spiremind --config config.local.toml run --environment mock
+uv run --env-file .env spiremind --config config.local.toml run --environment mock --policy model
 ```
 
-接口发送标准 `/chat/completions` 请求；`extra_body` 可承载服务商参数。服务不支持
-`response_format` 时可设置 `json_mode=false`，但返回仍必须是合法 JSON。
-默认 `calculator_mode="required"`：每个需要模型选择的决策先调用一次标准 function tool，
-后续算术仍可继续调用；本地计算器只支持有限的算术和比较表达式，不执行 Python 代码。
-`probe-model` 用 `48-11=37` 检查完整工具往返，并报告 `calculator_calls`。
-不支持 function calling 的兼容服务可设置 `calculator_mode="off"`；`"auto"` 仅提示模型自选工具，
-不保证调用。强制模式会增加模型请求次数和 token 用量。
+Thinking 由配置决定；本次真实对照保持 `deepseek-v4-flash-0731`、thinking 开启、calculator required 一致。基线与优化提示共用传输实现，以分离提示与记忆的影响。实机桥接安装、只读观察、存档与故障排查见 [部署指南](docs/DEPLOYMENT.md)、[bridge.lock.json](bridge.lock.json)。
 
-## 实机启动
+默认未来运行会保存局部经验并离线自动复盘。需要模型复盘时，在本地配置加入：
 
-适配器通过 [sts2-ai-mcp](https://github.com/BMingSY/sts2-ai-mcp) 的 HTTP v2 decision API 连接游戏。
-固定依赖提交、协议和兼容补丁记录在 [bridge.lock.json](bridge.lock.json)。Windows 上先关闭游戏，
-再构建并安装桥接：
-
-```powershell
-pwsh -File scripts/prepare-bridge.ps1 `
-  -GameRoot 'C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2' `
-  -Install
+```toml
+[memory]
+reflection_use_model = true
+reflection_requests = 4
+reflection_tokens = 12000
 ```
 
-启动游戏并停在主菜单后执行：
+复盘受每次运行的子预算与总 token 预算共同约束；容量 8 的队列满时保留数据库 pending 作业，下次运行恢复。Reflection 没有游戏执行接口。
 
-```powershell
-uv run --env-file .env spiremind --config config.local.toml doctor
-uv run --env-file .env spiremind --config config.local.toml observe
-uv run --env-file .env spiremind --config config.local.toml sync-card-db
-uv run --env-file .env spiremind --config config.local.toml run
-```
-
-`run` 会继续已有模组存档或从主菜单开始新局。`observe` 只读，`step` 最多执行一个动作。
-运行期间不要同时手动操作游戏，也不要更新 CardDB。角色覆盖、日志恢复、升级流程和常见错误见
-[部署与使用指南](docs/DEPLOYMENT.md)。
-
-## 架构
-
-| 模块 | 职责 |
-| --- | --- |
-| `core` | 不可变 GameState、合法 Action、结构化 Decision |
-| `environment` | HTTP 观察、动作绑定、执行、状态归一化和事后核验 |
-| `runtime` | 场景路由、生命周期、校验、恢复、预算和 trace |
-| `strategies` | Combat、Run/Deck、Map、Event；只消费内部 schema |
-| `memory` | Working、Run、Skill 及 SQLite 快照；跨场景共享战略 |
-| `knowledge` | 五角色共 15 个版本化策略包、版本匹配的 CardDB、115 条本地 EnemyKnowledge |
-| `context` | 根据场景、相关性、优先级和预算组装 L0–L5 上下文 |
-| `providers` | 可替换的 OpenAI-compatible HTTP 模型客户端 |
-
-每一步遵循 Observe → Route → Memory → Decide → Validate → Execute → Observe → Verify → Update。模型只选择当前合法 `action_id`；动作参数来自桥接，必须绑定相同 `decision_id`。发送前写入持久化 pending 记录；超时或重启后先等待/核对状态，不自动重发同一个动作。
-
-多选卡牌按核验后的数量变化跟踪已选项，避免模型反复点击同一卡将其取消。同一状态/动作重复三次后从策略候选中剔除；若候选耗尽则以 `stalled` 停止并保留现场。
-
-战斗除 `stable=true` 外还必须等到 `player_turn_phase=Play`。空手/零能量本身不代表应该结束回合。CombatStrategy 计算可见攻击来伤与有限范围的卡牌效果，显式提示滑溜、多段攻击和敌我力量归属；在可见致命攻击下，安全层会先找经过核算的斩杀，再搜索当前手牌与能量内的多张格挡组合，最后考虑确实能存活的药水。单目标战斗还会在 4,096 次转移上限内计算支持卡牌的最佳攻击顺序，处理敌方格挡、易伤、Slow 和多段攻击；完整证明的 `verified_lethal_plan` 会优先执行。支持范围内的完整回合搜索也会把显式 `HpLoss`、回能、回复、狂怒格挡和残酷增伤放入同一状态转移，并跨同一回合记住是否已经失去生命；模型会同时看到带卖血与不卖血路线的资源结果。非斩杀回合向模型提供最低生存格挡、结束回合生命余量和最大可见伤害路线，防止把“敌方正在攻击”误解成“必须先防御”。`[strategy] combat_guards=false` 可关闭规则介入，仍保留核算提示。Boss 大额来伤用药阈值默认为最大生命的 20%，是可配置的风险偏好，不是精确游戏机制。
-
-战斗内选牌会先解释“消耗”等选择操作；选择一张牌不等于打出它。明确的消耗选择优先处理不可打出的状态/诅咒牌，并保留当前 HP、能量、格挡和来伤摘要。生存核算采用 `survives/dead/unknown` 三态，只有动作效果覆盖完整时才会宣称可见无解。
-
-战斗上下文会保留手牌的即时数值、目标专属数值、污染附着信息、不可打出原因，以及敌方意图的总伤害。核算直接使用这些公开字段：新获得的污染按剩余攻击段数增加来伤，当前污染不重复加算；脆弱造成的小数格挡按显示整数取整；巨人化只增强下一张攻击。搜索按实际出牌顺序结算回能、卖血、治疗及生命上限；只有明确因能量不足而不可打出的牌才会进入回能后的后续行动。缺少所需攻击段数、出现未建模能力或手牌效果时，相关精确结论改为未知，不把不完整估算当成斩杀或生存证明。
-
-这些计算只覆盖可见攻击意图与已支持的 v0.111.x 简单机制，不是完整模拟器，不保证计入所有回合末触发、遗物和特殊状态。未知目标效果不提供精确伤害估计；药水估计不会把已有虚弱重复计算成额外减伤。
-
-策略输入只包含明确选出的公开字段，排除 evaluator、动作 preview、隐藏抽牌顺序和原始 JSON。CardDB 从运行中的模组静态数据导出，按精确游戏版本隔离；手牌已有实时描述时以实时描述为准。完整原始观测仅存审计日志，不注入模型。
-
-EnemyKnowledge 本地保存 v0.111.0 的 115 个敌人条目。战斗时按规范化 enemy ID 精确识别，只把当前存活敌人的最多三条特性和两条简略攻略注入 `L4_enemy_knowledge`；同类敌人去重，未知 ID 或版本不匹配时安全跳过。实时生命、意图、能力与卡牌文字始终优先。数据来源、生成方法和限制见 [Enemy Knowledge 说明](docs/ENEMY_KNOWLEDGE.md)，完整可读条目见 [本地敌人图鉴](docs/ENEMY_BESTIARY_v0.111.0.md)。
-
-RunMemory 保存 needs、连续流派评分和资源意图；HP、Gold、手牌等仍从实时状态读取。短期计划遇到状态修订会失效，不跨决策重用旧动作。SkillMemory 的初始规则来自交接文档，是有版本/触发条件的人工战术知识；其 confidence 不代表测得的胜率。
-
-地图策略把当前可达节点的后续精英、商店、休息点及 Boss 楼层整理成可核对的路线展望，
-并记录所选路线供商店决策使用；跨幕时清除。低血量、低精英准备度且后续节点相同的分叉会
-避开额外精英。临近 Boss 的最后一家已知商店在低血量时会先打开货架检查，但不会强制购物。
-这个路线展望只覆盖当前可见地图，不预测事件内容、战斗损血或胜率。
-
-策略包采用加权相关性评分，默认最多取 3 个且分数至少 0.35；没有匹配时允许零个。攻略不包含固定的卡牌伤害/费用数值。牌组指标和 readiness 是启发式估计，后续可用真实对局评估调整。
-
-## 预算与恢复
-
-默认上下文目标约 4,000 token、上限约 16,000 token，估计基于 UTF-8 字节数，实际 usage 由服务端返回。必要状态和合法动作不能删减时触发保守规则回退。模型不可用、输出不合法或不在合法动作集合时也会回退，并记录原因。
-
-实机默认每次运行最多 3,000 步和 2 小时；默认不设总 token 上限。可在 TOML 的 `[runtime]` 中显式设置 `max_total_tokens` 来限制单次运行的 token 用量。只有观察到死亡/通关才标记 `complete=true`。
-
-## 测试与证据
+## 验证与贡献
 
 ```powershell
 uv run ruff check src tests scripts
 uv run ruff format --check src tests scripts
-uv run pytest -q --basetemp=runs/pytest-local
+uv run pytest -q
 uv build
-uv run spiremind replay runs/<attempt-id>
+uv run python scripts/smoke_wheel.py
 ```
 
-若系统临时目录有权限限制，使用上述项目内 `--basetemp`，每次可换一个目录名。CI 定义 Python 3.11/3.13 和 Windows/Linux 的离线测试；本地验证与尚未执行的 CI 要分开看。
-
-每次运行写入 `runs/<attempt-id>/`：manifest、states、contexts、decisions、progress 和最终 summary；实机额外保存 bridge-health、原始 observations、知识版本。每个决策包含 revision、场景、策略、记忆快照 ID、动作、模型、耗时、执行结果与错误。SQLite 记忆与原始 trace 分开保存。`replay` 离线汇总日志，不向游戏重新发送动作。
-使用计算器的决策还会在 `decisions.jsonl` 记录 `calculations`，summary 汇总 `calculator_calls`。
-
-`complete=true` 表示观察到终局，可能来自续局；`full_lifecycle_complete=true` 还要求本进程亲自完成新局 embark。实机/Mock 仍须通过 `mode` 区分。终局原始内部状态保存在 `terminal-state.json`。
-
-`verified_actions` 表示事后观察到状态推进；`uncertain_actions` 单独记录未收到明确执行回执的请求，不应混称为已确认执行。规则介入由 `policy_rule_decisions` 与每条 decision 的 `policy_rule` 标识。
-
-新建 run 的 manifest 还记录脱敏后的模型/游戏/策略配置、Python 与包版本和源码哈希；不会写入 API key。模型请求分别统计传输失败、可重试 HTTP、输出截断与无效 JSON。
-
-复核保存的 Boss 局面（默认只做本地分析；`--use-model` 会把选中的历史游戏状态及记忆发送给配置中的模型，不会操作游戏）：
-
-```powershell
-uv run python scripts/evaluate_combat.py --trace runs/20260927T120749-ceebc0ab
-uv run --env-file .env python scripts/evaluate_combat.py --config config.local.toml `
-  --trace runs/20260927T120749-ceebc0ab --use-model
-```
-
-该脚本针对本次第 17 层死亡复盘的五个已知局面；它不是任意对局通用胜率评测器。本机 trace 不随开源包发布。
-
-也可以用 `--revisions` 对任意保存 trace 的精确状态做同样的离线比较，例如：
-
-```powershell
-uv run --env-file .env python scripts/evaluate_combat.py --config config.local.toml `
-  --trace runs/<attempt-id> --revisions 84 88 92 96 100 --use-model
-```
-
-详细实测数据与尚未覆盖的能力见 [验收报告](docs/ACCEPTANCE.md)。
-
-## 许可与发布边界
-
-SpireMind 原创代码采用 MIT License。桥接上游有自己的许可；游戏图像、原始资产及本机导出的完整卡牌库不随发布包分发。随包提供的派生敌人事实不属于 MIT 代码授权，来源和权利说明见 [Third-party notices](THIRD_PARTY_NOTICES.md) 与 `src/spiremind/knowledge/enemies/NOTICE.md`。`runs/`、`references/`、构建产物、本地配置、环境密钥和原始交接文档均不提交。
+CI 覆盖 Windows/Linux 与 Python 3.11/3.13，检查确定性行为与隔离 wheel 演示；耗时收益由重复测量验收，不作为波动敏感的 CI 阈值。贡献说明见 [CONTRIBUTING](CONTRIBUTING.md)，安全边界见 [SECURITY](SECURITY.md)，第三方资料说明见 [THIRD_PARTY_NOTICES](THIRD_PARTY_NOTICES.md)。本地配置、密钥、原始运行日志、SQLite 和存档备份均不提交。
