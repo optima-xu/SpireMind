@@ -365,9 +365,51 @@ async def test_trace_backpressure_cancel_drain_and_failure(tmp_path):
     broken._write_batch = fail
     await broken.append("rows.jsonl", {})
     with pytest.raises(TraceWriteError):
-        await broken.flush()
+        await asyncio.wait_for(broken.flush(), 2)
     with pytest.raises(TraceWriteError):
         await broken.close()
+
+
+async def test_trace_failure_settles_flush_queued_during_handle_close(tmp_path):
+    trace = AsyncTraceWriter(tmp_path, "late-flush")
+    loop = asyncio.get_running_loop()
+    writing = asyncio.Event()
+    closing_handles = asyncio.Event()
+    flush_queued = asyncio.Event()
+    allow_failure = threading.Event()
+    allow_close = threading.Event()
+    original_put = trace.queue.put
+
+    def fail(batch):
+        loop.call_soon_threadsafe(writing.set)
+        assert allow_failure.wait(2)
+        raise OSError("injected")
+
+    def close_handles():
+        loop.call_soon_threadsafe(closing_handles.set)
+        assert allow_close.wait(2)
+
+    async def delayed_put(item):
+        if item[0] == "flush":
+            await closing_handles.wait()
+        await original_put(item)
+        if item[0] == "flush":
+            flush_queued.set()
+
+    trace._write_batch = fail
+    trace._close_handles = close_handles
+    trace.queue.put = delayed_put
+    await trace.append("rows.jsonl", {})
+    await asyncio.wait_for(writing.wait(), 2)
+    flush = asyncio.create_task(trace.flush())
+    await asyncio.sleep(0)
+    allow_failure.set()
+    await asyncio.wait_for(flush_queued.wait(), 2)
+    allow_close.set()
+    with pytest.raises(TraceWriteError):
+        await asyncio.wait_for(flush, 2)
+    with pytest.raises(TraceWriteError):
+        await trace.close()
 
 
 async def test_budget_checks_before_http_and_invalid_json_reuses_calculator(monkeypatch):

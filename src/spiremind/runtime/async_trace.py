@@ -37,6 +37,10 @@ class AsyncTraceWriter:
                 for handle in self.handles.values():
                     handle.flush()
 
+    def _close_handles(self):
+        for handle in self.handles.values():
+            handle.close()
+
     async def _consume(self):
         loop = asyncio.get_running_loop()
         try:
@@ -64,17 +68,17 @@ class AsyncTraceWriter:
                 if any(item[0] == "stop" for item in batch):
                     break
         finally:
-            while not self.queue.empty():
-                _, _, _, future = self.queue.get_nowait()
-                if future and not future.done():
-                    future.set_exception(self.error or TraceWriteError("trace_stopped"))
-                self.queue.task_done()
-
-            def close_handles():
-                for handle in self.handles.values():
-                    handle.close()
-
-            await loop.run_in_executor(self.executor, close_handles)
+            try:
+                await loop.run_in_executor(self.executor, self._close_handles)
+            finally:
+                # A producer may finish queue.put while handle closure awaits
+                # the worker. Settle those late acknowledgements before exiting;
+                # draining earlier can leave flush waiting on a dead consumer.
+                while not self.queue.empty():
+                    _, _, _, future = self.queue.get_nowait()
+                    if future and not future.done():
+                        future.set_exception(self.error or TraceWriteError("trace_stopped"))
+                    self.queue.task_done()
 
     async def _send(self, kind, filename="", text="", future=None):
         if self.error:
