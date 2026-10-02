@@ -21,7 +21,11 @@ from .validator import ActionValidator
 
 
 class ProviderFallbackLimit(EnvironmentError):
-    """Repeated model failures reached the configured safety limit."""
+    """Model recovery exceeded the configured time window."""
+
+
+class ProviderRetryPending(EnvironmentError):
+    """Retry the model without executing its fallback action."""
 
 
 class DecisionInterrupted(Exception):
@@ -56,7 +60,17 @@ class AgentRuntime:
         self.uncertain_actions = self.policy_rules = 0
         self.reconciled_actions = self.semantic_successes = 0
         self.provider_error_streak = self.max_provider_error_streak = 0
+        self.provider_failure_started = None
+        self.environment_failure_started = None
         self._last_traced_state: tuple[str, int] | None = None
+
+    def _recovery_clock(self):
+        return time.monotonic() - (self.control.paused_seconds if self.control else 0)
+
+    def _retry_remaining(self, failure_started):
+        if failure_started is None:
+            return self.config.runtime.error_retry_seconds
+        return max(0, self.config.runtime.error_retry_seconds - (self._recovery_clock() - failure_started))
 
     async def _checkpoint(self):
         if self.control and await self.control.checkpoint():
@@ -128,7 +142,17 @@ class AgentRuntime:
                 assert strategy is not None and context is not None
                 policy_state = self.progress.policy_state(state)
                 row["policy_action_count"] = len(policy_state.legal_actions)
-                decision = await strategy.decide(policy_state, context)
+                if self.provider_failure_started is None:
+                    decision = await strategy.decide(policy_state, context)
+                else:
+                    remaining = self._retry_remaining(self.provider_failure_started)
+                    if remaining <= 0:
+                        raise ProviderFallbackLimit("Model recovery exceeded error_retry_seconds")
+                    try:
+                        async with asyncio.timeout(remaining):
+                            decision = await strategy.decide(policy_state, context)
+                    except TimeoutError as error:
+                        raise ProviderFallbackLimit("Model recovery exceeded error_retry_seconds") from error
                 if strategy.last_context:
                     await resolve(self.trace.append("contexts.jsonl", asdict(strategy.last_context)))
             row.update(
@@ -155,10 +179,19 @@ class AgentRuntime:
                 self.max_provider_error_streak = max(
                     self.max_provider_error_streak, self.provider_error_streak
                 )
-                if self.provider_error_streak >= self.config.runtime.max_errors:
-                    raise ProviderFallbackLimit("Repeated provider failures reached max_errors")
+                if self.provider_failure_started is None:
+                    self.provider_failure_started = self._recovery_clock()
+                    print(
+                        f"Model unavailable; retrying for {self.config.runtime.error_retry_seconds:g}s",
+                        flush=True,
+                    )
+                row["action_sent"] = False
+                if self._retry_remaining(self.provider_failure_started) <= 0:
+                    raise ProviderFallbackLimit("Model recovery exceeded error_retry_seconds")
+                raise ProviderRetryPending("Model unavailable; waiting to retry")
             elif decision.context_id is not None:
                 self.provider_error_streak = 0
+                self.provider_failure_started = None
             self.fallbacks += int(decision.fallback)
             self.policy_rules += int(decision.policy_rule is not None)
             self.used_tokens += decision.input_tokens + decision.output_tokens
@@ -214,6 +247,7 @@ class AgentRuntime:
                 await self.memory.finish_run("victory" if new_state.victory else "death")
                 await resolve(self.trace.write_json("terminal-state.json", new_state.model_dump(mode="json")))
             self.consecutive_errors = 0
+            self.environment_failure_started = None
             return new_state
         except DecisionInterrupted:
             row["discarded_on_resume"] = True
@@ -253,7 +287,24 @@ class AgentRuntime:
                     outcome = "token_limit"
                     break
                 try:
-                    state = await self.step()
+                    if (
+                        self.provider_failure_started is not None
+                        and self._retry_remaining(self.provider_failure_started) <= 0
+                    ):
+                        raise ProviderFallbackLimit("Model recovery exceeded error_retry_seconds")
+                    if self.environment_failure_started is None:
+                        state = await self.step()
+                    else:
+                        remaining = self._retry_remaining(self.environment_failure_started)
+                        if remaining <= 0:
+                            outcome = "error_limit"
+                            break
+                        try:
+                            async with asyncio.timeout(remaining):
+                                state = await self.step()
+                        except TimeoutError:
+                            outcome = "error_limit"
+                            break
                     await resolve(self.trace.write_json("progress.json", self.summary("running", started)))
                     if state.terminal:
                         outcome = "victory" if state.victory else "death"
@@ -276,6 +327,11 @@ class AgentRuntime:
                 except ProviderFallbackLimit:
                     outcome = "error_limit"
                     break
+                except ProviderRetryPending:
+                    await resolve(
+                        self.trace.write_json("progress.json", self.summary("retrying_provider", started))
+                    )
+                    await asyncio.sleep(min(1, self._retry_remaining(self.provider_failure_started)))
                 except ValueError as error:
                     self.errors += 1
                     await resolve(
@@ -289,10 +345,16 @@ class AgentRuntime:
                     await resolve(
                         self.trace.append("errors.jsonl", {"error": type(error).__name__, "step": self.steps})
                     )
-                    if self.consecutive_errors >= rt.max_errors:
+                    if self.environment_failure_started is None:
+                        self.environment_failure_started = self._recovery_clock()
+                    remaining = self._retry_remaining(self.environment_failure_started)
+                    if remaining <= 0:
                         outcome = "error_limit"
                         break
-                    await asyncio.sleep(0.2 if isinstance(error, StaleDecision) else 1)
+                    await resolve(
+                        self.trace.write_json("progress.json", self.summary("retrying_environment", started))
+                    )
+                    await asyncio.sleep(min(remaining, 0.2 if isinstance(error, StaleDecision) else 1))
             else:
                 outcome = "step_limit"
         except BaseException:
@@ -330,7 +392,18 @@ class AgentRuntime:
             policy_rule_decisions=self.policy_rules,
             provider_error_streak=self.provider_error_streak,
             max_provider_error_streak=self.max_provider_error_streak,
+            error_retry_seconds=self.config.runtime.error_retry_seconds,
+            provider_failure_seconds=(
+                round(self._recovery_clock() - self.provider_failure_started, 2)
+                if self.provider_failure_started is not None
+                else 0
+            ),
             floor=state.run.floor if state else None,
+            environment_failure_seconds=(
+                round(self._recovery_clock() - self.environment_failure_started, 2)
+                if self.environment_failure_started is not None
+                else 0
+            ),
             character=state.run.character if state else None,
             game_version=state.game_version if state else None,
             model_requested=self.config.model.model if self.provider else None,

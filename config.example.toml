@@ -16,6 +16,7 @@ ascension = 0
 context_tokens = 4000
 max_context_tokens = 16000
 max_steps = 3000
+error_retry_seconds = 180 # Retry continuous model/bridge failures for up to 180 seconds.
 
 [strategy]
 combat_guards = true

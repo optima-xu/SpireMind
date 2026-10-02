@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import pytest
@@ -14,7 +15,7 @@ from spiremind.knowledge.cards import CardDB
 from spiremind.knowledge.library import StrategyLibrary
 from spiremind.memory.manager import MemoryManager
 from spiremind.memory.storage_sqlite import MemoryStore
-from spiremind.runtime.agent import AgentRuntime
+from spiremind.runtime.agent import AgentRuntime, ProviderFallbackLimit, ProviderRetryPending
 from spiremind.runtime.lifecycle import lifecycle_decision
 from spiremind.runtime.locking import SingleWriter
 from spiremind.runtime.router import SceneRouter
@@ -147,7 +148,14 @@ def test_lifecycle_closes_a_main_menu_submenu(states):
     assert decision.action == close
 
 
-async def test_repeated_provider_fallbacks_trip_error_limit(tmp_path):
+async def test_provider_retries_for_180_seconds_without_sending_actions(tmp_path, monkeypatch):
+    clock = [0.0]
+
+    async def retry_sleep(seconds):
+        clock[0] += 20
+
+    monkeypatch.setattr("spiremind.runtime.agent.asyncio.sleep", retry_sleep)
+
     class ProviderFailingStrategy:
         name = "event"
         last_context = None
@@ -166,13 +174,91 @@ async def test_repeated_provider_fallbacks_trip_error_limit(tmp_path):
     config = Config()
     config.runtime.max_errors = 2
     agent = AgentRuntime(env, MemoryManager(store), router, DeckAnalyzer(library), trace, config)
+    monkeypatch.setattr(agent, "_recovery_clock", lambda: clock[0])
 
     result = await agent.run()
 
     assert result["outcome"] == "error_limit"
-    assert result["errors"] == result["max_provider_error_streak"] == 2
-    assert result["fallbacks"] == result["verified_actions"] == len(env.executed) == 1
-    assert json.loads((trace.path / "final-state.json").read_text())["scene"] == "map"
+    assert result["errors"] == result["max_provider_error_streak"] == 9
+    assert result["provider_failure_seconds"] == 180
+    assert result["fallbacks"] == result["verified_actions"] == len(env.executed) == 0
+    assert json.loads((trace.path / "final-state.json").read_text())["scene"] == "event"
+    store.close()
+
+
+async def test_provider_success_resets_recovery_window(tmp_path, monkeypatch):
+    class RecoveringStrategy:
+        name = "event"
+        last_context = None
+        failing = True
+
+        async def decide(self, state, memory):
+            decision = conservative_choice(state, memory)
+            if self.failing:
+                decision.provider_error = "unavailable"
+            else:
+                decision.context_id = "successful-model-response"
+            return decision
+
+    store = MemoryStore(tmp_path / "memory.sqlite")
+    strategy = RecoveringStrategy()
+    env = MockEnvironment(demo_states()[2:])
+    agent = AgentRuntime(
+        env,
+        MemoryManager(store),
+        SceneRouter(strategy, strategy, strategy, strategy),
+        DeckAnalyzer(StrategyLibrary()),
+        TraceWriter(tmp_path / "runs", "recovery"),
+        Config(),
+    )
+    clock = [10.0]
+    monkeypatch.setattr(agent, "_recovery_clock", lambda: clock[0])
+    with pytest.raises(ProviderRetryPending):
+        await agent.step()
+    assert agent.provider_failure_started == 10
+    clock[0] = 100
+    strategy.failing = False
+    await agent.step()
+    assert agent.provider_failure_started is None
+    assert agent.provider_error_streak == 0
+    assert len(env.executed) == 1
+    strategy.failing = True
+    with pytest.raises(ProviderRetryPending):
+        await agent.step()
+    assert agent.provider_failure_started == 100
+    store.close()
+
+
+async def test_slow_provider_retry_is_cancelled_at_recovery_deadline(tmp_path):
+    class HangingStrategy:
+        name = "event"
+        last_context = None
+        cancelled = False
+
+        async def decide(self, state, memory):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                self.cancelled = True
+
+    store = MemoryStore(tmp_path / "memory.sqlite")
+    strategy = HangingStrategy()
+    env = MockEnvironment(demo_states()[2:])
+    config = Config()
+    config.runtime.error_retry_seconds = 0.02
+    agent = AgentRuntime(
+        env,
+        MemoryManager(store),
+        SceneRouter(strategy, strategy, strategy, strategy),
+        DeckAnalyzer(StrategyLibrary()),
+        TraceWriter(tmp_path / "runs", "deadline"),
+        config,
+    )
+    agent.provider_failure_started = agent._recovery_clock()
+    with pytest.raises(ProviderFallbackLimit):
+        await asyncio.wait_for(agent.step(), 1)
+    assert strategy.cancelled
+    assert not env.executed
     store.close()
 
 
@@ -198,6 +284,7 @@ async def test_completed_receipt_must_name_the_observed_next_decision(tmp_path):
     env = MismatchedReceiptEnvironment(demo_states()[2:])
     config = Config()
     config.runtime.max_errors = 1
+    config.runtime.error_retry_seconds = 0.001
     agent = AgentRuntime(
         env,
         MemoryManager(store),

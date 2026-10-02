@@ -53,7 +53,8 @@ class RuntimeConfig(Settings):
     runs_dir: Path = Path("runs")
     max_steps: int | None = Field(default=3000, ge=1)
     max_total_tokens: int | None = Field(default=None, ge=1)
-    max_errors: int = Field(default=6, ge=1)
+    max_errors: int = Field(default=6, ge=1)  # Legacy configs; recovery now uses elapsed time.
+    error_retry_seconds: float = Field(default=180, gt=0)
     max_seconds: float | None = Field(default=None, gt=0)
     context_tokens: int = Field(default=4000, ge=512)
     max_context_tokens: int = Field(default=16000, ge=1024)

@@ -135,3 +135,16 @@ max_total_tokens = false
 
 `--no-limits` 关闭步数、时间和累计 token 上限；配置中的 `false` 可分别关闭各项。
 配置修改需重启进程才能生效。单次请求的输出长度、重试次数、动作校验和错误保护仍按原配置工作。
+
+Continuous model or bridge failures retry for 180 seconds instead of stopping after
+six errors. Configure `[runtime] error_retry_seconds = 180`. Successful model responses
+/ verified actions reset their respective timers; manual pause time is excluded.
+Failed model decisions send no fallback action. Bridge recovery observes and reconciles
+pending actions before executing a fresh legal decision. `progress.json` reports
+`retrying_provider` or `retrying_environment`. The legacy `max_errors` setting is accepted
+but no longer controls recovery. `--no-limits` preserves this recovery deadline.
+
+模型或桥接连续失败时，在 180 秒内持续尝试，达到期限后退出；不再按 6 次错误停止。
+模型成功响应／动作核验成功分别重置计时，手动暂停时间不计入。
+模型失败时不发送回退动作；桥接恢复先观察并对账 pending，避免重复执行。
+可通过 `[runtime] error_retry_seconds = 180` 调整；`--no-limits` 不关闭这一恢复期限。
