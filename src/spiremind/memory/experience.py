@@ -362,8 +362,17 @@ class ExperienceStore:
             p = LessonProposal.model_validate_json(payload)
             if (p.game_version, p.character, p.owner, p.scene) != scope:
                 continue
-            if p.conditions.get("card") and p.conditions["card"] not in terms:
-                continue
+            if p.conditions.get("card"):
+                visible_cards = (
+                    state.combat.hand
+                    if state.combat
+                    else tuple(choice.card for choice in state.choices if choice.card)
+                )
+                if not any(
+                    c.id == p.conditions["card"] and c.upgraded == p.conditions.get("upgraded", False)
+                    for c in visible_cards
+                ):
+                    continue
             if p.conditions.get("powers", []) != powers:
                 continue
             skills.append(

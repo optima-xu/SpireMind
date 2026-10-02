@@ -117,6 +117,7 @@ class DeckAnalyzer:
             state.run.deck,
             state.run.relics,
             self.cards.generation if self.cards else 0,
+            self.library.knowledge_version,
         )
         found, profile = self.cache.get(key)
         if not found:

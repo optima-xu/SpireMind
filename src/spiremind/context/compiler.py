@@ -64,11 +64,21 @@ class ContextCompiler:
         return {key: memory[key] for key in priority if key in memory}
 
     @staticmethod
-    def _admit(payload: dict, name: str, content, limit: int) -> tuple[dict, bool]:
+    def _admit(payload: dict, name: str, content, limit: int, *, base_bytes=None) -> tuple[dict, bool]:
         """Admit a layer item-by-item, preserving its priority order."""
+        # Existing layers do not change while testing optional items. Encode the
+        # large live state once, then account for the new JSON member exactly.
+        base = {key: value for key, value in payload.items() if key != name}
+        fixed_bytes = (
+            (len(encode(base).encode("utf-8")) if base_bytes is None or name in payload else base_bytes)
+            + len(encode(name).encode("utf-8"))
+            + 1
+        )
+        fixed_bytes += int(bool(base))  # member separator; outer braces already counted
+        byte_budget = 3 * (limit - estimate_tokens(SYSTEM))
 
         def fits(value) -> bool:
-            return estimate_tokens(SYSTEM) + estimate_tokens(payload | {name: value}) <= limit
+            return fixed_bytes + len(encode(value).encode("utf-8")) <= byte_budget
 
         if fits(content):
             return payload | {name: content}, False
@@ -94,7 +104,8 @@ class ContextCompiler:
             else []
         )
         payload = {"L1_current_state": view, "L5_task": task}
-        core_size = estimate_tokens(SYSTEM) + estimate_tokens(payload)
+        payload_bytes = len(encode(payload).encode("utf-8"))
+        core_size = estimate_tokens(SYSTEM) + (payload_bytes + 2) // 3
         if core_size > self.budget.maximum:
             raise ContextOverflow(f"Required visible facts/actions exceed maximum: {core_size}")
         optional_reserve = max(600, estimate_tokens(enemy_guidance) + 100 if enemy_guidance else 0)
@@ -175,7 +186,11 @@ class ContextCompiler:
         for name, content in layers:
             if not content:
                 continue
-            payload, incomplete = self._admit(payload, name, content, limit)
+            separator = int(bool(payload))
+            payload, incomplete = self._admit(payload, name, content, limit, base_bytes=payload_bytes)
+            if name in payload:
+                payload_bytes += separator + len(encode(name).encode("utf-8")) + 1
+                payload_bytes += len(encode(payload[name]).encode("utf-8"))
             if incomplete:
                 dropped.append(name)
         user = encode(payload)

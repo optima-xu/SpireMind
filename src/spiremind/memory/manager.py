@@ -437,9 +437,16 @@ class MemoryManager:
         def write_evidence():
             self.experience.insert(episode, commit=False)
             if new_state.terminal or (old_state.combat and not new_state.combat):
-                self.experience.enqueue(self.run.instance_id, reason="scene_boundary", commit=False)
+                self.experience.enqueue(episode["lineage"], reason="scene_boundary", commit=False)
 
         if self.experience:
+            lineage = hashlib.sha256(
+                json.dumps(
+                    [old_state.game_version, old_state.run.character, old_state.run.id],
+                    sort_keys=True,
+                    ensure_ascii=False,
+                ).encode()
+            ).hexdigest()
             episode = self.experience.episode(
                 old_state,
                 action,
@@ -447,9 +454,11 @@ class MemoryManager:
                 producer,
                 consumer,
                 semantic_success,
-                self.run.instance_id,
+                lineage,
                 handoff,
             )
+            episode["instance_id"] = self.run.instance_id
+            episode["id"] = hashlib.sha256((self.run.instance_id + episode["id"]).encode()).hexdigest()
         self.store.save_context(
             self.run,
             {"schema_version": 3, "audit": audit},

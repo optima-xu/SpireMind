@@ -18,6 +18,8 @@ class AsyncCards:
         self.worker = worker
 
     async def lookup(self, ids, version):
+        if not ids:
+            return []
         return await self.worker.call(lambda: self.worker.cards.lookup(ids, version))
 
     async def count(self, version):

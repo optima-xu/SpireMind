@@ -82,7 +82,7 @@ async def probe(args):
             }[agent](compiler, None, conservative_choice)
             for round_index in range(args.rounds + 1):
                 if round_index == 0:
-                    for object_ in (cards, analyzer, getattr(memory, "experience", None)):
+                    for object_ in (cards, analyzer, library, getattr(memory, "experience", None)):
                         if object_ is not None and hasattr(object_, "cache"):
                             object_.cache.clear()
                 started = time.perf_counter_ns()

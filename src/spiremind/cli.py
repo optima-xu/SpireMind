@@ -142,7 +142,7 @@ async def execute(args):
         try:
             health = await env.health()
             if args.command == "sync-card-db":
-                with SingleWriter(live_lock):
+                with SingleWriter(live_lock), SingleWriter(root / "cards.maintenance.lock"):
                     db = CardDB(root / "cards.sqlite")
                     try:
                         db.put_many(await env.card_facts())
@@ -166,7 +166,7 @@ async def execute(args):
         finally:
             await env.close()
     if args.command == "import-card-db":
-        with SingleWriter(live_lock):
+        with SingleWriter(live_lock), SingleWriter(root / "cards.maintenance.lock"):
             db = CardDB(root / "cards.sqlite")
             try:
                 return {"imported": db.import_json(args.path)}
@@ -220,6 +220,7 @@ async def execute(args):
             library = StrategyLibrary()
             memory_path = root / ("mock-memory.sqlite" if is_mock else "memory.sqlite")
             stack.enter_context(SingleWriter(memory_path.with_suffix(".maintenance.lock")))
+            stack.enter_context(SingleWriter(root / "cards.maintenance.lock"))
             memory = await AsyncMemory.create(
                 root / ("mock-memory.sqlite" if is_mock else "memory.sqlite"), root / "cards.sqlite", library
             )

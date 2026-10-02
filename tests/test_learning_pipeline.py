@@ -18,6 +18,7 @@ from spiremind.memory.async_store import AsyncMemory
 from spiremind.memory.evidence_io import import_evidence
 from spiremind.memory.experience import ExperienceStore, LessonProposal
 from spiremind.memory.manager import MemoryManager
+from spiremind.memory.reflection import ReflectionAgent
 from spiremind.memory.storage_sqlite import MemoryStore
 from spiremind.providers.openai import OpenAIProvider, retry_after_seconds
 from spiremind.providers.protocols import BudgetExceeded, RequestBudget
@@ -189,6 +190,14 @@ def test_learned_promotion_contradiction_and_holdout_exclusion(states, tmp_path)
     assert store.propose(p)["status"] == "active"
     view = store.retrieve(states[4], "combat")
     assert len(view["skills"]) == 1
+    upgraded = states[4].model_copy(
+        update={
+            "combat": states[4].combat.model_copy(
+                update={"hand": tuple(c.model_copy(update={"upgraded": True}) for c in states[4].combat.hand)}
+            )
+        }
+    )
+    assert store.retrieve(upgraded, "combat")["skills"] == []
     assert held["id"] not in json.dumps(view)
     assert store.retrieve(states[4], "run")["skills"] == []
     contrary = evidence(store, states[4], "seed4", block=4)
@@ -257,6 +266,77 @@ async def test_combat_private_goal_cannot_write_runtime_hp_flag(states, tmp_path
     assert manager.run.policy_version == 0
     assert manager.working.lost_hp_this_turn is False
     store.close()
+
+
+async def test_same_seed_new_instances_do_not_inflate_lesson_support(states, tmp_path):
+    store = MemoryStore(tmp_path / "memory.sqlite")
+    manager = MemoryManager(store)
+    manager.experience = ExperienceStore(store.db)
+    state = states[4]
+    action = next(a for a in state.legal_actions if a.card_id == "c1")
+    after = state.model_copy(
+        update={
+            "revision": state.revision + 1,
+            "decision_id": "new",
+            "combat": state.combat.model_copy(update={"block": state.combat.block + 5}),
+        }
+    )
+    instances = set()
+    for _ in range(3):
+        manager.begin_run(state)
+        instances.add(manager.run.instance_id)
+        await manager.update(state, action, after, producer="combat")
+    assert len(instances) == 3
+    assert store.db.execute("SELECT COUNT(*) FROM episodes").fetchone()[0] == 3
+    assert store.db.execute("SELECT COUNT(DISTINCT lineage) FROM episodes").fetchone()[0] == 1
+    assert manager.experience.consolidate() == []
+    store.close()
+
+
+async def test_reflection_bounded_queue_cancellation_and_resume(tmp_path, states):
+    worker = await AsyncMemory.create(
+        tmp_path / "memory.sqlite", tmp_path / "cards.sqlite", StrategyLibrary()
+    )
+
+    def prepare_jobs():
+        for n in range(12):
+            evidence(worker.experience, states[4], f"seed{n}")
+            worker.experience.enqueue(f"seed{n}")
+
+    await worker.call(prepare_jobs)
+    started = asyncio.Event()
+
+    class Slow:
+        async def reflect(self, data):
+            started.set()
+            await asyncio.Event().wait()
+
+    first = ReflectionAgent(worker, Slow())
+    await first.notify()
+    await asyncio.wait_for(started.wait(), 2)
+    assert first.queue.qsize() <= 8
+    first.task.cancel()
+    await asyncio.gather(first.task, return_exceptions=True)
+    await first.close()
+    assert (await worker.call(worker.experience.inspect))["reflection_jobs"] == {"pending": 12}
+    completed = asyncio.Event()
+
+    class Fast:
+        calls = 0
+
+        async def reflect(self, data):
+            self.calls += 1
+            if self.calls == 12:
+                completed.set()
+            return []
+
+    provider = Fast()
+    second = ReflectionAgent(worker, provider)
+    await second.notify()
+    await asyncio.wait_for(completed.wait(), 5)
+    await second.close()
+    assert (await worker.call(worker.experience.inspect))["reflection_jobs"] == {"complete": 12}
+    await worker.close()
 
 
 async def test_trace_backpressure_cancel_drain_and_failure(tmp_path):

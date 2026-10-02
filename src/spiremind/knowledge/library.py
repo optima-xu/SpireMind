@@ -1,8 +1,11 @@
+import hashlib
 from pathlib import Path
+from threading import RLock
 
 import yaml
 from pydantic import BaseModel, ConfigDict
 
+from spiremind.core.cache import LRU
 from spiremind.core.state import GameState
 
 
@@ -31,11 +34,16 @@ class StrategyPackage(BaseModel):
 class StrategyLibrary:
     def __init__(self, root: Path | None = None):
         root = root or Path(__file__).parent / "strategies"
-        self.packages = [
+        self.packages = tuple(
             StrategyPackage.model_validate(p)
             for path in sorted(root.glob("*/*.yaml"))
             for p in yaml.safe_load(path.read_text(encoding="utf-8"))
-        ]
+        )
+        self.knowledge_version = hashlib.sha256(
+            "".join(p.model_dump_json() for p in self.packages).encode()
+        ).hexdigest()
+        self.cache = LRU(128)
+        self._cache_lock = RLock()
 
     def scores(self, state: GameState) -> list[tuple[float, StrategyPackage]]:
         """Return persistent deck fit scores.
@@ -43,6 +51,23 @@ class StrategyLibrary:
         The score deliberately excludes the current hand. A shuffled draw must not
         make the long-lived run memory oscillate between archetypes.
         """
+        key = (
+            self.knowledge_version,
+            state.game_version,
+            state.run.character,
+            tuple((c.id, c.count) for c in state.run.deck),
+            tuple(r.id for r in state.run.relics),
+        )
+        with self._cache_lock:
+            found, scores = self.cache.get(key)
+        if found:
+            return list(scores)
+        result = self._scores(state)
+        with self._cache_lock:
+            self.cache.put(key, tuple(result))
+        return result
+
+    def _scores(self, state):
         deck = [card.id for card in state.run.deck for _ in range(card.count)]
         present = set(deck) | {r.id for r in state.run.relics}
         result = []
