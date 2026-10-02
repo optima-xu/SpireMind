@@ -277,7 +277,7 @@ async def test_missing_usage_is_estimated_for_runtime_budget(settings):
 
     result = await provider.choose(CTX, {"A"})
 
-    assert result.input_tokens == CTX.estimated_tokens
-    assert result.output_tokens > 0
-    assert provider.input_tokens == CTX.estimated_tokens
+    assert result.input_tokens >= CTX.estimated_tokens
+    assert result.output_tokens == settings.max_tokens
+    assert provider.input_tokens == result.input_tokens
     await provider.close()

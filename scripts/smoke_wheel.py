@@ -17,7 +17,7 @@ def main() -> None:
         venv.EnvBuilder(with_pip=True).create(environment)
         python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
         subprocess.run(
-            [str(python), "-m", "pip", "install", "--no-deps", str(wheels[-1])],
+            [str(python), "-m", "pip", "install", str(wheels[-1])],
             check=True,
         )
         code = (
@@ -34,6 +34,27 @@ def main() -> None:
             "assert any('Slow increases' in tip for tip in b['strategy'])"
         )
         subprocess.run([str(python), "-c", code], check=True)
+        result = subprocess.run(
+            [str(python), "-m", "spiremind", "run", "--environment", "mock", "--policy", "rules"],
+            cwd=environment,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        import json
+
+        walkthrough = json.loads(result.stdout)
+        assert walkthrough["complete"] and walkthrough["verified_actions"] == 10
+        benchmark_path = environment / "benchmark.json"
+        subprocess.run(
+            [str(python), "-m", "spiremind", "benchmark", "--rounds", "1", "--output", str(benchmark_path)],
+            cwd=environment,
+            text=True,
+            capture_output=True,
+            check=True,
+        )
+        assert json.loads(benchmark_path.read_text())["cases"] == 16
+        print("Isolated wheel: packaged knowledge, 10 verified actions and offline benchmark passed.")
 
 
 if __name__ == "__main__":

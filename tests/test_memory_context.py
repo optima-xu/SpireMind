@@ -6,6 +6,7 @@ from spiremind.context.budget import ContextBudget, ContextOverflow
 from spiremind.context.compiler import ContextCompiler
 from spiremind.context.views import state_view
 from spiremind.core.decision import StrategyUpdate
+from spiremind.core.enums import Scene
 from spiremind.core.state import Card, Power, PublicFacts
 from spiremind.knowledge.cards import CardDB, CardFact
 from spiremind.knowledge.library import StrategyLibrary
@@ -245,8 +246,10 @@ async def test_strategy_updates_are_scene_scoped_bounded_and_auditable(states, t
             gold_policy="Reserve enough gold for removal",
         ),
     )
-    assert set(bounded["applied"]) == {"boss_plan", "potion_policy"}
-    assert bounded["rejected"] == {"gold_policy": "persistent_change_limit"}
+    assert bounded["applied"] == {}
+    assert bounded["rejected"] == {
+        key: "field_owned_by_run" for key in ("boss_plan", "potion_policy", "gold_policy")
+    }
     store.close()
 
 
@@ -294,8 +297,18 @@ async def test_context_snapshots_are_complete_deduplicated_and_retained(states, 
     duplicate = await memory.context_for(states[4], "combat")
     assert first.snapshot_id == duplicate.snapshot_id
     snapshot = store.load_snapshot(first.snapshot_id)
-    assert snapshot["schema_version"] == 2
-    assert set(snapshot) == {"schema_version", "agent", "run", "working", "skills"}
+    assert snapshot["schema_version"] == 3
+    assert set(snapshot) == {
+        "schema_version",
+        "agent",
+        "run",
+        "working",
+        "skills",
+        "instance_id",
+        "policy_version",
+        "handoff",
+        "experiences",
+    }
 
     memory.working.current_goal = "goal two"
     second = await memory.context_for(states[4], "combat")
@@ -438,7 +451,9 @@ async def test_deck_facts_ground_roles_and_reject_false_strength_plan(states, tm
             ("barricade", "壁垒"),
         )
     )
-    state = states[3].model_copy(update={"run": states[3].run.model_copy(update={"deck": deck})})
+    state = states[3].model_copy(
+        update={"scene": Scene.SHOP, "run": states[3].run.model_copy(update={"deck": deck})}
+    )
     analysis = DeckAnalyzer(StrategyLibrary(), db).analyze(state)
     assert analysis["needs"]["aoe"] == 0
     assert analysis["needs"]["scaling"] == 0

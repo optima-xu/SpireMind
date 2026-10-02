@@ -297,9 +297,7 @@ async def test_strategy_update_proposal_and_validation_are_traced(tmp_path):
     record = json.loads((trace.path / "decisions.jsonl").read_text())
     assert record["strategy_update"]["gold_policy"] == "Save for a strong removal."
     assert record["strategy_update_audit"]["applied"] == {"gold_policy": "Save for a strong removal."}
-    assert record["strategy_update_audit"]["rejected"] == {
-        "route_preferences": "route_preferences_require_map_scene"
-    }
+    assert record["strategy_update_audit"]["rejected"] == {"route_preferences": "field_owned_by_map"}
     store.close()
 
 

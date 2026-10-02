@@ -7,6 +7,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from spiremind.core.cache import LRU
 from spiremind.core.state import PublicFacts
 
 
@@ -40,6 +41,13 @@ class CardDB:
             "CREATE TABLE IF NOT EXISTS card_sets (version TEXT PRIMARY KEY, source_version TEXT, "
             "content_sha256 TEXT, card_count INTEGER)"
         )
+        self.cache = LRU(1024)
+        self.generation = 0
+        self.lookup_queries = 0
+
+    def _invalidate(self):
+        self.generation += 1
+        self.cache.clear()
 
     def put(self, fact: CardFact):
         with self.db:
@@ -48,6 +56,7 @@ class CardDB:
                 (fact.game_version, fact.card_id, fact.upgraded, fact.model_dump_json()),
             )
             self._refresh_metadata(fact.game_version)
+        self._invalidate()
 
     @staticmethod
     def _digest(facts: Iterable[CardFact]) -> str:
@@ -89,6 +98,7 @@ class CardDB:
                     "INSERT OR REPLACE INTO card_sets VALUES (?,?,?,?)",
                     (version, sources, self._digest(version_facts), len(version_facts)),
                 )
+        self._invalidate()
         return sum(len(group) for group in groups.values())
 
     def lookup(self, ids: set[str] | set[tuple[str, bool]], version: str) -> list[CardFact]:
@@ -97,25 +107,32 @@ class CardDB:
         A bare id means the base card for backward compatibility. Callers that
         know runtime upgrade state should pass ``(id, upgraded)`` pairs.
         """
-        requested: dict[str, set[bool]] = defaultdict(set)
-        for identity in ids:
-            if isinstance(identity, tuple):
-                card_id, upgraded = identity
-                requested[card_id].add(upgraded)
-            else:
-                requested[identity].add(False)
-        if not requested:
-            return []
-        placeholders = ",".join("?" for _ in requested)
-        rows = self.db.execute(
-            f"SELECT id,upgraded,payload FROM cards WHERE version=? AND id IN ({placeholders})",  # noqa: S608
-            (version, *sorted(requested)),
-        )
-        result = [
-            CardFact.model_validate_json(payload)
-            for card_id, upgraded, payload in rows
-            if bool(upgraded) in requested[card_id]
-        ]
+        requested = {(item if isinstance(item, tuple) else (item, False)) for item in ids}
+        missing, result = set(), []
+        for card_id, upgraded in sorted(requested):
+            found, fact = self.cache.get((self.generation, version, card_id, upgraded))
+            if not found:
+                missing.add((card_id, upgraded))
+            elif fact is not None:
+                result.append(fact)
+        # Negative entries are cached too; an unknown card must not cause a query per turn.
+        if missing:
+            names = sorted({identity[0] for identity in missing})
+            placeholders = ",".join("?" for _ in names)
+            self.lookup_queries += 1
+            rows = self.db.execute(
+                f"SELECT id,upgraded,payload FROM cards WHERE version=? AND id IN ({placeholders})",
+                (version, *names),
+            )
+            fetched = {
+                (name, bool(upgraded)): CardFact.model_validate_json(payload)
+                for name, upgraded, payload in rows
+            }
+            for card_id, upgraded in sorted(missing):
+                fact = fetched.get((card_id, upgraded))
+                self.cache.put((self.generation, version, card_id, upgraded), fact)
+                if fact is not None:
+                    result.append(fact)
         return sorted(result, key=lambda fact: (fact.card_id, fact.upgraded))
 
     def count(self, version: str) -> int:

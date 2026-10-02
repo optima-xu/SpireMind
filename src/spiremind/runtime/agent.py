@@ -6,9 +6,11 @@ from datetime import UTC, datetime
 import httpx
 
 from spiremind.config import Config
+from spiremind.core.async_utils import resolve
 from spiremind.core.enums import ActionKind
 from spiremind.environment.base import EnvironmentError, GameEnvironment, StaleDecision
 from spiremind.memory.manager import MemoryManager
+from spiremind.providers.protocols import BudgetExceeded
 from spiremind.strategies.run import DeckAnalyzer
 
 from .lifecycle import lifecycle_decision
@@ -32,9 +34,11 @@ class AgentRuntime:
         trace: TraceWriter,
         config: Config,
         provider=None,
+        reflection=None,
     ):
         self.env, self.memory, self.router = env, memory, router
         self.analyzer, self.trace, self.config, self.provider = analyzer, trace, config, provider
+        self.reflection = reflection
         self.validator = ActionValidator()
         self.progress = ProgressGuard()
         self.last_state = None
@@ -47,10 +51,10 @@ class AgentRuntime:
         self.provider_error_streak = self.max_provider_error_streak = 0
         self._last_traced_state: tuple[str, int] | None = None
 
-    def _trace_state(self, state) -> None:
+    async def _trace_state(self, state) -> None:
         identity = (state.decision_id, state.revision)
         if identity != self._last_traced_state:
-            self.trace.append("states.jsonl", state.model_dump(mode="json"))
+            await resolve(self.trace.append("states.jsonl", state.model_dump(mode="json")))
             self._last_traced_state = identity
 
     async def step(self):
@@ -59,22 +63,27 @@ class AgentRuntime:
         if self.started_scene is None:
             self.started_scene = state.scene.value
         self.last_state = state
-        self._trace_state(state)
+        await self._trace_state(state)
         can_clear_initial_terminal = self.steps == 0 and any(
             action.kind == ActionKind.RETURN_TO_MAIN_MENU for action in state.legal_actions
         )
         if state.terminal and not can_clear_initial_terminal:
-            self.memory.ensure_run(state)
+            await resolve(self.memory.ensure_run(state))
             await self.memory.finish_run("victory" if state.victory else "death")
-            self.trace.write_json("terminal-state.json", state.model_dump(mode="json"))
+            await resolve(self.trace.write_json("terminal-state.json", state.model_dump(mode="json")))
             return state
         lifecycle = lifecycle_decision(state, self.config.game)
         strategy = None
         context = None
         if lifecycle is None:
             strategy = self.router.route(state)
-            self.memory.apply_analysis(state, self.analyzer.analyze(state))
-            context = await self.memory.context_for(state, strategy.name)
+            preparation_started = time.monotonic()
+            if hasattr(self.memory, "prepare"):
+                context = await self.memory.prepare(state, strategy.name)
+            else:
+                self.memory.apply_analysis(state, self.analyzer.analyze(state))
+                context = await self.memory.context_for(state, strategy.name)
+            preparation_ms = (time.monotonic() - preparation_started) * 1000
         row = dict(
             run_id=state.run.id,
             decision_id=state.decision_id,
@@ -84,6 +93,9 @@ class AgentRuntime:
             scene=state.scene.value,
             strategy_name=strategy.name if strategy else "lifecycle",
             memory_snapshot_id=context.snapshot_id if context else None,
+            run_instance_id=context.instance_id if context else None,
+            policy_version=context.policy_version if context else None,
+            preparation_ms=preparation_ms if context else 0,
             action=None,
             legal_action_count=len(state.legal_actions),
             model_name=None,
@@ -100,7 +112,7 @@ class AgentRuntime:
                 row["policy_action_count"] = len(policy_state.legal_actions)
                 decision = await strategy.decide(policy_state, context)
                 if strategy.last_context:
-                    self.trace.append("contexts.jsonl", asdict(strategy.last_context))
+                    await resolve(self.trace.append("contexts.jsonl", asdict(strategy.last_context)))
             row.update(
                 action=decision.action.model_dump(mode="json"),
                 model_name=decision.model_name,
@@ -138,7 +150,7 @@ class AgentRuntime:
             row["execution_result"] = receipt.model_dump()
             new_state = await self.env.observe()
             self.last_state = new_state
-            self._trace_state(new_state)
+            await self._trace_state(new_state)
             transition_ok = await self.env.verify(state, decision.action, new_state)
             identity_ok = (
                 receipt.action_id == decision.action.id and receipt.previous_decision_id == state.decision_id
@@ -154,13 +166,14 @@ class AgentRuntime:
             row["reconciled_after_pending"] = ok and receipt.status == "pending"
             row["verify_ok"] = ok
             if not ok:
-                self.memory.working.invalidate_plan()
+                await resolve(self.memory.invalidate_plan())
                 raise EnvironmentError("Action transition verification failed")
             self.verified += 1
             self.reconciled_actions += int(reconciled)
             self.semantic_successes += int(semantic_success)
             if decision.action.kind == ActionKind.EMBARK:
                 self.started_new_run = True
+                await resolve(self.memory.begin_run(new_state))
             self.progress.confirmed(state, decision.action, new_state)
             strategy_update_audit = None
             if lifecycle is None:
@@ -170,12 +183,16 @@ class AgentRuntime:
                     new_state,
                     decision.strategy_update,
                     semantic_success=semantic_success,
+                    producer=strategy.name,
+                    expected_policy_version=context.policy_version,
                 )
             if strategy_update_audit is not None:
                 row["strategy_update_audit"] = strategy_update_audit
+            if self.reflection:
+                await self.reflection.notify()
             if new_state.terminal:
                 await self.memory.finish_run("victory" if new_state.victory else "death")
-                self.trace.write_json("terminal-state.json", new_state.model_dump(mode="json"))
+                await resolve(self.trace.write_json("terminal-state.json", new_state.model_dump(mode="json")))
             self.consecutive_errors = 0
             return new_state
         except Exception as error:
@@ -185,11 +202,13 @@ class AgentRuntime:
                 if isinstance(error, (ValueError, EnvironmentError))
                 else type(error).__name__
             )
-            self.memory.working.invalidate_plan()
+            await resolve(self.memory.invalidate_plan())
             raise
         finally:
             row["latency_ms"] = round((time.monotonic() - started) * 1000, 2)
-            self.trace.append("decisions.jsonl", row)
+            await resolve(self.trace.append("decisions.jsonl", row))
+            if self.provider and hasattr(self.provider, "request_records"):
+                await resolve(self.trace.write_json("model-requests.json", self.provider.request_records))
             self.steps += 1
 
     async def run(self) -> dict:
@@ -210,7 +229,7 @@ class AgentRuntime:
                     break
                 try:
                     state = await self.step()
-                    self.trace.write_json("progress.json", self.summary("running", started))
+                    await resolve(self.trace.write_json("progress.json", self.summary("running", started)))
                     if state.terminal:
                         outcome = "victory" if state.victory else "death"
                         break
@@ -220,6 +239,9 @@ class AgentRuntime:
                             f"scene={state.scene.value}",
                             flush=True,
                         )
+                except BudgetExceeded:
+                    outcome = "token_limit"
+                    break
                 except NoProgress:
                     self.errors += 1
                     outcome = "stalled"
@@ -229,13 +251,17 @@ class AgentRuntime:
                     break
                 except ValueError as error:
                     self.errors += 1
-                    self.trace.append("errors.jsonl", {"error": type(error).__name__, "step": self.steps})
+                    await resolve(
+                        self.trace.append("errors.jsonl", {"error": type(error).__name__, "step": self.steps})
+                    )
                     outcome = "invalid_state"
                     break
                 except (EnvironmentError, httpx.TransportError) as error:
                     self.errors += 1
                     self.consecutive_errors += 1
-                    self.trace.append("errors.jsonl", {"error": type(error).__name__, "step": self.steps})
+                    await resolve(
+                        self.trace.append("errors.jsonl", {"error": type(error).__name__, "step": self.steps})
+                    )
                     if self.consecutive_errors >= rt.max_errors:
                         outcome = "error_limit"
                         break
@@ -247,11 +273,13 @@ class AgentRuntime:
             raise
         finally:
             if self.last_state is not None:
-                self._trace_state(self.last_state)
-                self.trace.write_json("final-state.json", self.last_state.model_dump(mode="json"))
+                await self._trace_state(self.last_state)
+                await resolve(
+                    self.trace.write_json("final-state.json", self.last_state.model_dump(mode="json"))
+                )
             summary = self.summary(outcome, started)
-            self.trace.write_json("summary.json", summary)
-            self.trace.write_json("progress.json", summary)
+            await resolve(self.trace.write_json("summary.json", summary))
+            await resolve(self.trace.write_json("progress.json", summary))
         return summary
 
     def summary(self, outcome: str, started: float) -> dict:

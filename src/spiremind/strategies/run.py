@@ -1,6 +1,8 @@
 import re
+from copy import deepcopy
 
 from spiremind.context.route_horizon import last_known_shop_before_boss
+from spiremind.core.cache import LRU
 from spiremind.core.decision import Decision
 from spiremind.core.enums import ActionKind, Scene
 from spiremind.core.state import GameState
@@ -101,6 +103,7 @@ class DeckAnalyzer:
     def __init__(self, library: StrategyLibrary, cards: CardDB | None = None):
         self.library = library
         self.cards = cards
+        self.cache = LRU(128)
 
     @staticmethod
     def _starter(card_id: str) -> bool:
@@ -108,6 +111,23 @@ class DeckAnalyzer:
         return value == "bash" or value.startswith(("strike", "defend"))
 
     def analyze(self, state: GameState) -> dict:
+        key = (
+            state.game_version,
+            state.run.character,
+            state.run.deck,
+            state.run.relics,
+            self.cards.generation if self.cards else 0,
+        )
+        found, profile = self.cache.get(key)
+        if not found:
+            profile = self._compute(state)
+            self.cache.put(key, profile)
+        result = deepcopy(profile)
+        factor = result.pop("_readiness_factor")
+        result["elite_readiness"] = round(state.run.hp / max(1, state.run.max_hp) * factor, 3)
+        return result
+
+    def _compute(self, state: GameState) -> dict:
         deck = state.run.deck
         facts = (
             {
@@ -180,7 +200,7 @@ class DeckAnalyzer:
         scores = {package.archetype: score for score, package in self.library.scores(state)}
         improvements = sum(card.count for card in deck if not self._starter(card.id))
         improvement_quality = min(1.0, improvements / max(3, total_cards * 0.2))
-        readiness = (state.run.hp / max(1, state.run.max_hp)) * (
+        readiness = (
             0.25 + 0.35 * (1 - needs["block"]) + 0.25 * (1 - needs["scaling"]) + 0.15 * improvement_quality
         )
         metrics = {}
@@ -199,6 +219,6 @@ class DeckAnalyzer:
             needs=needs,
             strengths=[key for key, value in needs.items() if value < 0.25 and meaningful[key] > 0],
             weaknesses=[k for k, v in needs.items() if v > 0.6],
-            elite_readiness=round(readiness, 3),
+            _readiness_factor=readiness,
             derived_metrics=metrics,
         )

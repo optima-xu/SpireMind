@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "spiremind"
-version = "0.1.0"
-description = "Observable Slay the Spire 2 agent with bounded context and persistent strategy memory"
+version = "0.2.0"
+description = "Observable multi-agent runtime with evidence-backed learning and bounded asynchronous I/O"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -68,6 +68,10 @@ include = [
   "config.deepseek.example.toml",
   "docs/ACCEPTANCE.md",
   "docs/ARCHITECTURE_IMPROVEMENTS.md",
+  "docs/MULTI_AGENT_MEMORY.md",
+  "docs/PERFORMANCE.md",
+  "docs/INTERVIEW.md",
+  "docs/benchmarks",
   "docs/DEATH_REVIEW.md",
   "docs/DEPLOYMENT.md",
   "docs/ENEMY_BESTIARY_v0.111.0.md",

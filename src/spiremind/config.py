@@ -64,11 +64,19 @@ class StrategyConfig(Settings):
     boss_potion_damage_fraction: float = Field(default=0.20, gt=0, le=1)
 
 
+class MemoryConfig(Settings):
+    enabled: bool = True
+    reflection_use_model: bool = False
+    reflection_requests: int = Field(default=4, ge=1, le=4)
+    reflection_tokens: int = Field(default=12000, ge=1, le=12000)
+
+
 class Config(Settings):
     model: ModelConfig = Field(default_factory=ModelConfig)
     game: GameConfig = Field(default_factory=GameConfig)
     runtime: RuntimeConfig = Field(default_factory=RuntimeConfig)
     strategy: StrategyConfig = Field(default_factory=StrategyConfig)
+    memory: MemoryConfig = Field(default_factory=MemoryConfig)
 
     @classmethod
     def load(cls, path: Path | None = None):

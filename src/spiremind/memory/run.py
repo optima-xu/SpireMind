@@ -1,9 +1,16 @@
+from uuid import uuid4
+
 from pydantic import BaseModel, Field
 
 
 class RunMemory(BaseModel):
     run_id: str
     game_version: str
+    instance_id: str = Field(default_factory=lambda: uuid4().hex)
+    policy_version: int = 0
+    last_floor: int = 0
+    last_act: int | None = 1
+    last_character: str = ""
     archetype_scores: dict[str, float] = Field(default_factory=dict)
     needs: dict[str, float] = Field(default_factory=dict)
     strengths: list[str] = Field(default_factory=list)

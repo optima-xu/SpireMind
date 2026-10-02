@@ -16,18 +16,22 @@ from spiremind.environment.mock import MockEnvironment
 from spiremind.knowledge.cards import CardDB
 from spiremind.knowledge.enemies import EnemyKnowledge
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.manager import MemoryManager
+from spiremind.memory.async_store import AsyncMemory
+from spiremind.memory.experience import ExperienceStore, import_history
+from spiremind.memory.reflection import ReflectionAgent
 from spiremind.memory.storage_sqlite import MemoryStore
 from spiremind.providers.openai import OpenAIProvider
+from spiremind.providers.protocols import RequestBudget
 from spiremind.runtime.agent import AgentRuntime
+from spiremind.runtime.async_trace import AsyncTraceWriter
 from spiremind.runtime.locking import SingleWriter
 from spiremind.runtime.router import SceneRouter
-from spiremind.runtime.trace import TraceWriter, replay_summary
+from spiremind.runtime.trace import replay_summary
 from spiremind.strategies.combat import CombatStrategy
 from spiremind.strategies.event import EventStrategy
 from spiremind.strategies.fallback import conservative_choice
 from spiremind.strategies.map import MapStrategy
-from spiremind.strategies.run import DeckAnalyzer, RunStrategy
+from spiremind.strategies.run import RunStrategy
 
 
 def canonical_bridge_url(value: str) -> str:
@@ -71,6 +75,32 @@ def safe_extra_body(value: dict) -> dict:
 
 async def execute(args):
     config = Config.load(args.config)
+    if args.command == "benchmark":
+        from spiremind.benchmark import benchmark
+
+        return await benchmark(args, config)
+    if args.command == "memory":
+        path = args.database or config.runtime.runs_dir / "memory.sqlite"
+        with SingleWriter(path.with_suffix(".maintenance.lock")):
+            store = MemoryStore(path)
+            try:
+                experience = ExperienceStore(store.db)
+                if args.memory_command == "import":
+                    if args.path.is_file():
+                        from spiremind.memory.evidence_io import import_evidence
+
+                        return import_evidence(experience, args.path)
+                    return import_history(experience, args.path)
+                if args.memory_command == "consolidate":
+                    if args.use_model:
+                        from spiremind.memory.commands import consolidate_model
+
+                        return await consolidate_model(experience, config)
+                    results = experience.consolidate()
+                    return {"proposals": len(results), "memory": experience.inspect()}
+                return experience.inspect()
+            finally:
+                store.close()
     if args.command == "replay":
         return replay_summary(args.path)
     root = config.runtime.runs_dir.expanduser().resolve()
@@ -156,7 +186,7 @@ async def execute(args):
     mode = ("mock_model" if args.policy == "model" else "mock_rules") if is_mock else "live"
     run_lock = root / "mock.lock" if is_mock else live_lock
     with SingleWriter(run_lock):
-        trace = TraceWriter(
+        trace = AsyncTraceWriter(
             root,
             mode,
             configuration={
@@ -183,34 +213,37 @@ async def execute(args):
             },
         )
         async with AsyncExitStack() as stack:
+            stack.push_async_callback(trace.close)
             env = MockEnvironment() if is_mock else MCPEnvironment(config.game, root / f"pending-{key}.json")
             if not is_mock:
                 stack.push_async_callback(env.close)
-            store = MemoryStore(root / ("mock-memory.sqlite" if is_mock else "memory.sqlite"))
-            stack.callback(store.close)
-            cards = CardDB(root / "cards.sqlite")
-            stack.callback(cards.close)
+            library = StrategyLibrary()
+            memory_path = root / ("mock-memory.sqlite" if is_mock else "memory.sqlite")
+            stack.enter_context(SingleWriter(memory_path.with_suffix(".maintenance.lock")))
+            memory = await AsyncMemory.create(
+                root / ("mock-memory.sqlite" if is_mock else "memory.sqlite"), root / "cards.sqlite", library
+            )
+            stack.push_async_callback(memory.close)
+            cards = memory.card_gateway
             enemy_knowledge = EnemyKnowledge()
             if not is_mock:
                 health = await env.health()
-                trace.write_json("bridge-health.json", health)
+                await trace.write_json("bridge-health.json", health)
                 env.raw_sink = lambda state: trace.append("bridge-observations.jsonl", state)
                 facts = await env.card_facts()
-                if cards.needs_sync(env.game_version, facts=facts):
-                    cards.put_many(facts)
-                trace.write_json(
+                await cards.sync(env.game_version, facts)
+                await trace.write_json(
                     "knowledge.json",
                     {
                         "game_version": env.game_version,
-                        "card_facts": cards.count(env.game_version),
-                        "metadata": cards.metadata(env.game_version),
+                        "card_facts": await cards.count(env.game_version),
+                        "metadata": await cards.metadata(env.game_version),
                         "enemy_knowledge": enemy_knowledge.metadata(),
                     },
                 )
             provider = OpenAIProvider(config.model) if args.policy == "model" else None
             if provider:
                 stack.push_async_callback(provider.close)
-            library = StrategyLibrary()
             compiler = ContextCompiler(
                 library,
                 cards,
@@ -225,16 +258,49 @@ async def execute(args):
                 )
                 for cls in (CombatStrategy, RunStrategy, MapStrategy, EventStrategy)
             ]
+            shared_budget = RequestBudget(1_000_000, config.runtime.max_total_tokens or 10**15)
+            if provider:
+                provider.budget = shared_budget
+            reflection_provider = None
+            if config.memory.reflection_use_model:
+                reflection_provider = OpenAIProvider(
+                    config.model,
+                    budget=RequestBudget(
+                        config.memory.reflection_requests,
+                        config.memory.reflection_tokens,
+                        parent=shared_budget,
+                    ),
+                )
+                stack.push_async_callback(reflection_provider.close)
+            reflection = ReflectionAgent(memory, reflection_provider)
+            stack.push_async_callback(reflection.close)
+            await reflection.notify()
             runtime = AgentRuntime(
                 env,
-                MemoryManager(store, cards=cards),
+                memory,
                 SceneRouter(*strategies),
-                DeckAnalyzer(library, cards),
+                None,
                 trace,
                 config,
                 provider,
+                reflection,
             )
-            return await runtime.run()
+            result = await runtime.run()
+            await reflection.close()
+            result["storage"] = await memory.stats()
+            result["reflection"] = dict(
+                completed=reflection.completed,
+                rejected=reflection.rejected,
+                model_calls=reflection_provider.calls if reflection_provider else 0,
+                input_tokens=reflection_provider.input_tokens if reflection_provider else 0,
+                output_tokens=reflection_provider.output_tokens if reflection_provider else 0,
+            )
+            result["request_budget"] = shared_budget.report()
+            if reflection_provider:
+                await trace.write_json("reflection-requests.json", reflection_provider.request_records)
+            await trace.write_json("summary.json", result)
+            await trace.flush()
+            return result
 
 
 def main():
@@ -258,6 +324,19 @@ def main():
         sub.add_parser(command)
     for command in ("replay", "import-card-db"):
         sub.add_parser(command).add_argument("path", type=Path)
+    memory = sub.add_parser("memory", help="Import, reflect on or inspect experience")
+    memory.add_argument("--database", type=Path)
+    commands = memory.add_subparsers(dest="memory_command", required=True)
+    commands.add_parser("import").add_argument("path", type=Path)
+    commands.add_parser("inspect")
+    commands.add_parser("consolidate").add_argument("--use-model", action="store_true")
+    bench = sub.add_parser("benchmark", help="Offline by default; model calls require --use-model")
+    bench.add_argument("--use-model", action="store_true")
+    bench.add_argument("--baseline", type=Path)
+    bench.add_argument("--dataset", type=Path)
+    bench.add_argument("--memory-db", type=Path)
+    bench.add_argument("--output", type=Path, default=Path("runs/benchmarks/latest.json"))
+    bench.add_argument("--rounds", type=int, default=15)
     args = parser.parse_args()
     try:
         result = asyncio.run(execute(args))

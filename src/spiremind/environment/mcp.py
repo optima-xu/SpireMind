@@ -10,6 +10,7 @@ import httpx
 
 from spiremind.config import GameConfig
 from spiremind.core.actions import Action, ActionResult
+from spiremind.core.async_utils import resolve
 from spiremind.core.state import GameState, PublicFacts
 from spiremind.knowledge.cards import CardFact
 from spiremind.runtime.validator import ActionValidator
@@ -118,7 +119,7 @@ class MCPEnvironment:
             raise EnvironmentError(f"Bridge error: {code}")
         return body.get("data", body)
 
-    def _normalize(self, value: dict) -> GameState:
+    async def _normalize(self, value: dict) -> GameState:
         if not self._ready(value):
             raise TransitionPending("Combat has not entered the Play phase")
         if value.get("protocol_version") != PROTOCOL:
@@ -126,7 +127,7 @@ class MCPEnvironment:
         if self.state is None or value["decision_id"] != self.state.decision_id:
             self.revision += 1
         if self.raw_sink:
-            self.raw_sink(value)
+            await resolve(self.raw_sink(value))
         self.state = normalize(value, self.revision, self.game_version)
         return self.state
 
@@ -196,7 +197,7 @@ class MCPEnvironment:
                     if self._ready(d):
                         return d
                     if self.raw_sink:
-                        self.raw_sink(d)
+                        await resolve(self.raw_sink(d))
                     after = d["decision_id"]
             except (TimeoutError, TransitionPending, httpx.TransportError):
                 pass
@@ -228,18 +229,18 @@ class MCPEnvironment:
             data = {}
         value = data.get("decision") if data.get("available") else None
         if value and self._ready(value):
-            state = self._normalize(value)
+            state = await self._normalize(value)
             self._clear_pending()
             return state
         value = await self._wait(previous)
-        state = self._normalize(value)
+        state = await self._normalize(value)
         self._clear_pending()
         return state
 
     async def observe(self) -> GameState:
         if self.cached_decision is not None:
             value, self.cached_decision = self.cached_decision, None
-            state = self._normalize(value)
+            state = await self._normalize(value)
             self._clear_pending()
             return state
         if self.pending:
@@ -259,9 +260,9 @@ class MCPEnvironment:
         value = data.get("decision") if data.get("available") else None
         if value and not self._ready(value):
             if self.raw_sink:
-                self.raw_sink(value)
+                await resolve(self.raw_sink(value))
             value = await self._wait(value["decision_id"])
-        return self._normalize(value or await self._wait())
+        return await self._normalize(value or await self._wait())
 
     async def legal_actions(self) -> list[Action]:
         return list((await self.observe()).legal_actions)

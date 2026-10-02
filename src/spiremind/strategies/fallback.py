@@ -11,7 +11,7 @@ def conservative_choice(state: GameState, memory: MemoryContext) -> Decision:
     """A deterministic outage policy, explicitly labelled, not a claimed expert policy."""
 
     if state.scene == Scene.COMBAT:
-        facts = assess(state)
+        facts = memory.assessment if memory and memory.assessment is not None else assess(state)
         forced = forced_survival_action(state, facts)
         if forced:
             action, rule = forced
