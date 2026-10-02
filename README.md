@@ -75,6 +75,8 @@ Open another PowerShell window in the same project directory:
 
 Pause waits for an ongoing model request or game action to settle. Wait until `status` shows `paused` before manually interacting with the game. Resume reads fresh state and discards any decision computed before the pause. Do not run a second agent on the same bridge. Model reflection, when explicitly enabled, may finish a background job while game decisions are paused.
 
+To disable step, time and cumulative-token limits, use `start --no-limits` or, after stopping the process, `resume --no-limits`. You can also set the corresponding `[runtime]` config fields to `false`; details are in the command reference.
+
 [Full command reference](docs/COMMANDS.md) includes single-step execution, replay, memory maintenance and benchmarks. Python users can use `uv run spiremind ...` on Windows or Linux; live bridge setup here is for Windows.
 
 ## Technical Report

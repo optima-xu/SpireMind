@@ -190,7 +190,13 @@ async def execute(args):
     if args.command == "pause":
         return request_control(control_path, run_lock, "paused")
     if args.command == "resume" and writer_active(run_lock):
-        if args.character or args.ascension is not None or args.policy or args.max_steps is not None:
+        if (
+            args.character
+            or args.ascension is not None
+            or args.policy
+            or args.max_steps is not None
+            or getattr(args, "no_limits", False)
+        ):
             raise ValueError("Resuming a running agent keeps its settings. Omit launch overrides.")
         return request_control(control_path, run_lock, "running")
     previous = read_control(control_path).get("settings", {}) if args.command == "resume" else {}
@@ -203,6 +209,8 @@ async def execute(args):
         data["game"]["character"] = args.character or previous["character"]
     if args.ascension is not None or previous.get("ascension") is not None:
         data["game"]["ascension"] = args.ascension if args.ascension is not None else previous["ascension"]
+    if getattr(args, "no_limits", False):
+        data["runtime"].update(max_steps=None, max_seconds=None, max_total_tokens=None)
     if args.command == "step":
         data["runtime"]["max_steps"] = 1
     config = Config.model_validate(data)
@@ -251,6 +259,10 @@ async def execute(args):
                         "character": config.game.character,
                         "ascension": config.game.ascension,
                         "policy": policy,
+                        "runtime_limits": {
+                            key: getattr(config.runtime, key)
+                            for key in ("max_steps", "max_seconds", "max_total_tokens")
+                        },
                     },
                 )
             )
@@ -296,7 +308,7 @@ async def execute(args):
                 )
                 for cls in (CombatStrategy, RunStrategy, MapStrategy, EventStrategy)
             ]
-            shared_budget = RequestBudget(1_000_000, config.runtime.max_total_tokens or 10**15)
+            shared_budget = RequestBudget(None, config.runtime.max_total_tokens)
             if provider:
                 provider.budget = shared_budget
             reflection_provider = None
@@ -387,6 +399,10 @@ def build_parser():
             "--policy", choices=("model", "rules"), default=None if command == "resume" else "model"
         )
         p.add_argument("--max-steps", type=int)
+        if command != "step":
+            p.add_argument(
+                "--no-limits", action="store_true", help="Disable step, elapsed-time and total-token limits"
+            )
         if command == "resume":
             p.set_defaults(character=None, ascension=None)
         else:

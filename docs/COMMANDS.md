@@ -111,3 +111,27 @@ run stopped by a limit or invalid-state outcome; `1` for a setup/config/runtime 
 `130` after Ctrl+C. Logs are in `runs/<attempt-id>/`; look at `summary.json` for the outcome.
 
 退出码与命令是否结束有关，控制命令成功不表示游戏已完成。配置、数据库和完整日志不会提交到 Git。
+
+## Run limits / 运行上限
+
+`start`, `run` and a stopped `resume` accept `--no-limits` to disable the step,
+elapsed-time and cumulative-token limits. A running process keeps its loaded settings;
+changing a config file takes effect when the process is restarted. `step` still executes
+at most one decision. The agent stops when the run ends or a runtime error guard fires;
+pause and resume remain available.
+
+```powershell
+.\spiremind.cmd --config config.local.toml resume --no-limits
+```
+
+Individual limits can also be disabled in TOML:
+
+```toml
+[runtime]
+max_steps = false
+max_seconds = false
+max_total_tokens = false
+```
+
+`--no-limits` 关闭步数、时间和累计 token 上限；配置中的 `false` 可分别关闭各项。
+配置修改需重启进程才能生效。单次请求的输出长度、重试次数、动作校验和错误保护仍按原配置工作。

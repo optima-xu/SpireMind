@@ -75,6 +75,8 @@ notepad .env
 
 暂停会等待正在进行的模型请求或游戏动作结束。需要手动操作时，先确认 `status` 显示 `paused`；继续时会重新读取状态，丢弃暂停前算出的决策。同一桥接只允许一个 Agent 写进程。显式开启模型复盘时，游戏决策暂停期间，后台复盘可能仍会完成已有作业。
 
+关闭步数、时间和累计 token 上限可使用 `start --no-limits`，或在进程停止后使用 `resume --no-limits`。也可在配置的 `[runtime]` 中将相应字段设为 `false`，详见完整命令表。
+
 [完整命令表](docs/COMMANDS.md)包含单步执行、日志回放、记忆维护和评测。Python 用户也可在 Windows/Linux 使用 `uv run spiremind ...`；这里的实机安装流程针对 Windows。
 
 ## 技术报告

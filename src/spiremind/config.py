@@ -3,7 +3,7 @@ import tomllib
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class Settings(BaseModel):
@@ -51,12 +51,18 @@ class GameConfig(Settings):
 
 class RuntimeConfig(Settings):
     runs_dir: Path = Path("runs")
-    max_steps: int = Field(default=3000, ge=1)
+    max_steps: int | None = Field(default=3000, ge=1)
     max_total_tokens: int | None = Field(default=None, ge=1)
     max_errors: int = Field(default=6, ge=1)
     max_seconds: float | None = Field(default=None, gt=0)
     context_tokens: int = Field(default=4000, ge=512)
     max_context_tokens: int = Field(default=16000, ge=1024)
+
+    @field_validator("max_steps", "max_total_tokens", "max_seconds", mode="before")
+    @classmethod
+    def disabled_limit(cls, value):
+        # TOML has no null; false explicitly disables a run limit, while zero is invalid.
+        return None if value is False else value
 
 
 class StrategyConfig(Settings):

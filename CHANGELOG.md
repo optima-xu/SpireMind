@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 
+- Explicit `--no-limits` and TOML `false` settings for disabling run step, time and cumulative-token limits.
 - One-command Windows setup for Python, locked dependencies, configuration templates and the pinned game bridge.
 - Main-menu-only `start`, cooperative `pause`/`resume`, process `status` and a Windows CLI launcher.
 - Automatic literal `.env` and local TOML loading, preserving process environment values.

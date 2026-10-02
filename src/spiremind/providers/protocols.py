@@ -18,13 +18,15 @@ class BudgetExceeded(RuntimeError):
 class RequestBudget:
     """Reserve the entire possible request before dispatch; reconcile observed usage."""
 
-    def __init__(self, max_requests: int, max_tokens: int, parent=None):
+    def __init__(self, max_requests: int | None, max_tokens: int | None, parent=None):
         self.max_requests, self.max_tokens = max_requests, max_tokens
         self.requests = self.tokens = self.reserved = 0
         self.parent = parent
 
     def reserve(self, tokens):
-        if self.requests >= self.max_requests or self.tokens + self.reserved + tokens > self.max_tokens:
+        if (self.max_requests is not None and self.requests >= self.max_requests) or (
+            self.max_tokens is not None and self.tokens + self.reserved + tokens > self.max_tokens
+        ):
             raise BudgetExceeded("request_budget_exhausted")
         if self.parent:
             self.parent.reserve(tokens)

@@ -238,7 +238,7 @@ class AgentRuntime:
         started, outcome = time.monotonic(), "step_limit"
         rt = self.config.runtime
         try:
-            while self.steps < rt.max_steps:
+            while rt.max_steps is None or self.steps < rt.max_steps:
                 await self._checkpoint()
                 elapsed = time.monotonic() - started - (self.control.paused_seconds if self.control else 0)
                 if rt.max_seconds is not None and elapsed > rt.max_seconds:
