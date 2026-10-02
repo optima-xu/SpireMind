@@ -4,7 +4,7 @@ from spiremind.core.enums import ActionKind, Scene
 from spiremind.core.state import GameState
 
 
-def lifecycle_decision(state: GameState, config: GameConfig) -> Decision | None:
+def lifecycle_decision(state: GameState, config: GameConfig, *, new_run=False) -> Decision | None:
     if state.scene == Scene.GAME_OVER:
         action = next(
             (a for a in state.legal_actions if a.kind == ActionKind.RETURN_TO_MAIN_MENU),
@@ -14,7 +14,11 @@ def lifecycle_decision(state: GameState, config: GameConfig) -> Decision | None:
             return Decision(action=action, reason="Clear the previous terminal screen before a new run")
         return None
     if state.scene == Scene.MAIN_MENU:
-        for kind in (ActionKind.CONTINUE_RUN, ActionKind.OPEN_RUN):
+        if new_run and any(a.kind == ActionKind.CONTINUE_RUN for a in state.legal_actions):
+            raise ValueError(
+                "An existing run is available. Use resume, or finish/abandon it in the game first."
+            )
+        for kind in (ActionKind.OPEN_RUN,) if new_run else (ActionKind.CONTINUE_RUN, ActionKind.OPEN_RUN):
             action = next((a for a in state.legal_actions if a.kind == kind), None)
             if action:
                 return Decision(

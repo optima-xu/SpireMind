@@ -24,6 +24,10 @@ class ProviderFallbackLimit(EnvironmentError):
     """Repeated model failures reached the configured safety limit."""
 
 
+class DecisionInterrupted(Exception):
+    """A pause invalidated a computed decision; observe again before acting."""
+
+
 class AgentRuntime:
     def __init__(
         self,
@@ -35,10 +39,13 @@ class AgentRuntime:
         config: Config,
         provider=None,
         reflection=None,
+        control=None,
+        new_run=False,
     ):
         self.env, self.memory, self.router = env, memory, router
         self.analyzer, self.trace, self.config, self.provider = analyzer, trace, config, provider
         self.reflection = reflection
+        self.control, self.new_run = control, new_run
         self.validator = ActionValidator()
         self.progress = ProgressGuard()
         self.last_state = None
@@ -50,6 +57,15 @@ class AgentRuntime:
         self.reconciled_actions = self.semantic_successes = 0
         self.provider_error_streak = self.max_provider_error_streak = 0
         self._last_traced_state: tuple[str, int] | None = None
+
+    async def _checkpoint(self):
+        if self.control and await self.control.checkpoint():
+            self.progress = ProgressGuard()
+            await resolve(self.memory.invalidate_plan())
+            if hasattr(self.env, "cached_decision"):
+                self.env.cached_decision = None
+            return True
+        return False
 
     async def _trace_state(self, state) -> None:
         identity = (state.decision_id, state.revision)
@@ -72,7 +88,9 @@ class AgentRuntime:
             await self.memory.finish_run("victory" if state.victory else "death")
             await resolve(self.trace.write_json("terminal-state.json", state.model_dump(mode="json")))
             return state
-        lifecycle = lifecycle_decision(state, self.config.game)
+        lifecycle = lifecycle_decision(
+            state, self.config.game, new_run=self.new_run and not self.started_new_run
+        )
         strategy = None
         context = None
         if lifecycle is None:
@@ -144,6 +162,8 @@ class AgentRuntime:
             self.fallbacks += int(decision.fallback)
             self.policy_rules += int(decision.policy_rule is not None)
             self.used_tokens += decision.input_tokens + decision.output_tokens
+            if await self._checkpoint():
+                raise DecisionInterrupted()
             self.validator.validate(state, decision.action)
             receipt = await self.env.execute(decision.action)
             self.uncertain_actions += int(receipt.status == "uncertain")
@@ -195,6 +215,9 @@ class AgentRuntime:
                 await resolve(self.trace.write_json("terminal-state.json", new_state.model_dump(mode="json")))
             self.consecutive_errors = 0
             return new_state
+        except DecisionInterrupted:
+            row["discarded_on_resume"] = True
+            raise
         except Exception as error:
             # Only local, sanitized messages. HTTP clients never expose request headers here.
             row["error"] = (
@@ -216,7 +239,9 @@ class AgentRuntime:
         rt = self.config.runtime
         try:
             while self.steps < rt.max_steps:
-                if rt.max_seconds is not None and time.monotonic() - started > rt.max_seconds:
+                await self._checkpoint()
+                elapsed = time.monotonic() - started - (self.control.paused_seconds if self.control else 0)
+                if rt.max_seconds is not None and elapsed > rt.max_seconds:
                     outcome = "time_limit"
                     break
                 tokens = (
@@ -239,6 +264,8 @@ class AgentRuntime:
                             f"scene={state.scene.value}",
                             flush=True,
                         )
+                except DecisionInterrupted:
+                    continue
                 except BudgetExceeded:
                     outcome = "token_limit"
                     break

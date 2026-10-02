@@ -1,148 +1,101 @@
-# 部署与使用
+# 安装与运行
 
-本文覆盖三种用途：离线验证控制流程、连接任意 OpenAI-compatible 模型，以及在 Windows 上连接
-《杀戮尖塔 2》实机。实机桥接当前固定支持游戏 **v0.111.0**；其他版本需要重新验证桥接补丁和
-内部状态字段。
+实机桥接针对 **Windows、STS2 v0.111.0、标准单人模式**。其他游戏版本需重新验证补丁。
+Python 决策代码支持 Windows/Linux、Python 3.11–3.13。
 
-## 1. 环境要求
+## 推荐安装
 
-通用部分需要：
-
-- Git
-- Python 3.11–3.13
-- [uv](https://docs.astral.sh/uv/getting-started/installation/)
-
-实机运行还需要：
-
-- Windows
-- 《杀戮尖塔 2》v0.111.0
-- .NET SDK 9
-- 游戏自带的 Godot 引擎
-
-## 2. 获取项目并安装依赖
+先安装 [Git for Windows](https://git-scm.com/downloads/win)，关闭游戏，然后执行：
 
 ```powershell
 git clone https://github.com/optima-xu/SpireMind.git
 Set-Location SpireMind
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1
+```
+
+脚本会寻找 Steam 游戏目录，使用 uv 准备 Python 3.13 和锁定的运行依赖；缺少 uv 或 .NET 9 SDK
+时调用[官方 uv 安装器](https://docs.astral.sh/uv/reference/installer/)和
+[官方 .NET 安装器](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script)。
+工具安装在项目 `.tools/`，不需要手动激活虚拟环境或全局修改 PATH。已有 uv/.NET 可复用。
+桥接按 `bridge.lock.json` 固定提交，应用兼容补丁，构建并复制三个模组文件，逐一校验哈希。
+安装过程中游戏必须保持关闭。
+
+```powershell
+# 非默认 Steam 库
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -GameRoot 'D:\SteamLibrary\steamapps\common\Slay the Spire 2'
+
+# 只安装 Python 演示；跳过游戏、Git 桥接和 .NET
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Offline
+
+# 使用阿里云模型配置模板
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Provider deepseek
+```
+
+`-Offline` 表示跳过实机集成，首次下载 Python/依赖仍需要网络。重复运行会保留 `.env` 和
+`config.local.toml`；`-Provider` 只影响首次创建的配置，不会覆盖已有服务地址。
+如果升级了游戏，请先重新验证桥接，不要直接沿用旧补丁。
+
+## 配置模型
+
+安装后编辑 `config.local.toml` 和 `.env`：
+
+- 通用模板填写 `base_url`、`model`，密钥变量为 `OPENAI_API_KEY`。
+- 阿里云模板填写自己的部署地址，密钥变量为 `DASHSCOPE_API_KEY`，默认 `enable_thinking=true`。
+- `calculator_mode="required"` 要求接口支持标准 `tools`、`tool_choice` 和工具结果消息。
+  不支持 function calling 时可改为 `"off"`，此时不再强制计算器；`"auto"` 也不保证调用。
+- 不支持 `response_format` 时可设置 `json_mode=false`，最终决策仍须是合法 JSON。
+
+CLI 默认自动读取 `config.local.toml`，再加载同目录的 `.env`；已有进程环境变量优先。
+`.env` 只支持字面量 `KEY=value`、引号和注释，不执行命令或展开变量。
+使用其他配置：`.\spiremind.cmd --config PATH doctor`。
+
+```powershell
+# 无密钥演示
+.\spiremind.cmd start --environment mock --policy rules
+
+# 主动测试模型；会调用 API
+.\spiremind.cmd probe-model
+```
+
+`probe-model` 检查 JSON、模型设置、动作绑定和计算器往返，结果写入 `runs/model-probe.json`。
+
+## 首页启动、暂停与恢复
+
+从 Steam 打开游戏并启用 STS2AIMCP 模组，停在**首页／主菜单**：
+
+```powershell
+.\spiremind.cmd doctor
+.\spiremind.cmd start --character ironclad --ascension 0
+```
+
+不在首页时，先返回首页；`start` 会拒绝接管当前场景。角色可选 `ironclad`、`silent`、`regent`、
+`necrobinder`、`defect`，进阶必须已解锁。首页有未完成对局时使用 `resume`，换角色／难度前
+先在游戏内完成或放弃原对局。启动会自动同步当前版本牌库。
+
+在同目录的另一个终端执行 `pause`，并用 `status` 确认已到 `paused` 后再手动操作。
+`resume` 继续暂停的进程；Ctrl+C 停止后也可用 `resume` 重新连接未完成对局。
+运行中的动作会完成验证或对账再暂停，恢复时重新读状态。完整命令见[命令说明](COMMANDS.md)。
+
+模组存档与原版存档分开。Mock 只是固定流程测试，不是游戏模拟器。
+
+## 手动安装与开发
+
+已有 Python/uv 的用户可跳过安装脚本：
+
+```powershell
 uv sync --locked
-```
-
-先执行完全离线的控制流测试：
-
-```powershell
-uv run spiremind run --environment mock --policy rules
-```
-
-Mock 是固定场景序列，只验证状态、路由、动作和 trace，不是游戏模拟器。
-
-## 3. 配置模型
-
-### 通用 OpenAI-compatible 服务
-
-```powershell
 Copy-Item .env.example .env
 Copy-Item config.example.toml config.local.toml
 ```
 
-编辑 `.env`：
-
-```dotenv
-OPENAI_API_KEY=replace-me
-```
-
-再在 `config.local.toml` 中填写服务商的 `base_url` 和 `model`。SpireMind 请求标准
-`/chat/completions`，模型必须返回包含合法 `action_id` 的 JSON。
-
-### 阿里云 Model Studio / DashScope 兼容接口
+不要覆盖已有配置。实机桥接仍需 .NET 9 SDK 和游戏目录；关闭游戏后执行：
 
 ```powershell
-Copy-Item .env.example .env
-Copy-Item config.deepseek.example.toml config.local.toml
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-bridge.ps1 -GameRoot 'D:\SteamLibrary\steamapps\common\Slay the Spire 2' -Install
 ```
 
-把 `config.local.toml` 中的 `YOUR-ENDPOINT` 替换为自己的部署地址，并在 `.env` 中设置：
-
-```dotenv
-DASHSCOPE_API_KEY=replace-me
-```
-
-示例默认关闭 `enable_thinking`。服务商不接受 `response_format` 时，将 `json_mode` 改为 `false`；
-模型返回内容仍须是合法 JSON。
-`calculator_mode="required"` 默认强制模型先通过标准 function tool 做一次成功计算，后续算术
-可继续调用；此模式需要兼容服务支持 `tools`、`tool_choice` 和工具结果消息。若接口不支持，
-可改为 `calculator_mode="off"`，但此时不再保证算术经过工具；`"auto"` 也不保证调用。
-
-### 验证模型接口
-
-```powershell
-uv run --env-file .env spiremind --config config.local.toml probe-model
-uv run --env-file .env spiremind --config config.local.toml run --environment mock
-```
-
-`probe-model` 会用 `48-11=37` 检查模型名、JSON 解析和合法动作绑定；启用计算器时还检查工具往返。结果写入 `runs/model-probe.json`。它不会输出
-或保存 API key。
-
-不使用 uv 启动时，请通过操作系统或进程环境设置同名密钥变量；程序不会自动读取 `.env`。
-
-## 4. 构建并安装游戏桥接
-
-先关闭游戏。将下面的路径替换为自己的游戏安装目录：
-
-```powershell
-pwsh -File scripts/prepare-bridge.ps1 `
-  -GameRoot 'C:\Program Files (x86)\Steam\steamapps\common\Slay the Spire 2' `
-  -Install
-```
-
-脚本会：
-
-1. 克隆 `bridge.lock.json` 固定的 `sts2-ai-mcp` 提交。
-2. 应用本仓库针对 v0.111.0 的兼容补丁。
-3. 以 Release 模式构建桥接。
-4. 在 `-Install` 模式下复制并校验三个模组文件的哈希。
-
-省略 `-Install` 只会构建到 `build/mods/STS2AIMCP`。若游戏正在运行，安装会主动停止。
-
-## 5. 启动实机 Agent
-
-从 Steam 启动游戏，确认已加载 STS2AIMCP 模组并停在主菜单，然后依次执行：
-
-```powershell
-uv run --env-file .env spiremind --config config.local.toml doctor
-uv run --env-file .env spiremind --config config.local.toml observe
-uv run --env-file .env spiremind --config config.local.toml sync-card-db
-uv run --env-file .env spiremind --config config.local.toml run
-```
-
-- `doctor` 检查游戏、模组和协议版本。
-- `observe` 只读取当前公开状态。
-- `sync-card-db` 从当前游戏版本导入静态卡牌资料；Agent 运行时不要执行它。
-- `run` 继续已有模组存档，或从主菜单创建配置指定的新局。
-- `step` 最多执行一个动作，适合首次接入检查。
-
-可通过命令行覆盖角色和进阶：
-
-```powershell
-uv run --env-file .env spiremind --config config.local.toml run `
-  --character ironclad --ascension 0
-```
-
-运行时不要同时手动操作游戏。相同桥接地址只允许一个 SpireMind 写进程；第二个进程会被锁拒绝。
-Ctrl+C 会保留 trace 和待核对动作。
-
-## 6. 日志、恢复与升级
-
-每次执行在 `runs/<attempt-id>/` 保存脱敏配置、状态、上下文、决策、错误和 summary。`runs/`、`.env`、
-`config.local.toml`、SQLite 和完整卡牌缓存都已加入 `.gitignore`。分享日志前仍应检查其中是否包含不想
-公开的本地路径或游戏状态。
-
-离线查看一次运行：
-
-```powershell
-uv run spiremind replay runs/<attempt-id>
-```
-
-升级步骤：
+省略 `-Install` 只构建到 `build/mods/STS2AIMCP`。脚本不覆盖不匹配的 bridge checkout。
+Python 用户也可用 `uv run spiremind ...`，默认配置与 `.env` 行为相同。源码升级前停止 Agent：
 
 ```powershell
 git pull --ff-only
@@ -150,18 +103,17 @@ uv sync --locked
 uv run pytest -q
 ```
 
-升级前先停止 Agent。游戏版本变化后，不要沿用旧桥接补丁或把敌人知识文件简单改名；应重新验证
-桥接协议、同步卡牌资料并重建对应版本知识。
-
-## 7. 常见问题
+## 排查
 
 | 现象 | 检查 |
 | --- | --- |
-| `doctor` 无法连接 | 游戏是否运行、模组是否加载、`[game].base_url` 是否为桥接地址 |
-| 模型返回 401/403 | `.env` 的变量名是否与 `api_key_env` 一致，key 是否属于当前 endpoint |
-| 模型名不匹配 | 服务商是否改写模型名；必要时审查后关闭 `require_exact_model` |
-| 模型不支持 JSON mode | 设置 `json_mode=false`，同时确保提示返回纯 JSON |
-| `run` 返回退出码 2 | 达到步数、时间或 token 预算，查看对应 run 的 `summary.json` |
-| bridge checkout 不匹配 | 保留本地修改，另建干净 checkout；脚本不会覆盖未知提交 |
+| 安装找不到游戏 | 使用 `-GameRoot` 指定目录，或 `-Offline` 体验演示。 |
+| `doctor` 无法连接 | 游戏是否运行、模组是否启用、`[game].base_url` 是否正确。 |
+| 模型返回 401/403 | `.env` 的变量名是否与 `api_key_env` 一致，密钥是否属于该 endpoint。 |
+| `start` 提示先返回首页 | 返回主菜单；已有对局时用 `resume`。 |
+| `pause_requested` 后仍未暂停 | 等待当前模型请求或动作对账完成，查看 `status`。 |
+| `resume` 找不到对局 | 从 Steam 启动游戏；空首页用 `start` 开新局。 |
+| 命令返回退出码 2 | 达到运行预算或状态检查停止，查看 `runs/<attempt-id>/summary.json`。 |
 
-项目仍处于 alpha。已验证控制链和固定回归不代表五角色、多 seed 或高进阶胜率已经达标。
+每次运行保存脱敏配置、状态、上下文、决策和 summary。密钥、配置、数据库、`.tools/`、`runs/`
+及桥接 checkout 被 Git 忽略；分享日志前检查本地路径和游戏信息。实机验证范围见[验收记录](ACCEPTANCE.md)。

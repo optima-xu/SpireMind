@@ -11,6 +11,8 @@ from urllib.parse import urlsplit, urlunsplit
 from spiremind.config import Config
 from spiremind.context.budget import ContextBudget
 from spiremind.context.compiler import AgentContext, ContextCompiler
+from spiremind.core.enums import ActionKind, Scene
+from spiremind.core.env_file import load_env_file
 from spiremind.environment.mcp import MCPEnvironment
 from spiremind.environment.mock import MockEnvironment
 from spiremind.knowledge.cards import CardDB
@@ -24,6 +26,7 @@ from spiremind.providers.openai import OpenAIProvider
 from spiremind.providers.protocols import RequestBudget
 from spiremind.runtime.agent import AgentRuntime
 from spiremind.runtime.async_trace import AsyncTraceWriter
+from spiremind.runtime.control import RunControl, control_status, read_control, request_control, writer_active
 from spiremind.runtime.locking import SingleWriter
 from spiremind.runtime.router import SceneRouter
 from spiremind.runtime.trace import replay_summary
@@ -73,8 +76,15 @@ def safe_extra_body(value: dict) -> dict:
     return clean(value)
 
 
+def load_cli_config(config_path):
+    if config_path is None and Path("config.local.toml").is_file():
+        config_path = Path("config.local.toml")
+    load_env_file((config_path.parent if config_path else Path.cwd()) / ".env")
+    return Config.load(config_path)
+
+
 async def execute(args):
-    config = Config.load(args.config)
+    config = load_cli_config(args.config)
     if args.command == "benchmark":
         from spiremind.benchmark import benchmark
 
@@ -172,19 +182,32 @@ async def execute(args):
                 return {"imported": db.import_json(args.path)}
             finally:
                 db.close()
+    is_mock = args.environment == "mock"
+    run_lock = root / "mock.lock" if is_mock else live_lock
+    control_path = run_lock.with_suffix(".control.json")
+    if args.command == "status":
+        return control_status(control_path, run_lock)
+    if args.command == "pause":
+        return request_control(control_path, run_lock, "paused")
+    if args.command == "resume" and writer_active(run_lock):
+        if args.character or args.ascension is not None or args.policy or args.max_steps is not None:
+            raise ValueError("Resuming a running agent keeps its settings. Omit launch overrides.")
+        return request_control(control_path, run_lock, "running")
+    previous = read_control(control_path).get("settings", {}) if args.command == "resume" else {}
+    if not isinstance(previous, dict):
+        raise ValueError("Invalid previous agent settings")
     data = config.model_dump(mode="python")
     if args.max_steps is not None:
         data["runtime"]["max_steps"] = args.max_steps
-    if args.character:
-        data["game"]["character"] = args.character
-    if args.ascension is not None:
-        data["game"]["ascension"] = args.ascension
+    if args.character or previous.get("character"):
+        data["game"]["character"] = args.character or previous["character"]
+    if args.ascension is not None or previous.get("ascension") is not None:
+        data["game"]["ascension"] = args.ascension if args.ascension is not None else previous["ascension"]
     if args.command == "step":
         data["runtime"]["max_steps"] = 1
     config = Config.model_validate(data)
-    is_mock = args.environment == "mock"
-    mode = ("mock_model" if args.policy == "model" else "mock_rules") if is_mock else "live"
-    run_lock = root / "mock.lock" if is_mock else live_lock
+    policy = args.policy or previous.get("policy", "model")
+    mode = ("mock_model" if policy == "model" else "mock_rules") if is_mock else "live"
     with SingleWriter(run_lock):
         trace = AsyncTraceWriter(
             root,
@@ -217,6 +240,20 @@ async def execute(args):
             env = MockEnvironment() if is_mock else MCPEnvironment(config.game, root / f"pending-{key}.json")
             if not is_mock:
                 stack.push_async_callback(env.close)
+            if args.command in {"start", "resume"}:
+                if not is_mock:
+                    await env.health()
+                validate_entry(await env.observe(), args.command)
+            control = stack.enter_context(
+                RunControl(
+                    control_path,
+                    {
+                        "character": config.game.character,
+                        "ascension": config.game.ascension,
+                        "policy": policy,
+                    },
+                )
+            )
             library = StrategyLibrary()
             memory_path = root / ("mock-memory.sqlite" if is_mock else "memory.sqlite")
             stack.enter_context(SingleWriter(memory_path.with_suffix(".maintenance.lock")))
@@ -242,7 +279,7 @@ async def execute(args):
                         "enemy_knowledge": enemy_knowledge.metadata(),
                     },
                 )
-            provider = OpenAIProvider(config.model) if args.policy == "model" else None
+            provider = OpenAIProvider(config.model) if policy == "model" else None
             if provider:
                 stack.push_async_callback(provider.close)
             compiler = ContextCompiler(
@@ -285,6 +322,8 @@ async def execute(args):
                 config,
                 provider,
                 reflection,
+                control=control,
+                new_run=args.command == "start",
             )
             result = await runtime.run()
             await reflection.close()
@@ -304,23 +343,60 @@ async def execute(args):
             return result
 
 
-def main():
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
-    if hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8")
+def validate_entry(state, command):
+    if command == "start":
+        if state.scene != Scene.MAIN_MENU or not any(
+            a.kind in {ActionKind.OPEN_RUN, ActionKind.CONTINUE_RUN} for a in state.legal_actions
+        ):
+            raise ValueError(
+                "Please return to the game's main menu before start. 请先返回游戏首页再启动 Agent。"
+            )
+        if any(a.kind == ActionKind.CONTINUE_RUN for a in state.legal_actions):
+            raise ValueError(
+                "An existing run is available. Use resume, or finish/abandon it in the game first."
+            )
+    elif (
+        state.terminal
+        or state.scene == Scene.UNKNOWN
+        or (
+            state.scene == Scene.MAIN_MENU
+            and not any(a.kind == ActionKind.CONTINUE_RUN for a in state.legal_actions)
+        )
+    ):
+        raise ValueError(
+            "No run to resume. Return to the main menu and use start. 请先返回首页并使用 start。"
+        )
+
+
+def build_parser():
     parser = argparse.ArgumentParser(prog="spiremind", description="SpireMind autonomous STS2 runtime")
     parser.add_argument(
-        "--config", type=Path, help="TOML config; defaults to generic environment-based settings"
+        "--config", type=Path, help="TOML config; auto-loads config.local.toml and .env when present"
     )
     sub = parser.add_subparsers(dest="command", required=True)
-    for command in ("run", "step"):
-        p = sub.add_parser(command)
+    descriptions = {
+        "start": "Start a new run from the game's main menu",
+        "resume": "Resume a paused agent or reconnect to an unfinished run",
+        "run": "Legacy entry: continue an existing run or create one",
+        "step": "Execute at most one decision from the current state",
+    }
+    for command in ("start", "run", "step", "resume"):
+        p = sub.add_parser(command, help=descriptions[command], description=descriptions[command])
         p.add_argument("--environment", choices=("live", "mock"), default="live")
-        p.add_argument("--policy", choices=("model", "rules"), default="model")
+        p.add_argument(
+            "--policy", choices=("model", "rules"), default=None if command == "resume" else "model"
+        )
         p.add_argument("--max-steps", type=int)
-        p.add_argument("--character", choices=("ironclad", "silent", "regent", "necrobinder", "defect"))
-        p.add_argument("--ascension", type=int)
+        if command == "resume":
+            p.set_defaults(character=None, ascension=None)
+        else:
+            p.add_argument("--character", choices=("ironclad", "silent", "regent", "necrobinder", "defect"))
+            p.add_argument("--ascension", type=int, help="Unlocked ascension level; 0 is base difficulty")
+    for command in ("pause", "status"):
+        description = "Pause at a safe boundary" if command == "pause" else "Read the agent control status"
+        sub.add_parser(command, help=description).add_argument(
+            "--environment", choices=("live", "mock"), default="live"
+        )
     for command in ("doctor", "observe", "probe-model", "sync-card-db"):
         sub.add_parser(command)
     for command in ("replay", "import-card-db"):
@@ -338,14 +414,26 @@ def main():
     bench.add_argument("--memory-db", type=Path)
     bench.add_argument("--output", type=Path, default=Path("runs/benchmarks/latest.json"))
     bench.add_argument("--rounds", type=int, default=15)
-    args = parser.parse_args()
+    return parser
+
+
+def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")
+    args = build_parser().parse_args()
     try:
         result = asyncio.run(execute(args))
         print(json.dumps(result, ensure_ascii=False, indent=2))
-        if args.command == "run" and not result.get("complete"):
+        if (
+            args.command in {"run", "start", "resume"}
+            and not result.get("complete")
+            and "status" not in result
+        ):
             raise SystemExit(2)
     except KeyboardInterrupt:
-        print("Stopped; trace and any pending action were preserved.")
+        print("Stopped; trace and any pending action were preserved. Use resume to continue the current run.")
         raise SystemExit(130) from None
     except Exception as error:
         # Avoid accidental key/transport-detail disclosure from arbitrary exception strings.

@@ -35,7 +35,7 @@ def main() -> None:
         )
         subprocess.run([str(python), "-c", code], check=True)
         result = subprocess.run(
-            [str(python), "-m", "spiremind", "run", "--environment", "mock", "--policy", "rules"],
+            [str(python), "-m", "spiremind", "start", "--environment", "mock", "--policy", "rules"],
             cwd=environment,
             text=True,
             capture_output=True,

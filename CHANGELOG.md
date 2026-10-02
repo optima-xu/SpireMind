@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file. The format 
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and releases use
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- One-command Windows setup for Python, locked dependencies, configuration templates and the pinned game bridge.
+- Main-menu-only `start`, cooperative `pause`/`resume`, process `status` and a Windows CLI launcher.
+- Automatic literal `.env` and local TOML loading, preserving process environment values.
+- English and Chinese READMEs with Quick Start and a concise technical report, plus a full command reference.
+
+### Changed
+
+- Resume reobserves the game and invalidates pre-pause choices; stopping preserves pending-action recovery.
+- Retain legacy `run` and `step` commands for existing integrations.
+
 ## [0.2.0] - 2026-10-02
 
 ### Added
@@ -51,5 +65,6 @@ All notable changes to this project will be documented in this file. The format 
 - API keys remain in environment variables and are excluded from manifests and traces.
 - Local configs, runs, saves, databases and bridge checkouts are excluded from source control.
 
-[0.2.0]: https://github.com/optima-xu/SpireMind/compare/v0.1.0...main
+[Unreleased]: https://github.com/optima-xu/SpireMind/compare/bfd7fb38da70f58079f2ce7e1893945fc6bff3d8...main
+[0.2.0]: https://github.com/optima-xu/SpireMind/compare/v0.1.0...bfd7fb38da70f58079f2ce7e1893945fc6bff3d8
 [0.1.0]: https://github.com/optima-xu/SpireMind/releases/tag/v0.1.0
