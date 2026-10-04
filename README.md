@@ -67,7 +67,7 @@ Open another PowerShell window in the same project directory:
 | Command | Purpose |
 | --- | --- |
 | `.\spiremind.cmd pause` | Request a pause at the next safe boundary. |
-| `.\spiremind.cmd status` | Check whether the agent is running, paused or stopped. |
+| `.\spiremind.cmd status` | Check control status and the current observe/model/execute/verify phase. |
 | `.\spiremind.cmd resume` | Resume a paused agent; if it has stopped, reconnect to the current unfinished run. |
 | **Ctrl+C** in the agent terminal | Stop the process and preserve memory, trace and pending-action evidence. |
 | `.\spiremind.cmd observe` | Read the current public game state. |
@@ -103,11 +103,11 @@ The Coordinator routes one specialist per decision and owns execution. Agents sh
 
 **Working** memory is private to a run instance, agent and task. **Run** memory shares owned policies across scenes. **Episodes** record verified local transitions. **Skills** contain human rules and learned conditional observations.
 
-Historical traces and future runs feed the same learning loop: observation → reflection → evidence checks → regression across at least three independent seed groups → activation → retrieval. Verified counterexamples deactivate a lesson. SQLite FTS5/BM25 retrieves at most two episodes and three active skills within 600 estimated tokens. The public training set contains 686 observations and reproduces two validated local lessons; this is experience learning, not model-weight training.
+Startup imports changed local history offline, including verifiable transitions from interrupted runs. Historical traces and future runs feed the same loop: observation → reflection → evidence checks → regression across at least three independent training seeds → activation → retrieval. Holdout seeds stay isolated; verified training counterexamples deactivate lessons. SQLite FTS5/BM25 retrieves at most two episodes and three active skills within 600 estimated tokens, ranked against the current hand and resources. The public training set contains 686 observations and reproduces two local lessons. Conditional tactical learning currently supports free Rage before attacks; it requires fresh safety checks. Learning updates experience memory rather than model weights.
 
 ### Performance and reliability
 
-Bounded LRU caches, one combat assessment per decision, a dedicated SQLite thread, combined transactions and a bounded logging queue reduce repeated work. Pending actions are persisted before dispatch; uncertain results are reconciled before another mutation. HTTP attempts have budget reservations, bounded retries and one JSON repair using existing calculator results.
+Bounded LRU caches, one combat assessment per decision, a dedicated SQLite thread, combined transactions and a bounded logging queue reduce repeated work. The calculator binds numeric forecasts to current legal actions; mismatches receive one repair before acceptance. Pending actions are persisted before dispatch, and failed post-action reads retain the receipt for reconciliation. Separate recovery windows cover observation, execution and verification, without charging model latency to bridge recovery. Usage reports distinguish server-reported tokens from conservative safety estimates.
 
 | Metric | Measured change |
 | --- | --- |
@@ -116,6 +116,6 @@ Bounded LRU caches, one combat assessment per decision, a dedicated SQLite threa
 | Repeated card queries | 546 → 16, **−97.1%** |
 | Median estimated combat-context tokens | 6648 → 5647, **−15.1%** |
 
-Measurements use 16 public states and three repeated comparisons at the source revisions recorded in the [performance report](docs/PERFORMANCE.md). Model testing stopped within budget with four complete A/B/C groups. These results do not establish improved win rate. CI covers Windows/Linux and Python 3.11/3.13, including cancellation, rollback, cache invalidation, pending recovery and isolated wheel installation.
+The table records the 2026-10-02 architecture comparison: 16 public states and three repeats at the revisions in the [performance report](docs/PERFORMANCE.md). The [2026-10-04 robustness update](docs/ROBUSTNESS.md) further reduced median estimated combat-context tokens from 5,647 to 4,272 (**−24.3%**); local warm preparation changed from 1.064 to 1.233 ms, with no additional speedup demonstrated. Model testing previously stopped within budget with four complete A/B/C groups. These results do not establish improved win rate. CI covers Windows/Linux and Python 3.11/3.13, including cancellation, rollback, cache invalidation, pending recovery and isolated wheel installation.
 
 Details: [memory design](docs/MULTI_AGENT_MEMORY.md) · [interview notes and resume bullets](docs/INTERVIEW.md) · [live validation scope](docs/ACCEPTANCE.md) · [contributing](CONTRIBUTING.md).

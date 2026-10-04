@@ -73,6 +73,8 @@ include = [
   "docs/ARCHITECTURE_IMPROVEMENTS.md",
   "docs/MULTI_AGENT_MEMORY.md",
   "docs/PERFORMANCE.md",
+  "docs/ROBUSTNESS.md",
+  "docs/AGENT_QUALITY_REVIEW.md",
   "docs/INTERVIEW.md",
   "docs/benchmarks",
   "docs/DEATH_REVIEW.md",

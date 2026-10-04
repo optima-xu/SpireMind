@@ -14,7 +14,7 @@ when present and reads `.env` beside the selected config; existing process varia
 | --- | --- |
 | `start --character ironclad --ascension 0` | Start a new standard single-player run **from the main menu**. 从首页开新局。 |
 | `pause` | Pause at the next safe boundary. 请求安全暂停。 |
-| `status` | Show actual and requested control status. 查看运行状态和待处理控制请求。 |
+| `status` | Show control status, current phase and recovery budgets. 查看控制状态、当前阶段与恢复预算。 |
 | `resume` | Resume a paused process, or reconnect after it has stopped. 继续暂停进程，或重新连接未完成对局。 |
 | `doctor` | Check bridge connectivity and versions. 检查桥接连接与版本。 |
 | `observe` | Read public state without choosing a game action. 查看公开游戏状态。 |
@@ -82,9 +82,13 @@ Mock 是固定的十动作流程，不代表真实胜率。控制 Mock 进程时
 
 Stop the agent before card/memory maintenance; the CLI enforces maintenance locks.
 These commands modify local databases, not model weights. Future verified actions
-automatically enter the experience pipeline. Model reflection is off by default.
+automatically enter the experience pipeline. Startup imports changed local history
+offline, including verifiable interrupted traces; unchanged history is cached.
+`[memory] bootstrap_history = false` disables this startup import, while
+`enabled = false` disables learning. Model reflection is off by default.
 
-Agent 停止后再维护数据库。未来运行会自动积累经验，默认离线复盘；模型复盘需显式开启。
+Agent 停止后再维护数据库。启动时自动离线导入变化的本地历史，未来运行继续积累经验；
+训练／留出分组保持冻结。模型复盘需显式开启。原始数据库和历史日志保留在本机。
 
 ```powershell
 # Reproduce the public experience import / 复现公开经验导入
@@ -137,14 +141,21 @@ max_total_tokens = false
 配置修改需重启进程才能生效。单次请求的输出长度、重试次数、动作校验和错误保护仍按原配置工作。
 
 Continuous model or bridge failures retry for 180 seconds instead of stopping after
-six errors. Configure `[runtime] error_retry_seconds = 180`. Successful model responses
-/ verified actions reset their respective timers; manual pause time is excluded.
+six errors. Configure `[runtime] error_retry_seconds = 180`. Model recovery and the
+observe/execute/verify bridge stages have separate windows. A bridge stage charges
+failed game I/O and backoff, including a hanging initial call; it excludes healthy
+model/preparation time. A successful observation cannot reset failed verification.
+Successful calls reset their own windows; manual pause time is excluded.
 Failed model decisions send no fallback action. Bridge recovery observes and reconciles
-pending actions before executing a fresh legal decision. `progress.json` reports
+pending actions before executing a fresh legal decision. A receipt is retained when
+post-action observation fails, so the next step verifies it before another model call
+or mutation. `status` exposes `phase` and `phase_started_at`; `progress.json` also reports
 `retrying_provider` or `retrying_environment`. The legacy `max_errors` setting is accepted
 but no longer controls recovery. `--no-limits` preserves this recovery deadline.
 
 模型或桥接连续失败时，在 180 秒内持续尝试，达到期限后退出；不再按 6 次错误停止。
-模型成功响应／动作核验成功分别重置计时，手动暂停时间不计入。
-模型失败时不发送回退动作；桥接恢复先观察并对账 pending，避免重复执行。
+模型与观察／执行／核验分别计时，桥接预算仅计失败 I/O 与退避，健康模型耗时不计入。
+成功调用只重置对应窗口，观察成功不会掩盖持续核验失败，手动暂停时间不计入。
+模型失败时不发送回退动作；执行后的读取失败保留回执，恢复先核验再请求新决策。
+`status` 提供当前阶段和阶段开始时间，可区分慢请求与恢复中的故障。
 可通过 `[runtime] error_retry_seconds = 180` 调整；`--no-limits` 不关闭这一恢复期限。

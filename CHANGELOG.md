@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 
+- Current-phase diagnostics and calculator facts bound to legal actions, with validated numeric forecasts.
+- Offline history bootstrap for interrupted traces, persistent holdout isolation and conditional tactical learning with counterexample retirement.
+- Public live-state robustness regressions and three reproducible incremental benchmark reports.
 - Explicit `--no-limits` and TOML `false` settings for disabling run step, time and cumulative-token limits.
 - One-command Windows setup for Python, locked dependencies, configuration templates and the pinned game bridge.
 - Main-menu-only `start`, cooperative `pause`/`resume`, process `status` and a Windows CLI launcher.
@@ -18,6 +21,14 @@ All notable changes to this project will be documented in this file. The format 
 
 - Resume reobserves the game and invalidates pre-pause choices; stopping preserves pending-action recovery.
 - Retain legacy `run` and `step` commands for existing integrations.
+
+### Fixed
+
+- Reconcile retained receipts after post-action read failures before requesting another decision or sending a mutation.
+- Track observe/execute/verify recovery separately, excluding healthy model latency from bridge deadlines.
+- Recompute supported Body Slam damage after Block setup; include Plating at end turn without counting Pyre energy twice.
+- Distinguish reported token usage from conservative safety estimates, including rejected HTTP requests.
+- Retry transient Windows atomic-file replacement locks and roll back failed evidence imports together with cached partitions.
 
 ## [0.2.0] - 2026-10-02
 
