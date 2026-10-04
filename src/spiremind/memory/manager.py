@@ -436,7 +436,7 @@ class MemoryManager:
 
         def write_evidence():
             self.experience.insert(episode, commit=False)
-            if new_state.terminal or (old_state.combat and not new_state.combat):
+            if new_state.terminal or (old_in_combat and not new_in_combat):
                 self.experience.enqueue(episode["lineage"], reason="scene_boundary", commit=False)
 
         if self.experience:

@@ -10,7 +10,9 @@ from .effects import (
     action_resource_key,
     attack_hits_from,
     attack_profile,
+    body_slam_damage,
     card_resources,
+    end_turn_block,
     facts_of,
     incoming_from,
     known_target_effects,
@@ -24,7 +26,9 @@ from .effects import (
 )
 
 
-def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX_SURVIVAL_SEARCH_TRANSITIONS):
+def visible_offense_plan(
+    state, *, lost_hp_this_turn=False, transition_limit=MAX_SURVIVAL_SEARCH_TRANSITIONS, disabled_cards=()
+):
     """Find a bounded full-turn plan for supported visible cards and one target.
 
     Draw remains unknown because pile order is hidden. Explicit HP loss, healing,
@@ -84,6 +88,9 @@ def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX
         card = cards.get(action.card_id)
         if not card:
             continue
+        if card.id in disabled_cards:
+            unsupported_effect = True
+            continue
         profile = attack_profile(card, target_index)
         is_attack = card.type.lower() == "attack" or profile is not None
         target = target_for(action, combat.enemies)
@@ -93,6 +100,9 @@ def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX
                 unsupported_effect = True
             continue
         if is_attack and (target != enemy or profile is None):
+            unsupported_effect = True
+            continue
+        if card.id == "body_slam" and body_slam_damage(card, combat) is None:
             unsupported_effect = True
             continue
         resources = card_resources(card, combat, target_index)
@@ -127,6 +137,7 @@ def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX
                 "resource_key": action_resource_key(action, card),
                 "cost": cost,
                 "is_attack": is_attack,
+                "block_scaling_card": card if card.id == "body_slam" else None,
                 "applies_vulnerable": applies_vulnerable,
                 **resources,
                 **(profile or {"damage": 0, "hits": 0, "hits_require_hp_loss": False}),
@@ -145,6 +156,9 @@ def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX
             or card.cost <= combat.energy
             or card.cost > combat.energy + extra_energy
         ):
+            continue
+        if card.id in disabled_cards:
+            unsupported_effect = True
             continue
         profile = attack_profile(card, target_index)
         is_attack = card.type.lower() == "attack" or profile is not None
@@ -175,6 +189,9 @@ def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX
         if is_attack and profile is None:
             unsupported_effect = True
             continue
+        if card.id == "body_slam" and body_slam_damage(card, combat) is None:
+            unsupported_effect = True
+            continue
         if not is_attack and not supported_setup:
             continue
         candidates.append(
@@ -183,6 +200,7 @@ def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX
                 "resource_key": f"card:{card.ref}",
                 "cost": card.cost,
                 "is_attack": is_attack,
+                "block_scaling_card": card if card.id == "body_slam" else None,
                 "applies_vulnerable": applies_vulnerable,
                 **resources,
                 **(profile or {"damage": 0, "hits": 0, "hits_require_hp_loss": False}),
@@ -238,7 +256,7 @@ def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX
         shown_incoming = (
             0 if neutralized else incoming_from(enemy) + node["tainted_gain"] * attack_hits_from(enemy)
         )
-        return node["hp"] - max(0, shown_incoming - combat.block - node["self_block"])
+        return node["hp"] - max(0, shown_incoming - combat.block - end_turn_block(state) - node["self_block"])
 
     def better_damage(candidate, incumbent):
         left = (
@@ -308,6 +326,8 @@ def visible_offense_plan(state, *, lost_hp_this_turn=False, transition_limit=MAX
                     if initial_giant_charges and node["giant_charges"] == 0
                     else row["damage"]
                 )
+                if row["block_scaling_card"] is not None:
+                    card_damage = body_slam_damage(row["block_scaling_card"], combat, node["self_block"])
                 per_hit = math.floor(card_damage * vulnerable_multiplier * (1 + node["slow"] / 100))
                 hits = (2 if node["lost_hp"] else 1) if row["hits_require_hp_loss"] else row["hits"]
                 for _ in range(hits):
@@ -433,6 +453,7 @@ def visible_survival_plan(state, rows, incoming, *, search_stats=None):
             - reduction
             + node["tainted_gain"] * remaining_hits
             - combat.block
+            - end_turn_block(state)
             - node["block"],
         )
         return node["hp"] - loss

@@ -22,6 +22,7 @@ class ModelChoice(BaseModel):
     reason: str = Field(max_length=800)
     confidence: float = Field(ge=0, le=1, allow_inf_nan=False)
     strategy_update: StrategyUpdate | None = None
+    forecast: dict[str, int] | None = Field(default=None, max_length=6)
 
 
 class Decision(BaseModel):
@@ -37,3 +38,4 @@ class Decision(BaseModel):
     provider_error: str | None = None
     context_id: str | None = None
     policy_rule: str | None = None
+    action_evaluation: dict | None = None

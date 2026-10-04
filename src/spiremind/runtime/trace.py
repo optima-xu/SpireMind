@@ -6,6 +6,8 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from uuid import uuid4
 
+from spiremind.core.files import replace_file
+
 
 def source_fingerprint() -> str:
     root = Path(__file__).resolve().parents[1]
@@ -57,7 +59,7 @@ class TraceWriter:
     def write_json(self, filename: str, payload: dict):
         temporary = self.path / (filename + ".tmp")
         temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
-        temporary.replace(self.path / filename)
+        replace_file(temporary, self.path / filename)
 
 
 def replay_summary(path: Path) -> dict:
@@ -75,6 +77,22 @@ def replay_summary(path: Path) -> dict:
             # A killed process can leave only its final JSONL record truncated.
             break
     errors = sum(bool(r.get("error")) for r in records)
+    reconciliation_path = path / "reconciliations.jsonl"
+    if reconciliation_path.exists():
+        reconciled = {}
+        for line in reconciliation_path.read_text(encoding="utf-8").splitlines():
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if row.get("verify_ok"):
+                reconciled[
+                    (row.get("decision_id"), row.get("state_revision"), (row.get("action") or {}).get("id"))
+                ] = row
+        for row in records:
+            key = (row.get("decision_id"), row.get("state_revision"), (row.get("action") or {}).get("id"))
+            if row.get("execution_result") and key in reconciled:
+                row.update({k: value for k, value in reconciled[key].items() if k != "error"})
     verified = sum(r.get("verify_ok") is True for r in records)
     summary_path = path / "summary.json"
     summary = json.loads(summary_path.read_text(encoding="utf-8")) if summary_path.exists() else {}

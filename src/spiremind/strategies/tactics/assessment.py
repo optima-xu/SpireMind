@@ -1,5 +1,6 @@
 import math
 
+from spiremind.context.action_facts import action_evaluations
 from spiremind.core.enums import ActionKind, Scene
 from spiremind.knowledge.library import version_matches
 
@@ -10,6 +11,7 @@ from .effects import (
     attack_hit_count_known,
     attack_hits_from,
     card_resources,
+    end_turn_block,
     facts_of,
     incoming_after_tainted,
     incoming_from,
@@ -25,16 +27,23 @@ from .effects import (
 from .search import visible_offense_plan, visible_survival_plan
 
 
-def _assess(state, *, lost_hp_this_turn=False):
+def _assess(state, *, lost_hp_this_turn=False, disabled_cards=()):
     combat = state.combat
     if not combat:
         return {}
     unmodeled_player_powers = sorted(
-        effect.id for effect in combat.powers if effect.id not in KNOWN_PLAYER_POWERS
+        effect.id
+        for effect in combat.powers
+        if effect.id not in KNOWN_PLAYER_POWERS
+        or (
+            effect.id in {"plating_power", "pyre_power"}
+            and not version_matches("0.111.x", state.game_version)
+        )
     )
     incoming = sum(incoming_from(e) for e in combat.enemies)
     attack_hits = sum(attack_hits_from(e) for e in combat.enemies)
-    loss = max(0, incoming - combat.block)
+    effective_block = combat.block + end_turn_block(state)
+    loss = max(0, incoming - effective_block)
     unknown = any(
         "attack" in i.type.lower() and i.damage is None and i.total_damage is None
         for e in combat.enemies
@@ -52,6 +61,8 @@ def _assess(state, *, lost_hp_this_turn=False):
         if action.kind == ActionKind.PLAY_CARD and c:
             target_index = combat.enemies.index(enemy) if enemy else None
             resources = card_resources(c, combat, target_index)
+            if c.id in disabled_cards:
+                resources["status_effect_known"] = False
             status_known = resources["status_effect_known"]
             projected_incoming = (
                 incoming_after_tainted(combat, resources["tainted_gain"]) if status_known else None
@@ -77,15 +88,15 @@ def _assess(state, *, lost_hp_this_turn=False):
                         state.run.max_hp or state.run.hp + resources["heal"],
                         state.run.hp - resources["hp_loss"] + resources["heal"],
                     )
-                    - max(0, projected_incoming - combat.block - block),
+                    - max(0, projected_incoming - effective_block - block),
                 }
             elif status_known and not row["self_lethal"] and resources["heal"] > 0:
                 row["hp_after_intents"] = min(
                     state.run.max_hp or state.run.hp + resources["heal"],
                     state.run.hp - resources["hp_loss"] + resources["heal"],
-                ) - max(0, projected_incoming - combat.block)
+                ) - max(0, projected_incoming - effective_block)
             elif status_known and not row["self_lethal"] and resources["tainted_gain"] > 0:
-                row["hp_after_intents"] = row["hp_after_cost"] - max(0, projected_incoming - combat.block)
+                row["hp_after_intents"] = row["hp_after_cost"] - max(0, projected_incoming - effective_block)
             if versioned and enemy and status_known:
                 estimate = simple_damage(
                     c,
@@ -127,7 +138,7 @@ def _assess(state, *, lost_hp_this_turn=False):
                                 state.run.max_hp or state.run.hp + resources["heal"],
                                 state.run.hp - resources["hp_loss"] + resources["heal"],
                             )
-                            - max(0, projected_incoming - combat.block - row.get("block_gain", 0))
+                            - max(0, projected_incoming - effective_block - row.get("block_gain", 0))
                             if status_known and not row["self_lethal"]
                             else None
                         ),
@@ -173,7 +184,7 @@ def _assess(state, *, lost_hp_this_turn=False):
                 row |= {
                     "intent_reduction_estimate": reduction,
                     "nonstacking_effect_key": f"weak:{enemy.ref}",
-                    "hp_after_intents": state.run.hp - max(0, incoming - reduction - combat.block),
+                    "hp_after_intents": state.run.hp - max(0, incoming - reduction - effective_block),
                 }
             choices.append(row)
     # An unknown attack cannot be treated as zero damage. The narrow visible
@@ -242,7 +253,7 @@ def _assess(state, *, lost_hp_this_turn=False):
         for action in state.legal_actions
         if action.kind in {ActionKind.PLAY_CARD, ActionKind.USE_POTION}
     ]
-    offense = visible_offense_plan(state, lost_hp_this_turn=lost_hp_this_turn)
+    offense = visible_offense_plan(state, lost_hp_this_turn=lost_hp_this_turn, disabled_cards=disabled_cards)
     unresolved_attack_combo = any(
         row.get("card_type", "").lower() == "attack"
         and "hp_damage" in row
@@ -376,7 +387,7 @@ def _assess(state, *, lost_hp_this_turn=False):
                 hp = min(state.run.max_hp or hp + followup["heal"], hp + followup["heal"])
                 block += followup["block_gain"]
                 tainted += followup["tainted_gain"]
-            return hp - max(0, incoming + tainted * attack_hits - combat.block - block)
+            return hp - max(0, incoming + tainted * attack_hits - effective_block - block)
 
         base_hp = projected_hp()
         feasible_followups = [item for item in enabled_followups if projected_hp(item) is not None]
@@ -401,7 +412,7 @@ def _assess(state, *, lost_hp_this_turn=False):
                 "tainted_gain": row["tainted_gain"],
                 "hp_after_shown_intents_if_only_cost": state.run.hp
                 - row["hp_loss"]
-                - max(0, incoming + row["tainted_gain"] * attack_hits - combat.block),
+                - max(0, incoming + row["tainted_gain"] * attack_hits - effective_block),
                 "enabled_followups": enabled_followups,
                 "best_enabled_followup": best_followup["card_ref"] if best_followup else None,
                 "best_enabled_heal": best_enabled_heal,
@@ -413,8 +424,9 @@ def _assess(state, *, lost_hp_this_turn=False):
                 ),
             }
         )
-    return {
-        "scope": "visible attack intents only; excludes end-turn triggers and hidden effects",
+    result = {
+        "scope": "visible attack intents plus supported Plating; other end-turn/hidden effects excluded",
+        "end_turn_block_gain": end_turn_block(state),
         "in_boss_fight": bool(state.run.boss and (boss_name_matches or boss_floor)),
         "incoming_attack_damage": incoming,
         "incoming_attack_hits": attack_hits if attack_hit_count_known(combat) else None,
@@ -452,6 +464,7 @@ def _assess(state, *, lost_hp_this_turn=False):
         "player_tainted": player_power_amount(combat, "tainted_power"),
         "draw_blocked_now": player_power_amount(combat, "no_draw_power") > 0,
         "unmodeled_player_powers": unmodeled_player_powers,
+        "disabled_card_mechanics": sorted(disabled_cards),
         "damage_caps": [
             {"enemy": e.ref, "remaining_hits": p.amount, "text": p.description}
             for e in combat.enemies
@@ -460,6 +473,8 @@ def _assess(state, *, lost_hp_this_turn=False):
         ],
         "evaluated_actions": choices,
     }
+    result["action_evaluations"] = action_evaluations(state, result, facts_loader=facts_of)
+    return result
 
 
 def forced_combat_selection_action(state):
@@ -595,7 +610,7 @@ def early_boss_potion_action(state, facts):
     return None
 
 
-def assess(state, *, lost_hp_this_turn=False):
+def assess(state, *, lost_hp_this_turn=False, disabled_cards=()):
     """Parse each immutable public fact once per complete decision assessment."""
     with parsed_scope():
-        return _assess(state, lost_hp_this_turn=lost_hp_this_turn)
+        return _assess(state, lost_hp_this_turn=lost_hp_this_turn, disabled_cards=disabled_cards)

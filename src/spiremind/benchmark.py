@@ -7,6 +7,7 @@ import statistics
 import sys
 import tempfile
 import time
+from dataclasses import replace
 from importlib.resources import files
 from pathlib import Path
 
@@ -56,8 +57,10 @@ async def production_probe(data, root):
             for repeat in range(6):
                 start = time.perf_counter()
                 view = await memory.prepare(state, case["agent"])
+                if case["agent"] == "combat" and state.combat:
+                    view = replace(view, assessment=assess(state))
                 task = (
-                    strategy.task_for(state, view, assess(state))
+                    strategy.task_for(state, view, view.assessment)
                     if case["agent"] == "combat" and state.combat
                     else strategy.task_for(state, view)
                 )
@@ -254,7 +257,7 @@ async def benchmark(args, config):
         python=sys.version.split()[0],
         notes=[
             "Local preparation excludes HTTP and game execution. "
-            "Cold means cleared fact/deck/retrieval caches.",
+            "Cold means cleared fact/deck/retrieval/progress-format caches.",
             "All included historical observations belong to holdout lineages; learning reads train only.",
         ],
     )

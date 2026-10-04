@@ -9,7 +9,7 @@ from spiremind.context.compiler import ContextCompiler
 from spiremind.core.actions import Action, ActionResult
 from spiremind.core.decision import Decision, StrategyUpdate
 from spiremind.core.enums import ActionKind, Scene
-from spiremind.environment.base import StaleDecision
+from spiremind.environment.base import EnvironmentError, StaleDecision
 from spiremind.environment.mock import MockEnvironment, demo_states
 from spiremind.knowledge.cards import CardDB
 from spiremind.knowledge.library import StrategyLibrary
@@ -245,7 +245,7 @@ async def test_slow_provider_retry_is_cancelled_at_recovery_deadline(tmp_path):
     strategy = HangingStrategy()
     env = MockEnvironment(demo_states()[2:])
     config = Config()
-    config.runtime.error_retry_seconds = 0.02
+    config.runtime.error_retry_seconds = 0.2
     agent = AgentRuntime(
         env,
         MemoryManager(store),
@@ -259,6 +259,135 @@ async def test_slow_provider_retry_is_cancelled_at_recovery_deadline(tmp_path):
         await asyncio.wait_for(agent.step(), 1)
     assert strategy.cancelled
     assert not env.executed
+    store.close()
+
+
+async def test_recovered_environment_does_not_cancel_a_healthy_slow_model(tmp_path):
+    class RecoveredEnvironment(MockEnvironment):
+        failed = False
+
+        async def observe(self):
+            if not self.failed:
+                self.failed = True
+                raise EnvironmentError("temporary bridge failure")
+            return await super().observe()
+
+    class SlowHealthyStrategy:
+        name = "event"
+        last_context = None
+
+        async def decide(self, state, memory):
+            await asyncio.sleep(0.06)
+            return conservative_choice(state, memory)
+
+    store = MemoryStore(tmp_path / "memory.sqlite")
+    strategy = SlowHealthyStrategy()
+    env = RecoveredEnvironment(demo_states()[2:])
+    config = Config()
+    config.runtime.max_steps = 1
+    config.runtime.error_retry_seconds = 0.03
+    agent = AgentRuntime(
+        env,
+        MemoryManager(store),
+        SceneRouter(strategy, strategy, strategy, strategy),
+        DeckAnalyzer(StrategyLibrary()),
+        TraceWriter(tmp_path / "runs", "recovered"),
+        config,
+    )
+    # Enter recovery without a tiny real-time backoff: CI filesystem/scheduler
+    # variation must not consume the entire test window before the retry starts.
+    with pytest.raises(EnvironmentError):
+        await agent.step()
+    agent.environment_failure_started = agent._recovery_clock()
+    result = await agent.run()
+    assert result["verified_actions"] == len(env.executed) == 1
+    assert result["outcome"] == "step_limit"
+    assert result["environment_failure_seconds"] == 0
+    store.close()
+
+
+async def test_observation_failure_after_execution_is_reconciled_before_any_new_action(tmp_path):
+    class DelayedObservationEnvironment(MockEnvironment):
+        fail_next_observe = False
+
+        async def execute(self, action):
+            receipt = await super().execute(action)
+            self.fail_next_observe = True
+            return receipt
+
+        async def observe(self):
+            if self.fail_next_observe:
+                self.fail_next_observe = False
+                raise EnvironmentError("observation unavailable after accepted action")
+            return await super().observe()
+
+    class Strategy:
+        name = "event"
+        last_context = None
+        calls = 0
+
+        async def decide(self, state, memory):
+            self.calls += 1
+            return conservative_choice(state, memory)
+
+    store = MemoryStore(tmp_path / "memory.sqlite")
+    strategy = Strategy()
+    env = DelayedObservationEnvironment(demo_states()[2:])
+    agent = AgentRuntime(
+        env,
+        MemoryManager(store),
+        SceneRouter(strategy, strategy, strategy, strategy),
+        DeckAnalyzer(StrategyLibrary()),
+        TraceWriter(tmp_path / "runs", "reconcile"),
+        Config(),
+    )
+    with pytest.raises(EnvironmentError):
+        await agent.step()
+    await agent.step()
+    assert agent.verified == len(env.executed) == strategy.calls == 1
+    assert agent._pending_transition is None
+    assert agent.memory.run.key_decisions
+    assert replay_summary(agent.trace.path)["verified"] == 1
+    store.close()
+
+
+async def test_repeated_bad_receipt_stops_without_dispatching_a_second_action(tmp_path, monkeypatch):
+    class BadReceiptEnvironment(MockEnvironment):
+        async def execute(self, action):
+            receipt = await super().execute(action)
+            return receipt.model_copy(update={"next_decision_id": "wrong-decision"})
+
+    class Strategy:
+        name = "event"
+        last_context = None
+
+        async def decide(self, state, memory):
+            return conservative_choice(state, memory)
+
+    clock = [0.0]
+
+    async def backoff(seconds):
+        clock[0] += 60
+
+    monkeypatch.setattr("spiremind.runtime.agent.asyncio.sleep", backoff)
+    store = MemoryStore(tmp_path / "memory.sqlite")
+    strategy = Strategy()
+    env = BadReceiptEnvironment(demo_states()[2:])
+    agent = AgentRuntime(
+        env,
+        MemoryManager(store),
+        SceneRouter(strategy, strategy, strategy, strategy),
+        DeckAnalyzer(StrategyLibrary()),
+        TraceWriter(tmp_path / "runs", "bad_receipt"),
+        Config(),
+    )
+    monkeypatch.setattr(agent, "_recovery_clock", lambda: clock[0])
+    result = await agent.run()
+    assert result["outcome"] == "error_limit"
+    assert result["environment_recovery_seconds"]["verify"] == 180
+    assert len(env.executed) == 1
+    assert agent.verified == 0
+    assert agent.memory.run.key_decisions == []
     store.close()
 
 

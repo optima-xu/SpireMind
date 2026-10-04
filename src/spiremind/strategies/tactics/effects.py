@@ -43,6 +43,7 @@ SIMPLE_ATTACKS = {
     "breakthrough",
     "molten_fist",
     "spite",
+    "body_slam",
 }
 
 KNOWN_TARGET_POWERS = {
@@ -72,6 +73,8 @@ KNOWN_PLAYER_POWERS = {
     "vicious_power",  # Draw is outside the visible-hand search.
     "vulnerable_power",  # The live enemy intent already includes this modifier.
     "weak_power",
+    "pyre_power",  # Start-of-turn energy is already reflected in combat.energy.
+    "plating_power",  # Grants its current amount of Block at the end of this turn.
 }
 
 MODELED_CARD_VALUE_KEYS = {
@@ -326,6 +329,29 @@ def card_resources(card, combat=None, target_index=None):
 
 def player_power_amount(combat, identity):
     return sum(numeric(effect.amount) or 0 for effect in combat.powers if effect.id == identity)
+
+
+def end_turn_block(state):
+    if not state.combat or not version_matches("0.111.x", state.game_version):
+        return 0
+    return math.floor(max(0, player_power_amount(state.combat, "plating_power")))
+
+
+def body_slam_damage(card, combat, additional_block=0):
+    """Validate the current preview before extrapolating Block-dependent damage.
+
+    CalculationBase/ExtraDamage are formula metadata, not current Block/Strength.
+    Shrink and Gigantification rounding remain outside this narrow contract.
+    """
+    if any(player_power_amount(combat, name) for name in ("shrink_power", "gigantification_power")):
+        return None
+    strength = player_power_amount(combat, "strength_power")
+    multiplier = 0.75 if player_power_amount(combat, "weak_power") > 0 else 1
+    damage = math.floor(max(0, combat.block + strength) * multiplier)
+    live = numeric(facts_of(card.values).get("CalculatedDamage"))
+    if live != damage:
+        return None
+    return math.floor(max(0, combat.block + additional_block + strength) * multiplier)
 
 
 def simple_damage(card, enemy, *, lost_hp_this_turn=False, target_index=None, cruelty_bonus=0):

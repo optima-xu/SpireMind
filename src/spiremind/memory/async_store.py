@@ -2,13 +2,15 @@
 
 import asyncio
 import inspect
+import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
 
 from spiremind.knowledge.cards import CardDB
+from spiremind.runtime.trace import source_fingerprint
 from spiremind.strategies.run import DeckAnalyzer
 
-from .experience import ExperienceStore
+from .experience import ExperienceStore, digest, import_history
 from .manager import MemoryManager
 from .storage_sqlite import MemoryStore
 
@@ -105,8 +107,71 @@ class AsyncMemory:
                 card_cache=self.cards.cache.stats(),
                 deck_cache=self.analyzer.cache.stats(),
                 retrieval_cache=self.experience.cache.stats(),
+                learning=self.experience.inspect(),
             )
         )
+
+    async def bootstrap(self, root):
+        """Import local history offline, once per changed trace dataset, on the SQLite owner thread."""
+
+        def bootstrap():
+            files = sorted(
+                path
+                for pattern in (
+                    "*/states.jsonl",
+                    "*/decisions.jsonl",
+                    "*/reconciliations.jsonl",
+                    "*/summary.json",
+                    "*/manifest.json",
+                )
+                for path in root.glob(pattern)
+                if (path.parent / "states.jsonl").exists() and (path.parent / "decisions.jsonl").exists()
+            )
+            fingerprint = digest(
+                [
+                    2,
+                    source_fingerprint(),
+                    [
+                        (path.relative_to(root).as_posix(), path.stat().st_size, path.stat().st_mtime_ns)
+                        for path in files
+                    ],
+                ]
+            )
+            previous = self.store.db.execute(
+                "SELECT payload FROM memory_meta WHERE key='history_bootstrap'"
+            ).fetchone()
+            if previous:
+                cached = json.loads(previous[0])
+                if cached["fingerprint"] == fingerprint:
+                    return cached | {"cached": True}
+            report = import_history(self.experience, root)
+            self.experience.consolidate()
+            value = dict(
+                fingerprint=fingerprint,
+                cached=False,
+                history={
+                    key: report[key]
+                    for key in (
+                        "traces",
+                        "incomplete_traces",
+                        "lineages",
+                        "train_lineages",
+                        "holdout_lineages",
+                        "inserted",
+                        "malformed",
+                        "unjoined",
+                        "dataset_sha256",
+                    )
+                },
+                learning=self.experience.inspect(),
+            )
+            with self.store.db:
+                self.store.db.execute(
+                    "INSERT OR REPLACE INTO memory_meta VALUES ('history_bootstrap',?)", (json.dumps(value),)
+                )
+            return value
+
+        return await self.call(bootstrap)
 
     async def close(self):
         if self.closed:

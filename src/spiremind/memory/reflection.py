@@ -52,6 +52,9 @@ class ReflectionAgent:
                             await self.memory.call(lambda p=proposal: self.memory.experience.propose(p))
                         except ValueError:
                             self.rejected += 1
+                    from .tactics import consolidate_tactics
+
+                    await self.memory.call(lambda: consolidate_tactics(self.memory.experience))
                 else:
                     await self.memory.call(self.memory.experience.consolidate)
                 await self.memory.call(lambda i=identity: self._status(i, "complete"))

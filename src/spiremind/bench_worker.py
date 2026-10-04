@@ -6,9 +6,10 @@ import json
 import statistics
 import tempfile
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
+from spiremind.context import views as context_views
 from spiremind.context.budget import ContextBudget
 from spiremind.context.compiler import ContextCompiler
 from spiremind.core.state import GameState
@@ -47,7 +48,12 @@ async def probe(args):
 
             from spiremind.memory.experience import ExperienceStore
 
-            learned_store = sqlite3.connect(f"file:{args.learning.as_posix()}?mode=ro", uri=True)
+            # Older frozen databases may lack newly introduced memory tables.
+            # Migrate only an isolated copy, preserving the source snapshot.
+            with sqlite3.connect(f"file:{args.learning.as_posix()}?mode=ro", uri=True) as frozen:
+                learned_store = sqlite3.connect(root / "learning.sqlite")
+                frozen.backup(learned_store)
+            frozen.close()
             memory.experience = ExperienceStore(learned_store)
         sql = dict(queries=0, transactions=0)
 
@@ -82,6 +88,9 @@ async def probe(args):
             }[agent](compiler, None, conservative_choice)
             for round_index in range(args.rounds + 1):
                 if round_index == 0:
+                    formatter = getattr(context_views, "_compact_progress", None)
+                    if formatter is not None:
+                        formatter.cache_clear()
                     for object_ in (cards, analyzer, library, getattr(memory, "experience", None)):
                         if object_ is not None and hasattr(object_, "cache"):
                             object_.cache.clear()
@@ -90,6 +99,8 @@ async def probe(args):
                 view = await memory.context_for(state, agent)
                 if agent == "combat" and state.combat:
                     assessment = assess(state)
+                    if hasattr(view, "assessment"):
+                        view = replace(view, assessment=assessment)
                     task = (
                         strategy.task_for(state, view, assessment)
                         if hasattr(analyzer, "cache")

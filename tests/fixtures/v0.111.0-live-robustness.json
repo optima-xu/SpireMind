@@ -1,0 +1,2701 @@
+[
+  {
+    "case": "revision_36",
+    "state": {
+      "scene": "combat",
+      "game_version": "v0.111.0",
+      "decision_id": "public:36",
+      "revision": 36,
+      "run": {
+        "character": "ironclad",
+        "ascension": 0,
+        "act": 2,
+        "floor": 25,
+        "hp": 61,
+        "max_hp": 77,
+        "max_energy": 3,
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"BURNING_BLOOD\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Heal\":6},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "winged_boots",
+            "name": "羽翼之靴",
+            "text": "你在选择下一层的房间时有[blue]0[/blue]次机会可以无视当前的路线。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"WINGED_BOOTS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Rooms\":0},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gremlin_horn",
+            "name": "地精之角",
+            "text": "每当有一名敌人死亡时，获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]并抽[blue]1[/blue]张牌。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GREMLIN_HORN\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Energy\":1,\"Cards\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gorget",
+            "name": "护喉甲",
+            "text": "在每场战斗开始时，获得[blue]4[/blue]层[gold]覆甲[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GORGET\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"PlatingPower\":4},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "toasty_mittens",
+            "name": "烘焙手套",
+            "text": "在你的回合开始时，[gold]消耗[/gold]你[gold]手牌[/gold]中的[blue]1[/blue]张牌并获得[blue]1[/blue]点[gold]力量[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"TOASTY_MITTENS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "id": "public-regression"
+      },
+      "combat": {
+        "turn": 4,
+        "energy": 2,
+        "block": 0,
+        "powers": [
+          {
+            "id": "plating_power",
+            "amount": 1.0,
+            "description": "在你的回合结束时获得[blue]1[/blue]点[gold]格挡[/gold]。[gold]覆甲[/gold]会在你的回合开始时减少[blue]1[/blue]层。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PLATING_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"Decrement\":1},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "strength_power",
+            "amount": 4.0,
+            "description": "增加攻击牌造成的伤害值[blue]4[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":4,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":4},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":4,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "pyre_power",
+            "amount": 1.0,
+            "description": "在每回合开始时获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PYRE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "unmovable_power",
+            "amount": 1.0,
+            "description": "每个回合你前[blue]1[/blue]次从卡牌中获得[gold]格挡[/gold]时，将数值翻倍。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"UNMOVABLE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "enemies": [
+          {
+            "id": "chomper",
+            "ref": "enemy:CHOMPER:02b62f75",
+            "name": "啃咬机",
+            "hp": 31,
+            "max_hp": 61,
+            "block": 0,
+            "powers": [
+              {
+                "id": "artifact_power",
+                "amount": 2.0,
+                "description": "[gold]免疫[/gold][blue]2[/blue]次负面效果。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"ARTIFACT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "StatusCard",
+                "damage": null,
+                "hits": null,
+                "total_damage": null,
+                "text": "3"
+              }
+            ],
+            "alive": true
+          },
+          {
+            "id": "chomper",
+            "ref": "enemy:CHOMPER:0067ab1d",
+            "name": "啃咬机",
+            "hp": 26,
+            "max_hp": 63,
+            "block": 0,
+            "powers": [
+              {
+                "id": "artifact_power",
+                "amount": 2.0,
+                "description": "[gold]免疫[/gold][blue]2[/blue]次负面效果。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"ARTIFACT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 8,
+                "hits": 2,
+                "total_damage": 16,
+                "text": "8[font_size=18]×2[/font_size]"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "hand": [
+          {
+            "id": "taunt",
+            "ref": "card:TAUNT:0359d944",
+            "name": "挑衅+",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": true,
+            "text": "获得14点格挡。 给予2层易伤。",
+            "keywords": [
+              "易伤",
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":14,\"VulnerablePower\":2}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "shrug_it_off",
+            "ref": "card:SHRUG_IT_OFF:0228a365",
+            "name": "耸肩无视",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得16点格挡。 抽1张牌。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":16,\"Cards\":1}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:036dbe93",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得10点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":10}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "combat:end_turn",
+          "decision_id": "public:36",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 16.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage"
+          ]
+        },
+        {
+          "id": "combat:play:0:enemy:0",
+          "decision_id": "public:36",
+          "kind": "play_card",
+          "label": "Play 挑衅+ on enemy:0",
+          "description": "获得14点格挡。 给予2层易伤。 | Keywords: 易伤, 格挡",
+          "card_id": "card:TAUNT:0359d944",
+          "target_id": "enemy:CHOMPER:02b62f75",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:0:enemy:1",
+          "decision_id": "public:36",
+          "kind": "play_card",
+          "label": "Play 挑衅+ on enemy:1",
+          "description": "获得14点格挡。 给予2层易伤。 | Keywords: 易伤, 格挡",
+          "card_id": "card:TAUNT:0359d944",
+          "target_id": "enemy:CHOMPER:0067ab1d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1",
+          "decision_id": "public:36",
+          "kind": "play_card",
+          "label": "Play 耸肩无视",
+          "description": "获得16点格挡。 抽1张牌。 | Keywords: 格挡",
+          "card_id": "card:SHRUG_IT_OFF:0228a365",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2",
+          "decision_id": "public:36",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得10点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:036dbe93",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:0:enemy:0",
+          "decision_id": "public:36",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:0:enemy:1",
+          "decision_id": "public:36",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:1",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "1",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "revision_37",
+    "state": {
+      "scene": "combat",
+      "game_version": "v0.111.0",
+      "decision_id": "public:37",
+      "revision": 37,
+      "run": {
+        "character": "ironclad",
+        "ascension": 0,
+        "act": 2,
+        "floor": 25,
+        "hp": 61,
+        "max_hp": 77,
+        "max_energy": 3,
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"BURNING_BLOOD\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Heal\":6},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "winged_boots",
+            "name": "羽翼之靴",
+            "text": "你在选择下一层的房间时有[blue]0[/blue]次机会可以无视当前的路线。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"WINGED_BOOTS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Rooms\":0},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gremlin_horn",
+            "name": "地精之角",
+            "text": "每当有一名敌人死亡时，获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]并抽[blue]1[/blue]张牌。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GREMLIN_HORN\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Energy\":1,\"Cards\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gorget",
+            "name": "护喉甲",
+            "text": "在每场战斗开始时，获得[blue]4[/blue]层[gold]覆甲[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GORGET\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"PlatingPower\":4},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "toasty_mittens",
+            "name": "烘焙手套",
+            "text": "在你的回合开始时，[gold]消耗[/gold]你[gold]手牌[/gold]中的[blue]1[/blue]张牌并获得[blue]1[/blue]点[gold]力量[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"TOASTY_MITTENS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "id": "public-regression"
+      },
+      "combat": {
+        "turn": 4,
+        "energy": 1,
+        "block": 16,
+        "powers": [
+          {
+            "id": "plating_power",
+            "amount": 1.0,
+            "description": "在你的回合结束时获得[blue]1[/blue]点[gold]格挡[/gold]。[gold]覆甲[/gold]会在你的回合开始时减少[blue]1[/blue]层。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PLATING_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"Decrement\":1},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "strength_power",
+            "amount": 4.0,
+            "description": "增加攻击牌造成的伤害值[blue]4[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":4,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":4},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":4,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "pyre_power",
+            "amount": 1.0,
+            "description": "在每回合开始时获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PYRE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "unmovable_power",
+            "amount": 1.0,
+            "description": "每个回合你前[blue]1[/blue]次从卡牌中获得[gold]格挡[/gold]时，将数值翻倍。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"UNMOVABLE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "enemies": [
+          {
+            "id": "chomper",
+            "ref": "enemy:CHOMPER:02b62f75",
+            "name": "啃咬机",
+            "hp": 31,
+            "max_hp": 61,
+            "block": 0,
+            "powers": [
+              {
+                "id": "artifact_power",
+                "amount": 2.0,
+                "description": "[gold]免疫[/gold][blue]2[/blue]次负面效果。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"ARTIFACT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "StatusCard",
+                "damage": null,
+                "hits": null,
+                "total_damage": null,
+                "text": "3"
+              }
+            ],
+            "alive": true
+          },
+          {
+            "id": "chomper",
+            "ref": "enemy:CHOMPER:0067ab1d",
+            "name": "啃咬机",
+            "hp": 26,
+            "max_hp": 63,
+            "block": 0,
+            "powers": [
+              {
+                "id": "artifact_power",
+                "amount": 2.0,
+                "description": "[gold]免疫[/gold][blue]2[/blue]次负面效果。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"ARTIFACT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 8,
+                "hits": 2,
+                "total_damage": 16,
+                "text": "8[font_size=18]×2[/font_size]"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "hand": [
+          {
+            "id": "taunt",
+            "ref": "card:TAUNT:0359d944",
+            "name": "挑衅+",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": true,
+            "text": "获得7点格挡。 给予2层易伤。",
+            "keywords": [
+              "易伤",
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":7,\"VulnerablePower\":2}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:036dbe93",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得5点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":5}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:01b94c9f",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成10点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":10}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "combat:end_turn",
+          "decision_id": "public:37",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 16.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage"
+          ]
+        },
+        {
+          "id": "combat:play:0:enemy:0",
+          "decision_id": "public:37",
+          "kind": "play_card",
+          "label": "Play 挑衅+ on enemy:0",
+          "description": "获得7点格挡。 给予2层易伤。 | Keywords: 易伤, 格挡",
+          "card_id": "card:TAUNT:0359d944",
+          "target_id": "enemy:CHOMPER:02b62f75",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:0:enemy:1",
+          "decision_id": "public:37",
+          "kind": "play_card",
+          "label": "Play 挑衅+ on enemy:1",
+          "description": "获得7点格挡。 给予2层易伤。 | Keywords: 易伤, 格挡",
+          "card_id": "card:TAUNT:0359d944",
+          "target_id": "enemy:CHOMPER:0067ab1d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1",
+          "decision_id": "public:37",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得5点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:036dbe93",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2:enemy:0",
+          "decision_id": "public:37",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成10点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:01b94c9f",
+          "target_id": "enemy:CHOMPER:02b62f75",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2:enemy:1",
+          "decision_id": "public:37",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:1",
+          "description": "造成10点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:01b94c9f",
+          "target_id": "enemy:CHOMPER:0067ab1d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:0:enemy:0",
+          "decision_id": "public:37",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:0",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "0",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:use_potion:0:enemy:1",
+          "decision_id": "public:37",
+          "kind": "use_potion",
+          "label": "Use potion 虚弱药水 on enemy:1",
+          "description": "给予[blue]3[/blue]层[gold]虚弱[/gold]。",
+          "card_id": null,
+          "target_id": "1",
+          "node_id": null,
+          "item_id": "WEAK_POTION",
+          "option_id": "0",
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "revision_200",
+    "state": {
+      "scene": "combat",
+      "game_version": "v0.111.0",
+      "decision_id": "public:200",
+      "revision": 200,
+      "run": {
+        "character": "ironclad",
+        "ascension": 0,
+        "act": 2,
+        "floor": 33,
+        "hp": 19,
+        "max_hp": 77,
+        "max_energy": 3,
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"BURNING_BLOOD\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Heal\":6},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "winged_boots",
+            "name": "羽翼之靴",
+            "text": "你在选择下一层的房间时有[blue]0[/blue]次机会可以无视当前的路线。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"WINGED_BOOTS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Rooms\":0},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gremlin_horn",
+            "name": "地精之角",
+            "text": "每当有一名敌人死亡时，获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]并抽[blue]1[/blue]张牌。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GREMLIN_HORN\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Energy\":1,\"Cards\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gorget",
+            "name": "护喉甲",
+            "text": "在每场战斗开始时，获得[blue]4[/blue]层[gold]覆甲[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GORGET\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"PlatingPower\":4},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "toasty_mittens",
+            "name": "烘焙手套",
+            "text": "在你的回合开始时，[gold]消耗[/gold]你[gold]手牌[/gold]中的[blue]1[/blue]张牌并获得[blue]1[/blue]点[gold]力量[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"TOASTY_MITTENS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "sparkling_rouge",
+            "name": "闪亮口红",
+            "text": "在你的第[blue]3[/blue]回合开始时，获得[blue]1[/blue]点[gold]力量[/gold]和[blue]1[/blue]点[gold]敏捷[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"SPARKLING_ROUGE\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1,\"DexterityPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "id": "public-regression"
+      },
+      "combat": {
+        "turn": 6,
+        "energy": 4,
+        "block": 0,
+        "powers": [
+          {
+            "id": "surrounded_power",
+            "amount": 1.0,
+            "description": "被从后方攻击时受到的伤害增加[blue]50%[/blue]。使用有目标的卡牌或药水来改变你的朝向。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"SURROUNDED_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "strength_power",
+            "amount": 7.0,
+            "description": "增加攻击牌造成的伤害值[blue]7[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":7,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":7},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":7,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "dexterity_power",
+            "amount": 3.0,
+            "description": "增加从卡牌中获得的[gold]格挡[/gold]值[blue]3[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"DEXTERITY_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":3,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":3},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":3,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "pyre_power",
+            "amount": 1.0,
+            "description": "在每回合开始时获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PYRE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "enemies": [
+          {
+            "id": "crusher",
+            "ref": "enemy:CRUSHER:00ab27cd",
+            "name": "碾碎爪",
+            "hp": 108,
+            "max_hp": 209,
+            "block": 18,
+            "powers": [
+              {
+                "id": "back_attack_left_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_LEFT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 14,
+                "hits": 1,
+                "total_damage": 14,
+                "text": "14"
+              }
+            ],
+            "alive": true
+          },
+          {
+            "id": "rocket",
+            "ref": "enemy:ROCKET:0204663d",
+            "name": "火箭",
+            "hp": 155,
+            "max_hp": 199,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_right_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_RIGHT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 7,
+                "hits": 1,
+                "total_damage": 7,
+                "text": "7"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "hand": [
+          {
+            "id": "taunt",
+            "ref": "card:TAUNT:03992e09",
+            "name": "挑衅+",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": true,
+            "text": "获得10点格挡。 给予2层易伤。",
+            "keywords": [
+              "易伤",
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":10,\"VulnerablePower\":2}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:017307a2",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得8点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":8}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "pommel_strike",
+            "ref": "card:POMMEL_STRIKE:032f36ca",
+            "name": "剑柄打击+",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": true,
+            "text": "造成17点伤害。 抽2张牌。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":17,\"Cards\":2}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:01656a6b",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成13点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":13}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "combat:end_turn",
+          "decision_id": "public:200",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 21.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage",
+            "lethal"
+          ]
+        },
+        {
+          "id": "combat:play:0:enemy:0",
+          "decision_id": "public:200",
+          "kind": "play_card",
+          "label": "Play 挑衅+ on enemy:0",
+          "description": "获得10点格挡。 给予2层易伤。 | Keywords: 易伤, 格挡",
+          "card_id": "card:TAUNT:03992e09",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:0:enemy:1",
+          "decision_id": "public:200",
+          "kind": "play_card",
+          "label": "Play 挑衅+ on enemy:1",
+          "description": "获得10点格挡。 给予2层易伤。 | Keywords: 易伤, 格挡",
+          "card_id": "card:TAUNT:03992e09",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1",
+          "decision_id": "public:200",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得8点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:017307a2",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2:enemy:0",
+          "decision_id": "public:200",
+          "kind": "play_card",
+          "label": "Play 剑柄打击+ on enemy:0",
+          "description": "造成17点伤害。 抽2张牌。",
+          "card_id": "card:POMMEL_STRIKE:032f36ca",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2:enemy:1",
+          "decision_id": "public:200",
+          "kind": "play_card",
+          "label": "Play 剑柄打击+ on enemy:1",
+          "description": "造成17点伤害。 抽2张牌。",
+          "card_id": "card:POMMEL_STRIKE:032f36ca",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:3:enemy:0",
+          "decision_id": "public:200",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成13点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:01656a6b",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:3:enemy:1",
+          "decision_id": "public:200",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:1",
+          "description": "造成13点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:01656a6b",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "revision_202",
+    "state": {
+      "scene": "combat",
+      "game_version": "v0.111.0",
+      "decision_id": "public:202",
+      "revision": 202,
+      "run": {
+        "character": "ironclad",
+        "ascension": 0,
+        "act": 2,
+        "floor": 33,
+        "hp": 19,
+        "max_hp": 77,
+        "max_energy": 3,
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"BURNING_BLOOD\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Heal\":6},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "winged_boots",
+            "name": "羽翼之靴",
+            "text": "你在选择下一层的房间时有[blue]0[/blue]次机会可以无视当前的路线。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"WINGED_BOOTS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Rooms\":0},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gremlin_horn",
+            "name": "地精之角",
+            "text": "每当有一名敌人死亡时，获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]并抽[blue]1[/blue]张牌。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GREMLIN_HORN\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Energy\":1,\"Cards\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gorget",
+            "name": "护喉甲",
+            "text": "在每场战斗开始时，获得[blue]4[/blue]层[gold]覆甲[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GORGET\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"PlatingPower\":4},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "toasty_mittens",
+            "name": "烘焙手套",
+            "text": "在你的回合开始时，[gold]消耗[/gold]你[gold]手牌[/gold]中的[blue]1[/blue]张牌并获得[blue]1[/blue]点[gold]力量[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"TOASTY_MITTENS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "sparkling_rouge",
+            "name": "闪亮口红",
+            "text": "在你的第[blue]3[/blue]回合开始时，获得[blue]1[/blue]点[gold]力量[/gold]和[blue]1[/blue]点[gold]敏捷[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"SPARKLING_ROUGE\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1,\"DexterityPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "id": "public-regression"
+      },
+      "combat": {
+        "turn": 6,
+        "energy": 2,
+        "block": 10,
+        "powers": [
+          {
+            "id": "surrounded_power",
+            "amount": 1.0,
+            "description": "被从后方攻击时受到的伤害增加[blue]50%[/blue]。使用有目标的卡牌或药水来改变你的朝向。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"SURROUNDED_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "strength_power",
+            "amount": 7.0,
+            "description": "增加攻击牌造成的伤害值[blue]7[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":7,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":7},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":7,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "dexterity_power",
+            "amount": 3.0,
+            "description": "增加从卡牌中获得的[gold]格挡[/gold]值[blue]3[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"DEXTERITY_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":3,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":3},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":3,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "pyre_power",
+            "amount": 1.0,
+            "description": "在每回合开始时获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PYRE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "enemies": [
+          {
+            "id": "crusher",
+            "ref": "enemy:CRUSHER:00ab27cd",
+            "name": "碾碎爪",
+            "hp": 101,
+            "max_hp": 209,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_left_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_LEFT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "vulnerable_power",
+                "amount": 2.0,
+                "description": "[blue]2[/blue]回合内，受到的攻击伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"VULNERABLE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{\"DamageIncrease\":1.5},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 14,
+                "hits": 1,
+                "total_damage": 14,
+                "text": "14"
+              }
+            ],
+            "alive": true
+          },
+          {
+            "id": "rocket",
+            "ref": "enemy:ROCKET:0204663d",
+            "name": "火箭",
+            "hp": 155,
+            "max_hp": 199,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_right_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_RIGHT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 7,
+                "hits": 1,
+                "total_damage": 7,
+                "text": "7"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "hand": [
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:017307a2",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得8点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":8}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:01656a6b",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成13点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":13}"
+            },
+            "target_values": {
+              "encoded": "{\"0\":{\"Damage\":19.5}}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "howl_from_beyond",
+            "ref": "card:HOWL_FROM_BEYOND:037bacd9",
+            "name": "彼岸咆哮",
+            "type": "attack",
+            "cost": 3,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "对所有敌人造成25点伤害。 在你的回合结束时，如果这张牌在你的消耗牌堆中，则将其打出。",
+            "keywords": [
+              "消耗"
+            ],
+            "values": {
+              "encoded": "{\"Damage\":25}"
+            },
+            "target_values": {
+              "encoded": "{\"0\":{\"Damage\":37.5}}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": false,
+            "unplayable_reason": "not_enough_energy",
+            "count": 1
+          },
+          {
+            "id": "dominate",
+            "ref": "card:DOMINATE:03341841",
+            "name": "主宰",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "给予1层易伤。 敌人身上每有一层易伤，就获得1点力量。 消耗。",
+            "keywords": [
+              "Exhaust",
+              "力量",
+              "易伤",
+              "消耗"
+            ],
+            "values": {
+              "encoded": "{\"VulnerablePower\":1,\"StrengthPerVulnerable\":1}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "combat:end_turn",
+          "decision_id": "public:202",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 21.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage"
+          ]
+        },
+        {
+          "id": "combat:play:0",
+          "decision_id": "public:202",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得8点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:017307a2",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1:enemy:0",
+          "decision_id": "public:202",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成13点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:01656a6b",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1:enemy:1",
+          "decision_id": "public:202",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:1",
+          "description": "造成13点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:01656a6b",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:3:enemy:0",
+          "decision_id": "public:202",
+          "kind": "play_card",
+          "label": "Play 主宰 on enemy:0",
+          "description": "给予1层易伤。 敌人身上每有一层易伤，就获得1点力量。 消耗。 | Keywords: Exhaust, 力量, 易伤, 消耗 | Mods: Exhaust",
+          "card_id": "card:DOMINATE:03341841",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:3:enemy:1",
+          "decision_id": "public:202",
+          "kind": "play_card",
+          "label": "Play 主宰 on enemy:1",
+          "description": "给予1层易伤。 敌人身上每有一层易伤，就获得1点力量。 消耗。 | Keywords: Exhaust, 力量, 易伤, 消耗 | Mods: Exhaust",
+          "card_id": "card:DOMINATE:03341841",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "revision_203",
+    "state": {
+      "scene": "combat",
+      "game_version": "v0.111.0",
+      "decision_id": "public:203",
+      "revision": 203,
+      "run": {
+        "character": "ironclad",
+        "ascension": 0,
+        "act": 2,
+        "floor": 33,
+        "hp": 19,
+        "max_hp": 77,
+        "max_energy": 3,
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"BURNING_BLOOD\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Heal\":6},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "winged_boots",
+            "name": "羽翼之靴",
+            "text": "你在选择下一层的房间时有[blue]0[/blue]次机会可以无视当前的路线。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"WINGED_BOOTS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Rooms\":0},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gremlin_horn",
+            "name": "地精之角",
+            "text": "每当有一名敌人死亡时，获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]并抽[blue]1[/blue]张牌。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GREMLIN_HORN\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Energy\":1,\"Cards\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gorget",
+            "name": "护喉甲",
+            "text": "在每场战斗开始时，获得[blue]4[/blue]层[gold]覆甲[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GORGET\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"PlatingPower\":4},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "toasty_mittens",
+            "name": "烘焙手套",
+            "text": "在你的回合开始时，[gold]消耗[/gold]你[gold]手牌[/gold]中的[blue]1[/blue]张牌并获得[blue]1[/blue]点[gold]力量[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"TOASTY_MITTENS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "sparkling_rouge",
+            "name": "闪亮口红",
+            "text": "在你的第[blue]3[/blue]回合开始时，获得[blue]1[/blue]点[gold]力量[/gold]和[blue]1[/blue]点[gold]敏捷[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"SPARKLING_ROUGE\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1,\"DexterityPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "id": "public-regression"
+      },
+      "combat": {
+        "turn": 6,
+        "energy": 1,
+        "block": 18,
+        "powers": [
+          {
+            "id": "surrounded_power",
+            "amount": 1.0,
+            "description": "被从后方攻击时受到的伤害增加[blue]50%[/blue]。使用有目标的卡牌或药水来改变你的朝向。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"SURROUNDED_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "strength_power",
+            "amount": 7.0,
+            "description": "增加攻击牌造成的伤害值[blue]7[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":7,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":7},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":7,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "dexterity_power",
+            "amount": 3.0,
+            "description": "增加从卡牌中获得的[gold]格挡[/gold]值[blue]3[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"DEXTERITY_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":3,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":3},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":3,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "pyre_power",
+            "amount": 1.0,
+            "description": "在每回合开始时获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PYRE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "enemies": [
+          {
+            "id": "crusher",
+            "ref": "enemy:CRUSHER:00ab27cd",
+            "name": "碾碎爪",
+            "hp": 101,
+            "max_hp": 209,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_left_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_LEFT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "vulnerable_power",
+                "amount": 2.0,
+                "description": "[blue]2[/blue]回合内，受到的攻击伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"VULNERABLE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{\"DamageIncrease\":1.5},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 14,
+                "hits": 1,
+                "total_damage": 14,
+                "text": "14"
+              }
+            ],
+            "alive": true
+          },
+          {
+            "id": "rocket",
+            "ref": "enemy:ROCKET:0204663d",
+            "name": "火箭",
+            "hp": 155,
+            "max_hp": 199,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_right_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_RIGHT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 7,
+                "hits": 1,
+                "total_damage": 7,
+                "text": "7"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "hand": [
+          {
+            "id": "strike_ironclad",
+            "ref": "card:STRIKE_IRONCLAD:01656a6b",
+            "name": "打击",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "造成13点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":13}"
+            },
+            "target_values": {
+              "encoded": "{\"0\":{\"Damage\":19.5}}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "howl_from_beyond",
+            "ref": "card:HOWL_FROM_BEYOND:037bacd9",
+            "name": "彼岸咆哮",
+            "type": "attack",
+            "cost": 3,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "对所有敌人造成25点伤害。 在你的回合结束时，如果这张牌在你的消耗牌堆中，则将其打出。",
+            "keywords": [
+              "消耗"
+            ],
+            "values": {
+              "encoded": "{\"Damage\":25}"
+            },
+            "target_values": {
+              "encoded": "{\"0\":{\"Damage\":37.5}}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": false,
+            "unplayable_reason": "not_enough_energy",
+            "count": 1
+          },
+          {
+            "id": "dominate",
+            "ref": "card:DOMINATE:03341841",
+            "name": "主宰",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "给予1层易伤。 敌人身上每有一层易伤，就获得1点力量。 消耗。",
+            "keywords": [
+              "Exhaust",
+              "力量",
+              "易伤",
+              "消耗"
+            ],
+            "values": {
+              "encoded": "{\"VulnerablePower\":1,\"StrengthPerVulnerable\":1}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "combat:end_turn",
+          "decision_id": "public:203",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 21.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage"
+          ]
+        },
+        {
+          "id": "combat:play:0:enemy:0",
+          "decision_id": "public:203",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:0",
+          "description": "造成13点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:01656a6b",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:0:enemy:1",
+          "decision_id": "public:203",
+          "kind": "play_card",
+          "label": "Play 打击 on enemy:1",
+          "description": "造成13点伤害。",
+          "card_id": "card:STRIKE_IRONCLAD:01656a6b",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2:enemy:0",
+          "decision_id": "public:203",
+          "kind": "play_card",
+          "label": "Play 主宰 on enemy:0",
+          "description": "给予1层易伤。 敌人身上每有一层易伤，就获得1点力量。 消耗。 | Keywords: Exhaust, 力量, 易伤, 消耗 | Mods: Exhaust",
+          "card_id": "card:DOMINATE:03341841",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2:enemy:1",
+          "decision_id": "public:203",
+          "kind": "play_card",
+          "label": "Play 主宰 on enemy:1",
+          "description": "给予1层易伤。 敌人身上每有一层易伤，就获得1点力量。 消耗。 | Keywords: Exhaust, 力量, 易伤, 消耗 | Mods: Exhaust",
+          "card_id": "card:DOMINATE:03341841",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "revision_209",
+    "state": {
+      "scene": "combat",
+      "game_version": "v0.111.0",
+      "decision_id": "public:209",
+      "revision": 209,
+      "run": {
+        "character": "ironclad",
+        "ascension": 0,
+        "act": 2,
+        "floor": 33,
+        "hp": 16,
+        "max_hp": 77,
+        "max_energy": 3,
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"BURNING_BLOOD\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Heal\":6},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "winged_boots",
+            "name": "羽翼之靴",
+            "text": "你在选择下一层的房间时有[blue]0[/blue]次机会可以无视当前的路线。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"WINGED_BOOTS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Rooms\":0},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gremlin_horn",
+            "name": "地精之角",
+            "text": "每当有一名敌人死亡时，获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]并抽[blue]1[/blue]张牌。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GREMLIN_HORN\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Energy\":1,\"Cards\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gorget",
+            "name": "护喉甲",
+            "text": "在每场战斗开始时，获得[blue]4[/blue]层[gold]覆甲[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GORGET\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"PlatingPower\":4},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "toasty_mittens",
+            "name": "烘焙手套",
+            "text": "在你的回合开始时，[gold]消耗[/gold]你[gold]手牌[/gold]中的[blue]1[/blue]张牌并获得[blue]1[/blue]点[gold]力量[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"TOASTY_MITTENS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "sparkling_rouge",
+            "name": "闪亮口红",
+            "text": "在你的第[blue]3[/blue]回合开始时，获得[blue]1[/blue]点[gold]力量[/gold]和[blue]1[/blue]点[gold]敏捷[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"SPARKLING_ROUGE\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1,\"DexterityPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "id": "public-regression"
+      },
+      "combat": {
+        "turn": 7,
+        "energy": 3,
+        "block": 0,
+        "powers": [
+          {
+            "id": "surrounded_power",
+            "amount": 1.0,
+            "description": "被从后方攻击时受到的伤害增加[blue]50%[/blue]。使用有目标的卡牌或药水来改变你的朝向。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"SURROUNDED_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "strength_power",
+            "amount": 8.0,
+            "description": "增加攻击牌造成的伤害值[blue]8[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":8,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":8},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":8,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "dexterity_power",
+            "amount": 3.0,
+            "description": "增加从卡牌中获得的[gold]格挡[/gold]值[blue]3[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"DEXTERITY_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":3,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":3},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":3,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "pyre_power",
+            "amount": 1.0,
+            "description": "在每回合开始时获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PYRE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "rage_power",
+            "amount": 5.0,
+            "description": "本回合，你每打出一张攻击牌就获得[blue]5[/blue]点[gold]格挡[/gold]。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":5,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":5},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":5,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "enemies": [
+          {
+            "id": "crusher",
+            "ref": "enemy:CRUSHER:00ab27cd",
+            "name": "碾碎爪",
+            "hp": 82,
+            "max_hp": 209,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_left_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_LEFT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "vulnerable_power",
+                "amount": 1.0,
+                "description": "[blue]1[/blue]回合内，受到的攻击伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"VULNERABLE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"DamageIncrease\":1.5},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 6,
+                "hits": 1,
+                "total_damage": 6,
+                "text": "6"
+              }
+            ],
+            "alive": true
+          },
+          {
+            "id": "rocket",
+            "ref": "enemy:ROCKET:0204663d",
+            "name": "火箭",
+            "hp": 155,
+            "max_hp": 199,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_right_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_RIGHT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 30,
+                "hits": 1,
+                "total_damage": 30,
+                "text": "30"
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "hand": [
+          {
+            "id": "twin_strike",
+            "ref": "card:TWIN_STRIKE:035913a3",
+            "name": "双重打击+",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": true,
+            "text": "造成15点伤害两次。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":15}"
+            },
+            "target_values": {
+              "encoded": "{\"0\":{\"Damage\":22.5}}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "rage",
+            "ref": "card:RAGE:019037ba",
+            "name": "狂怒+",
+            "type": "skill",
+            "cost": 0,
+            "star_cost": 0,
+            "upgraded": true,
+            "text": "打出此牌后，你在这个回合内每打出一张攻击牌，获得5点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Power\":5}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:0090bdcb",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得8点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":8}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "defend_ironclad",
+            "ref": "card:DEFEND_IRONCLAD:0116ac25",
+            "name": "防御",
+            "type": "skill",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": false,
+            "text": "获得8点格挡。",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"Block\":8}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "combat:end_turn",
+          "decision_id": "public:209",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 36.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage",
+            "lethal"
+          ]
+        },
+        {
+          "id": "combat:play:0:enemy:0",
+          "decision_id": "public:209",
+          "kind": "play_card",
+          "label": "Play 双重打击+ on enemy:0",
+          "description": "造成15点伤害两次。",
+          "card_id": "card:TWIN_STRIKE:035913a3",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:0:enemy:1",
+          "decision_id": "public:209",
+          "kind": "play_card",
+          "label": "Play 双重打击+ on enemy:1",
+          "description": "造成15点伤害两次。",
+          "card_id": "card:TWIN_STRIKE:035913a3",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1",
+          "decision_id": "public:209",
+          "kind": "play_card",
+          "label": "Play 狂怒+",
+          "description": "打出此牌后，你在这个回合内每打出一张攻击牌，获得5点格挡。 | Keywords: 格挡",
+          "card_id": "card:RAGE:019037ba",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:2",
+          "decision_id": "public:209",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得8点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:0090bdcb",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:3",
+          "decision_id": "public:209",
+          "kind": "play_card",
+          "label": "Play 防御",
+          "description": "获得8点格挡。 | Keywords: 格挡",
+          "card_id": "card:DEFEND_IRONCLAD:0116ac25",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ]
+    }
+  },
+  {
+    "case": "revision_217",
+    "state": {
+      "scene": "combat",
+      "game_version": "v0.111.0",
+      "decision_id": "public:217",
+      "revision": 217,
+      "run": {
+        "character": "ironclad",
+        "ascension": 0,
+        "act": 2,
+        "floor": 33,
+        "hp": 1,
+        "max_hp": 77,
+        "max_energy": 3,
+        "relics": [
+          {
+            "id": "burning_blood",
+            "name": "燃烧之血",
+            "text": "在战斗结束时，回复[green]6[/green]点生命。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"BURNING_BLOOD\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Heal\":6},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "winged_boots",
+            "name": "羽翼之靴",
+            "text": "你在选择下一层的房间时有[blue]0[/blue]次机会可以无视当前的路线。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"WINGED_BOOTS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Rooms\":0},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gremlin_horn",
+            "name": "地精之角",
+            "text": "每当有一名敌人死亡时，获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]并抽[blue]1[/blue]张牌。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GREMLIN_HORN\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"Energy\":1,\"Cards\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "gorget",
+            "name": "护喉甲",
+            "text": "在每场战斗开始时，获得[blue]4[/blue]层[gold]覆甲[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"GORGET\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"PlatingPower\":4},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "toasty_mittens",
+            "name": "烘焙手套",
+            "text": "在你的回合开始时，[gold]消耗[/gold]你[gold]手牌[/gold]中的[blue]1[/blue]张牌并获得[blue]1[/blue]点[gold]力量[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"TOASTY_MITTENS\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "sparkling_rouge",
+            "name": "闪亮口红",
+            "text": "在你的第[blue]3[/blue]回合开始时，获得[blue]1[/blue]点[gold]力量[/gold]和[blue]1[/blue]点[gold]敏捷[/gold]。",
+            "slot": null,
+            "amount": 1,
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"relic\",\"model_id\":\"SPARKLING_ROUGE\",\"progress_known\":true,\"primary\":null,\"counters\":{},\"thresholds\":{},\"parameters\":{\"StrengthPower\":1,\"DexterityPower\":1},\"statuses\":{\"show_counter\":false},\"metrics\":[{\"name\":\"show_counter\",\"role\":\"status\",\"value\":false,\"source_member\":\"ShowCounter\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "id": "public-regression"
+      },
+      "combat": {
+        "turn": 8,
+        "energy": 2,
+        "block": 19,
+        "powers": [
+          {
+            "id": "surrounded_power",
+            "amount": 1.0,
+            "description": "被从后方攻击时受到的伤害增加[blue]50%[/blue]。使用有目标的卡牌或药水来改变你的朝向。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"SURROUNDED_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "strength_power",
+            "amount": 9.0,
+            "description": "增加攻击牌造成的伤害值[blue]9[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":9,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":9},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":9,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "dexterity_power",
+            "amount": 3.0,
+            "description": "增加从卡牌中获得的[gold]格挡[/gold]值[blue]3[/blue]点。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"DEXTERITY_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":3,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":3},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":3,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          },
+          {
+            "id": "pyre_power",
+            "amount": 1.0,
+            "description": "在每回合开始时获得[img]res://images/packed/sprite_fonts/ironclad_energy_icon.png[/img]。",
+            "trigger_progress": {
+              "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"PYRE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+            }
+          }
+        ],
+        "enemies": [
+          {
+            "id": "crusher",
+            "ref": "enemy:CRUSHER:00ab27cd",
+            "name": "碾碎爪",
+            "hp": 38,
+            "max_hp": 209,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_left_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_LEFT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Attack",
+                "damage": 8,
+                "hits": 2,
+                "total_damage": 16,
+                "text": "8[font_size=18]×2[/font_size]"
+              },
+              {
+                "type": "Debuff",
+                "damage": null,
+                "hits": null,
+                "total_damage": null,
+                "text": ""
+              }
+            ],
+            "alive": true
+          },
+          {
+            "id": "rocket",
+            "ref": "enemy:ROCKET:0204663d",
+            "name": "火箭",
+            "hp": 155,
+            "max_hp": 199,
+            "block": 0,
+            "powers": [
+              {
+                "id": "back_attack_right_power",
+                "amount": 1.0,
+                "description": "从后方对你攻击时，造成的伤害增加[blue]50%[/blue]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"BACK_ATTACK_RIGHT_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "crab_rage_power",
+                "amount": 1.0,
+                "description": "当有盟友死亡时，[gold]{OwnerName}[/gold]获得[blue]{StrengthPower}[/blue]点[gold]力量[/gold]和[blue]{Block}[/blue]点[gold]格挡[/gold]。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"CRAB_RAGE_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":1,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":1},\"thresholds\":{},\"parameters\":{\"StrengthPower\":6,\"Block\":99},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":1,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              },
+              {
+                "id": "strength_power",
+                "amount": 2.0,
+                "description": "增加攻击牌造成的伤害值[blue]2[/blue]点。",
+                "trigger_progress": {
+                  "encoded": "{\"schema_version\":1,\"source_kind\":\"power\",\"model_id\":\"STRENGTH_POWER\",\"progress_known\":true,\"primary\":{\"metric\":\"amount\",\"current\":2,\"threshold\":null,\"remaining\":null,\"next_trigger\":null},\"counters\":{\"amount\":2},\"thresholds\":{},\"parameters\":{},\"statuses\":{},\"metrics\":[{\"name\":\"amount\",\"role\":\"stack_or_duration\",\"value\":2,\"source_member\":\"Amount\"}],\"note\":\"Runtime values exposed by the model; DisplayAmount is the authoritative UI counter when ShowCounter is true.\"}"
+                }
+              }
+            ],
+            "intents": [
+              {
+                "type": "Buff",
+                "damage": null,
+                "hits": null,
+                "total_damage": null,
+                "text": ""
+              }
+            ],
+            "alive": true
+          }
+        ],
+        "hand": [
+          {
+            "id": "body_slam",
+            "ref": "card:BODY_SLAM:02460312",
+            "name": "全身撞击+",
+            "type": "attack",
+            "cost": 0,
+            "star_cost": 0,
+            "upgraded": true,
+            "text": "造成你当前格挡值的伤害。 （造成28点伤害）",
+            "keywords": [
+              "格挡"
+            ],
+            "values": {
+              "encoded": "{\"CalculationBase\":0,\"ExtraDamage\":1,\"CalculatedDamage\":28}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          },
+          {
+            "id": "breakthrough",
+            "ref": "card:BREAKTHROUGH:003df0c4",
+            "name": "突破+",
+            "type": "attack",
+            "cost": 1,
+            "star_cost": 0,
+            "upgraded": true,
+            "text": "失去1点生命。 对所有敌人造成22点伤害。",
+            "keywords": [],
+            "values": {
+              "encoded": "{\"Damage\":22,\"HpLoss\":1}"
+            },
+            "target_values": {
+              "encoded": "{}"
+            },
+            "affliction_id": "",
+            "affliction_amount": null,
+            "affliction_description": "",
+            "playable": true,
+            "unplayable_reason": "",
+            "count": 1
+          }
+        ]
+      },
+      "legal_actions": [
+        {
+          "id": "combat:end_turn",
+          "decision_id": "public:217",
+          "kind": "end_turn",
+          "label": "End turn",
+          "description": "Incoming damage: 16.",
+          "card_id": null,
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": [
+            "incoming_damage"
+          ]
+        },
+        {
+          "id": "combat:play:0:enemy:0",
+          "decision_id": "public:217",
+          "kind": "play_card",
+          "label": "Play 全身撞击+ on enemy:0",
+          "description": "造成你当前格挡值的伤害。 （造成28点伤害） | Keywords: 格挡",
+          "card_id": "card:BODY_SLAM:02460312",
+          "target_id": "enemy:CRUSHER:00ab27cd",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:0:enemy:1",
+          "decision_id": "public:217",
+          "kind": "play_card",
+          "label": "Play 全身撞击+ on enemy:1",
+          "description": "造成你当前格挡值的伤害。 （造成28点伤害） | Keywords: 格挡",
+          "card_id": "card:BODY_SLAM:02460312",
+          "target_id": "enemy:ROCKET:0204663d",
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        },
+        {
+          "id": "combat:play:1",
+          "decision_id": "public:217",
+          "kind": "play_card",
+          "label": "Play 突破+",
+          "description": "失去1点生命。 对所有敌人造成22点伤害。",
+          "card_id": "card:BREAKTHROUGH:003df0c4",
+          "target_id": null,
+          "node_id": null,
+          "item_id": null,
+          "option_id": null,
+          "character": null,
+          "ascension": null,
+          "risk_tags": []
+        }
+      ]
+    }
+  }
+]

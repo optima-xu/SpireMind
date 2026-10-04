@@ -8,6 +8,7 @@ from spiremind.knowledge.enemies import EnemyKnowledge
 from spiremind.knowledge.library import StrategyLibrary
 from spiremind.memory.manager import MemoryContext
 
+from .action_facts import action_evaluations
 from .budget import ContextBudget, ContextOverflow, encode, estimate_tokens
 from .views import state_view
 
@@ -20,7 +21,10 @@ SYSTEM = (
     "Return JSON: action_id, confidence (0..1), reason (one sentence); never execution parameters. "
     "Optional strategy_update: run agent owns boss_plan/potion_policy/gold_policy; map agent owns "
     "route_preferences. current_goal stays private. Update at most two persistent fields from "
-    "visible evidence. Experience examples are conditional guidance, not game facts."
+    "visible evidence. Experience examples are conditional guidance, not game facts. "
+    "For an action in action_evaluations, call calculate with action_ids and copy its forecast "
+    "into the final JSON. live_block/live_damage_per_hit are current owner previews: never add "
+    "Strength/Dexterity again; target modifiers and trigger effects may still be unknown."
 )
 
 
@@ -32,6 +36,7 @@ class AgentContext:
     estimated_tokens: int
     packages: tuple[str, ...]
     dropped_layers: tuple[str, ...]
+    action_evaluations: tuple[dict, ...] = ()
 
 
 class ContextCompiler:
@@ -93,6 +98,13 @@ class ContextCompiler:
             for key, value in content.items():
                 if fits(admitted | {key: value}):
                     admitted[key] = value
+                elif isinstance(value, list):
+                    items = []
+                    for item in value:
+                        if fits(admitted | {key: items + [item]}):
+                            items.append(item)
+                    if items:
+                        admitted[key] = items
             return (payload | {name: admitted} if admitted else payload), True
         return payload, True
 
@@ -104,6 +116,17 @@ class ContextCompiler:
             else []
         )
         payload = {"L1_current_state": view, "L5_task": task}
+        evaluations = (
+            (memory.assessment or {}).get("action_evaluations")
+            or action_evaluations(state, memory.assessment)
+            if agent == "combat"
+            else ()
+        )
+        if evaluations:
+            payload["action_evaluations"] = [
+                {key: value for key, value in row.items() if key not in {"decision_id", "revision"}}
+                for row in evaluations
+            ]
         payload_bytes = len(encode(payload).encode("utf-8"))
         core_size = estimate_tokens(SYSTEM) + (payload_bytes + 2) // 3
         if core_size > self.budget.maximum:
@@ -180,7 +203,14 @@ class ContextCompiler:
         layers = (
             common + tactical
             if agent == "run"
-            else [("L4_enemy_knowledge", enemy_guidance), common[0], common[1], *tactical]
+            else [
+                ("L4_enemy_knowledge", enemy_guidance),
+                common[0],
+                tactical[1],
+                common[1],
+                tactical[0],
+                *tactical[2:],
+            ]
         )
         dropped = []
         for name, content in layers:
@@ -207,4 +237,5 @@ class ContextCompiler:
             estimate_tokens(SYSTEM) + estimate_tokens(user),
             actual_packages,
             tuple(dropped),
+            evaluations,
         )

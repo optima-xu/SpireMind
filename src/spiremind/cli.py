@@ -259,6 +259,7 @@ async def execute(args):
                         "character": config.game.character,
                         "ascension": config.game.ascension,
                         "policy": policy,
+                        "attempt_id": trace.attempt_id,
                         "runtime_limits": {
                             key: getattr(config.runtime, key)
                             for key in ("max_steps", "max_seconds", "max_total_tokens")
@@ -271,9 +272,14 @@ async def execute(args):
             stack.enter_context(SingleWriter(memory_path.with_suffix(".maintenance.lock")))
             stack.enter_context(SingleWriter(root / "cards.maintenance.lock"))
             memory = await AsyncMemory.create(
-                root / ("mock-memory.sqlite" if is_mock else "memory.sqlite"), root / "cards.sqlite", library
+                root / ("mock-memory.sqlite" if is_mock else "memory.sqlite"),
+                root / "cards.sqlite",
+                library,
+                learning=config.memory.enabled,
             )
             stack.push_async_callback(memory.close)
+            if not is_mock and config.memory.enabled and config.memory.bootstrap_history:
+                await trace.write_json("learning-bootstrap.json", await memory.bootstrap(root))
             cards = memory.card_gateway
             enemy_knowledge = EnemyKnowledge()
             if not is_mock:
@@ -312,7 +318,7 @@ async def execute(args):
             if provider:
                 provider.budget = shared_budget
             reflection_provider = None
-            if config.memory.reflection_use_model:
+            if config.memory.enabled and config.memory.reflection_use_model:
                 reflection_provider = OpenAIProvider(
                     config.model,
                     budget=RequestBudget(
@@ -322,9 +328,10 @@ async def execute(args):
                     ),
                 )
                 stack.push_async_callback(reflection_provider.close)
-            reflection = ReflectionAgent(memory, reflection_provider)
-            stack.push_async_callback(reflection.close)
-            await reflection.notify()
+            reflection = ReflectionAgent(memory, reflection_provider) if config.memory.enabled else None
+            if reflection:
+                stack.push_async_callback(reflection.close)
+                await reflection.notify()
             runtime = AgentRuntime(
                 env,
                 memory,
@@ -338,11 +345,12 @@ async def execute(args):
                 new_run=args.command == "start",
             )
             result = await runtime.run()
-            await reflection.close()
+            if reflection:
+                await reflection.close()
             result["storage"] = await memory.stats()
             result["reflection"] = dict(
-                completed=reflection.completed,
-                rejected=reflection.rejected,
+                completed=reflection.completed if reflection else 0,
+                rejected=reflection.rejected if reflection else 0,
                 model_calls=reflection_provider.calls if reflection_provider else 0,
                 input_tokens=reflection_provider.input_tokens if reflection_provider else 0,
                 output_tokens=reflection_provider.output_tokens if reflection_provider else 0,

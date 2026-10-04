@@ -62,9 +62,76 @@ class ExperienceStore:
           CREATE TABLE IF NOT EXISTS memory_meta (key TEXT PRIMARY KEY, payload TEXT);
           CREATE TABLE IF NOT EXISTS import_sources
             (id TEXT PRIMARY KEY, payload TEXT);
+          CREATE TABLE IF NOT EXISTS tactical_lessons
+            (id TEXT PRIMARY KEY, revision INTEGER, status TEXT, payload TEXT);
+          CREATE TABLE IF NOT EXISTS tactical_history
+            (id TEXT, revision INTEGER, status TEXT, payload TEXT, PRIMARY KEY(id,revision));
         """)
         self.cache = LRU(256)
         self.generation = 0
+        split = self.db.execute("SELECT payload FROM memory_meta WHERE key='history_split'").fetchone()
+        self.history_split = json.loads(split[0]) if split else {"train": [], "holdout": []}
+
+    def set_history_split(self, split):
+        """Freeze known seed partitions, including subsequent online episodes."""
+        if (
+            not isinstance(split, dict)
+            or set(split) != {"train", "holdout"}
+            or any(not isinstance(value, list) for value in split.values())
+            or any(
+                not isinstance(key, str) or not 1 <= len(key) <= 128
+                for values in split.values()
+                for key in values
+            )
+        ):
+            raise ValueError("invalid_history_split")
+        train = set(self.history_split["train"])
+        holdout = set(self.history_split["holdout"])
+        incoming_train, incoming_holdout = set(split["train"]), set(split["holdout"])
+        if incoming_train & incoming_holdout:
+            raise ValueError("overlapping_history_partitions")
+        assigned = train | holdout
+        train |= incoming_train - assigned
+        holdout |= incoming_holdout - assigned
+        self.history_split = {"train": sorted(train), "holdout": sorted(holdout)}
+        self.db.execute(
+            "INSERT OR REPLACE INTO memory_meta VALUES ('history_split',?)",
+            (json.dumps(self.history_split),),
+        )
+        for partition, lineages in self.history_split.items():
+            self.db.executemany(
+                "UPDATE episodes SET partition_name=? WHERE lineage=?",
+                [(partition, lineage) for lineage in lineages],
+            )
+        # Previously online evidence may now belong to the frozen holdout.
+        for identity, revision, status, payload in self.db.execute("SELECT * FROM lessons").fetchall():
+            proposal = LessonProposal.model_validate_json(payload)
+            if status != "disabled" and any(
+                self.compact(key)["partition"] != "train" for key in proposal.evidence_ids
+            ):
+                self.db.execute(
+                    "UPDATE lessons SET status='disabled',revision=? WHERE id=?", (revision + 1, identity)
+                )
+                self.db.execute(
+                    "INSERT INTO lesson_history VALUES (?,?,?,?)",
+                    (identity, revision + 1, "disabled", payload),
+                )
+        for identity, revision, status, payload in self.db.execute(
+            "SELECT * FROM tactical_lessons"
+        ).fetchall():
+            value = json.loads(payload)
+            if status != "disabled" and any(
+                self.compact(key)["partition"] != "train" for key in value["evidence_ids"]
+            ):
+                self.db.execute(
+                    "UPDATE tactical_lessons SET status='disabled',revision=? WHERE id=?",
+                    (revision + 1, identity),
+                )
+                self.db.execute(
+                    "INSERT INTO tactical_history VALUES (?,?,?,?)",
+                    (identity, revision + 1, "disabled", payload),
+                )
+        self.changed()
 
     def changed(self):
         self.generation += 1
@@ -111,6 +178,25 @@ class ExperienceStore:
             lineage=lineage,
             terms=symbols(old),
         )
+        if old.combat and new.combat and old.combat.turn == new.combat.turn:
+            evidence["outcome"] = {
+                "energy_delta": new.combat.energy - old.combat.energy,
+                "enemy_hp_delta": sum(e.hp for e in new.combat.enemies if e.alive)
+                - sum(e.hp for e in old.combat.enemies if e.alive),
+            }
+            if card and card.id == "rage" and action.kind.value == "play_card":
+                from spiremind.strategies.tactics.setup import free_rage_action
+
+                if free_rage_action(old) == action:
+                    before_rage = sum(p.amount or 0 for p in old.combat.powers if p.id == "rage_power")
+                    after_rage = sum(p.amount or 0 for p in new.combat.powers if p.id == "rage_power")
+                    evidence["tactical_features"] = {
+                        "tactic": "rage_before_attack",
+                        "expected_rage": card.values.unpack().get("Power"),
+                        "observed_rage": after_rage - before_rage,
+                        "safe_setup": new.run.hp == old.run.hp and new.combat.energy == old.combat.energy,
+                        "card_ref": card.ref,
+                    }
         evidence["id"] = digest(
             [lineage, old.decision_id, old.revision, action.id, new.decision_id, new.revision]
         )
@@ -121,6 +207,10 @@ class ExperienceStore:
 
     def insert(self, episode, partition="train", *, commit=True):
         old = episode["before"]
+        for frozen_partition, lineages in self.history_split.items():
+            if episode["lineage"] in lineages:
+                partition = frozen_partition
+                break
         cursor = self.db.execute(
             "INSERT OR IGNORE INTO episodes VALUES (?,?,?,?,?,?,?,?,?,?)",
             (
@@ -136,13 +226,32 @@ class ExperienceStore:
                 json.dumps(episode, ensure_ascii=False),
             ),
         )
+        inserted = bool(cursor.rowcount)
+        if not inserted and episode["verified"]:
+            cursor = self.db.execute(
+                "UPDATE episodes SET verified=1,payload=? WHERE id=? AND verified=0 AND lineage=? "
+                "AND version=? AND character=? AND agent=? AND scene=? AND signature=?",
+                (
+                    json.dumps(episode, ensure_ascii=False),
+                    episode["id"],
+                    episode["lineage"],
+                    old["game_version"],
+                    old["run"]["character"],
+                    episode["producer"],
+                    old["scene"],
+                    episode["signature"],
+                ),
+            )
         if cursor.rowcount:
+            if not inserted:
+                self.db.execute("DELETE FROM episode_fts WHERE id=?", (episode["id"],))
             self.db.execute(
                 "INSERT INTO episode_fts VALUES (?,?)", (episode["id"], " ".join(episode["terms"]))
             )
         if commit:
             self.db.commit()
-            self.changed()
+            if cursor.rowcount:
+                self.changed()
         return bool(cursor.rowcount)
 
     def observe(self, old, action, new, producer, consumer, verified, lineage, handoff):
@@ -239,8 +348,16 @@ class ExperienceStore:
         return dict(id=identity, revision=revision, status=status)
 
     def check_contradictions(self, episode):
-        if not episode["verified"]:
+        if not episode["verified"] or episode["lineage"] in self.history_split["holdout"]:
             return
+        partition = self.db.execute(
+            "SELECT partition_name FROM episodes WHERE id=?", (episode["id"],)
+        ).fetchone()
+        if partition is None or partition[0] != "train":
+            return
+        from .tactics import check_tactical_counterexample
+
+        check_tactical_counterexample(self, episode)
         for identity, revision, payload in self.db.execute(
             "SELECT id,revision,payload FROM lessons WHERE status='active'"
         ).fetchall():
@@ -312,6 +429,9 @@ class ExperienceStore:
                     )
                 )
             )
+        from .tactics import consolidate_tactics
+
+        results.extend(consolidate_tactics(self))
         self.db.execute("UPDATE reflection_jobs SET status='complete' WHERE status='pending'")
         self.db.commit()
         return results
@@ -328,6 +448,9 @@ class ExperienceStore:
             tuple(terms),
             repr(powers),
             tuple((c.id, c.upgraded) for c in state.combat.hand) if state.combat else (),
+            state.combat.energy if state.combat else None,
+            state.run.hp // 10,
+            tuple(e.id for e in state.combat.enemies if e.alive) if state.combat else (),
         )
         found, result = self.cache.get(key)
         if found:
@@ -341,17 +464,39 @@ class ExperienceStore:
                 "SELECT e.payload FROM episode_fts f JOIN episodes e ON e.id=f.id "
                 "WHERE episode_fts MATCH ? AND e.partition_name='train' AND e.verified=1 "
                 "AND e.version=? AND e.character=? AND e.agent=? AND e.scene=? "
-                "ORDER BY bm25(episode_fts),e.id LIMIT 2",
+                "ORDER BY bm25(episode_fts),e.id LIMIT 32",
                 (expression, *scope),
             ).fetchall()
         examples = []
-        for row in rows:
-            e = json.loads(row[0])
+        candidates = [json.loads(row[0]) for row in rows]
+        visible = (
+            {c.id for c in state.combat.hand}
+            if state.combat
+            else {c.card.id for c in state.choices if c.card}
+        )
+        legal_kinds = {a.kind.value for a in state.legal_actions}
+        if agent == "combat":
+            candidates = [
+                e
+                for e in candidates
+                if e["conditions"].get("kind") in legal_kinds
+                and (not e["conditions"].get("card") or e["conditions"]["card"] in visible)
+            ]
+        candidates.sort(
+            key=lambda e: (
+                -(e["conditions"].get("card") in visible),
+                -(e["conditions"].get("powers", []) == powers),
+                abs(e["before"]["run"]["hp"] - state.run.hp),
+                e["id"],
+            )
+        )
+        for e in candidates[:2]:
             examples.append(
                 dict(
                     evidence_id=e["id"],
                     conditions=e["conditions"],
                     observations=e["observations"],
+                    **({"outcome": e["outcome"]} if e.get("outcome") else {}),
                     status="verified_transition_not_optimality",
                 )
             )
@@ -385,7 +530,11 @@ class ExperienceStore:
             )
             if len(skills) == 3:
                 break
-        result = dict(episodes=examples, skills=skills)
+        from .tactics import retrieve_tactics
+
+        tactical_skills, warnings = retrieve_tactics(self, state, agent)
+        skills = tactical_skills + skills
+        result = dict(skills=skills[:3], episodes=examples, warnings=warnings)
         while estimate_tokens(result) > 600:
             (result["episodes"] or result["skills"]).pop()
         self.cache.put(key, result)
@@ -398,6 +547,7 @@ class ExperienceStore:
                 ("episodes", "partition_name"),
                 ("lessons", "status"),
                 ("reflection_jobs", "status"),
+                ("tactical_lessons", "status"),
             ]
         }
 
@@ -409,11 +559,22 @@ def import_history(store: ExperienceStore, root: Path):
 
     traces = []
     malformed = unjoined = inserted = 0
-    for path in sorted(root.glob("*/summary.json")):
-        summary = json.loads(path.read_text(encoding="utf-8"))
-        if summary.get("mode") != "live":
+    incomplete = 0
+    folders = sorted(
+        {path.parent for pattern in ("*/summary.json", "*/manifest.json") for path in root.glob(pattern)}
+    )
+    for folder in folders:
+        summary_path, manifest_path = folder / "summary.json", folder / "manifest.json"
+        try:
+            metadata = json.loads(
+                (summary_path if summary_path.exists() else manifest_path).read_text(encoding="utf-8")
+            )
+        except (ValueError, OSError):
+            malformed += 1
             continue
-        states_path, decisions_path = path.parent / "states.jsonl", path.parent / "decisions.jsonl"
+        if metadata.get("mode") != "live":
+            continue
+        states_path, decisions_path = folder / "states.jsonl", folder / "decisions.jsonl"
         if not states_path.exists() or not decisions_path.exists():
             continue
         states = {}
@@ -424,11 +585,29 @@ def import_history(store: ExperienceStore, root: Path):
             except ValueError:
                 malformed += 1
         records = []
-        for line in decisions_path.read_text(encoding="utf-8").splitlines():
-            try:
-                records.append(json.loads(line))
-            except ValueError:
-                malformed += 1
+        record_paths = [decisions_path]
+        if (folder / "reconciliations.jsonl").exists():
+            record_paths.append(folder / "reconciliations.jsonl")
+        for record_path in record_paths:
+            for line in record_path.read_text(encoding="utf-8").splitlines():
+                try:
+                    record = json.loads(line)
+                    if not isinstance(record, dict):
+                        raise ValueError("invalid_trace_record")
+                    records.append(record)
+                except ValueError:
+                    malformed += 1
+        # A successful reconciliation supersedes the earlier uncertain record.
+        joined = {}
+        for record in records:
+            key = (
+                record.get("decision_id"),
+                record.get("state_revision"),
+                (record.get("action") or {}).get("id"),
+            )
+            if key not in joined or record.get("semantic_success") is True:
+                joined[key] = record
+        records = list(joined.values())
         keys = sorted(
             {
                 (s.game_version, s.run.character, s.run.id)
@@ -438,19 +617,19 @@ def import_history(store: ExperienceStore, root: Path):
                 and s.scene.value not in {"game_over", "main_menu", "character_select"}
             }
         )
-        traces.append((path.parent.name, keys, states, records))
+        incomplete += int(not summary_path.exists() or not metadata.get("complete"))
+        traces.append((folder.name, keys, states, records))
     lineages = list(dict.fromkeys(key for _, keys, _, _ in traces for key in keys))
     split = max(1, int(len(lineages) * 0.7))
     train = {digest(key) for key in lineages[:split]}
-    previous = store.db.execute("SELECT payload FROM memory_meta WHERE key='history_split'").fetchone()
-    if previous:
-        train = set(json.loads(previous[0])["train"])
+    if store.history_split["train"] or store.history_split["holdout"]:
+        holdout = set(store.history_split["holdout"])
+        train = set(store.history_split["train"]) | {digest(key) for key in lineages} - holdout
     else:
-        store.db.execute(
-            "INSERT INTO memory_meta VALUES ('history_split',?)",
-            (json.dumps({"train": sorted(train), "holdout": [digest(k) for k in lineages[split:]]}),),
-        )
-        store.db.commit()
+        holdout = {digest(key) for key in lineages[split:]}
+    with store.db:
+        store.set_history_split({"train": sorted(train), "holdout": sorted(holdout)})
+    train = set(store.history_split["train"])
     for _attempt, _keys, states, records in traces:
         by_decision = {state.decision_id: state for state in states.values()}
         for index, row in enumerate(records):
@@ -492,9 +671,10 @@ def import_history(store: ExperienceStore, root: Path):
     store.changed()
     report = dict(
         traces=len(traces),
+        incomplete_traces=incomplete,
         lineages=len(lineages),
-        train_lineages=len(train),
-        holdout_lineages=len(lineages) - len(train),
+        train_lineages=sum(digest(key) in train for key in lineages),
+        holdout_lineages=sum(digest(key) not in train for key in lineages),
         inserted=inserted,
         malformed=malformed,
         unjoined=unjoined,

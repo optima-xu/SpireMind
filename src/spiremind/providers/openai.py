@@ -27,14 +27,21 @@ class ProviderError(RuntimeError):
     pass
 
 
+class RejectedHTTP(ProviderError):
+    def __init__(self, status_code):
+        super().__init__(f"Provider HTTP {status_code}; check configuration")
+        self.status_code = status_code
+
+
 class IncompleteModelResponse(ValueError):
     pass
 
 
 class RetryableHTTP(ValueError):
-    def __init__(self, message, retry_after=None):
+    def __init__(self, message, retry_after=None, status_code=None):
         super().__init__(message)
         self.retry_after = retry_after
+        self.status_code = status_code
 
 
 def retry_after_seconds(value):
@@ -83,6 +90,9 @@ class OpenAIProvider:
         self.invalid_responses = 0
         self.transport_errors = 0
         self.retryable_http_responses = 0
+        self.reported_input_tokens = self.reported_output_tokens = 0
+        self._usage_estimated = False
+        self._metered_this_request = False
 
     def _body(self, messages: list[dict], first_round: bool) -> dict:
         body = {"model": self.config.model, "messages": messages, "stream": False}
@@ -114,16 +124,38 @@ class OpenAIProvider:
             json=body,
         )
         if response.status_code in {401, 403, 404}:
-            raise ProviderError(f"Provider HTTP {response.status_code}; check configuration")
+            raise RejectedHTTP(response.status_code)
         if not response.is_success:
             code = response.status_code
             if code in {408, 429, 500, 502, 503, 504}:
                 self.retryable_http_responses += 1
-                raise RetryableHTTP(f"http_{code}", retry_after_seconds(response.headers.get("Retry-After")))
-            raise ProviderError(f"Provider rejected request: http_{code}")
+                raise RetryableHTTP(
+                    f"http_{code}", retry_after_seconds(response.headers.get("Retry-After")), code
+                )
+            raise RejectedHTTP(code)
         data = response.json()
         if not isinstance(data, Mapping):
             raise ValueError("invalid_response_envelope")
+        usage = data.get("usage")
+        if not isinstance(usage, Mapping):
+            usage = {}
+        prompt_tokens = usage.get("prompt_tokens")
+        completion_tokens = usage.get("completion_tokens")
+        if type(prompt_tokens) is int and prompt_tokens >= 0:
+            self.reported_input_tokens += prompt_tokens
+        else:
+            prompt_tokens = max(1, estimated_tokens)
+            self._usage_estimated = True
+        if type(completion_tokens) is int and completion_tokens >= 0:
+            self.reported_output_tokens += completion_tokens
+        else:
+            completion_tokens = body.get(
+                "max_completion_tokens", body.get("max_tokens", self.config.max_tokens)
+            )
+            self._usage_estimated = True
+        self.input_tokens += prompt_tokens
+        self.output_tokens += completion_tokens
+        self._metered_this_request = True
         choices = data.get("choices")
         if not isinstance(choices, list) or not choices:
             raise ValueError("invalid_choices")
@@ -141,17 +173,6 @@ class OpenAIProvider:
         self.last_model = model
         if self.config.require_exact_model and model != self.config.model:
             raise ProviderError("Response model does not match requested exact model")
-        usage = data.get("usage")
-        if not isinstance(usage, Mapping):
-            usage = {}
-        prompt_tokens = usage.get("prompt_tokens")
-        completion_tokens = usage.get("completion_tokens")
-        if type(prompt_tokens) is not int or prompt_tokens < 0:
-            prompt_tokens = max(1, estimated_tokens)
-        if type(completion_tokens) is not int or completion_tokens < 0:
-            completion_tokens = self.config.max_completion_tokens or self.config.max_tokens
-        self.input_tokens += prompt_tokens
-        self.output_tokens += completion_tokens
         reasoning = bool(message.get("reasoning_content") or message.get("reasoning"))
         self.reasoning_responses += int(reasoning)
         if item.get("finish_reason") not in {"stop", "tool_calls", None}:
@@ -165,16 +186,24 @@ class OpenAIProvider:
         if self.request_sink:
             self.request_sink()
         before = self.input_tokens + self.output_tokens
+        reported_before = self.reported_input_tokens + self.reported_output_tokens
+        self._usage_estimated = self._metered_this_request = False
         started = time.perf_counter()
         status = "ok"
+        http_status = None
         try:
             return await self._completion_unmetered(body, prompt_estimate)
         except BaseException as error:
             status = type(error).__name__
-            # A transport failure may have consumed server tokens; bill the reservation.
-            if self.input_tokens + self.output_tokens == before:
+            http_status = getattr(error, "status_code", None)
+            # Rejected authentication/configuration requests and 429 never
+            # become fabricated billed usage. Ambiguous transport failures
+            # still reserve a conservative estimate for the safety budget.
+            rejected = isinstance(error, RejectedHTTP) or http_status == 429
+            if not self._metered_this_request and not rejected:
                 self.input_tokens += prompt_estimate
                 self.output_tokens += output_limit
+                self._usage_estimated = True
             raise
         finally:
             used = self.input_tokens + self.output_tokens - before
@@ -185,6 +214,11 @@ class OpenAIProvider:
                     request=self.calls,
                     status=status,
                     tokens=used,
+                    reported_tokens=self.reported_input_tokens
+                    + self.reported_output_tokens
+                    - reported_before,
+                    usage_estimated=self._usage_estimated,
+                    http_status=http_status,
                     estimated_reservation=prompt_estimate + output_limit,
                     latency_ms=(time.perf_counter() - started) * 1000,
                 )
@@ -225,7 +259,7 @@ class OpenAIProvider:
         return lessons
 
     @staticmethod
-    def _tool_messages(message: Mapping) -> tuple[dict, list[dict], list[dict[str, str]]]:
+    def _tool_messages(message: Mapping, evaluations=()) -> tuple[dict, list[dict], list[dict[str, str]]]:
         calls = message.get("tool_calls")
         if not isinstance(calls, list) or not 1 <= len(calls) <= MAX_TOOL_CALLS_PER_ROUND:
             raise ValueError("invalid_tool_calls")
@@ -246,7 +280,7 @@ class OpenAIProvider:
             arguments = function.get("arguments")
             if not isinstance(arguments, str) or len(arguments) > 2048:
                 raise ValueError("invalid_tool_arguments")
-            computation = execute_calculator(arguments)
+            computation = execute_calculator(arguments, evaluations)
             echoed.append(
                 {
                     "id": call_id,
@@ -301,7 +335,7 @@ class OpenAIProvider:
                     {
                         "role": "user",
                         "content": "Repair the final JSON once using the existing calculator results. "
-                        "Choose one legal "
+                        "Match the chosen action's forecast exactly to action_evaluations. Choose one legal "
                         "action_id from: "
                         + json.dumps(sorted(legal_ids))
                         + ". Do not repeat completed arithmetic.",
@@ -323,7 +357,9 @@ class OpenAIProvider:
                     if message.get("tool_calls") is not None:
                         if self.config.calculator_mode == "off" or round_index == MAX_TOOL_ROUNDS:
                             raise ValueError("unexpected_or_excess_tool_calls")
-                        assistant, tool_messages, trace = self._tool_messages(message)
+                        assistant, tool_messages, trace = self._tool_messages(
+                            message, context.action_evaluations
+                        )
                         messages.extend([assistant, *tool_messages])
                         calculations.extend(trace)
                         self.calculator_calls += len(tool_messages)
@@ -340,6 +376,12 @@ class OpenAIProvider:
                     choice = self._parse_choice(content)
                     if choice.action_id not in legal_ids:
                         raise ValueError("invalid_action_id")
+                    evaluation = next(
+                        (row for row in context.action_evaluations if row["action_id"] == choice.action_id),
+                        None,
+                    )
+                    if evaluation is not None and choice.forecast != evaluation["forecast"]:
+                        raise ValueError("forecast_disagrees_with_current_facts")
                     return ModelResponse(
                         choice,
                         model,

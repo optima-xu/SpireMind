@@ -4,6 +4,8 @@ import asyncio
 import json
 from concurrent.futures import ThreadPoolExecutor
 
+from spiremind.core.files import replace_file
+
 from .trace import TraceWriter
 
 
@@ -32,7 +34,7 @@ class AsyncTraceWriter:
             elif kind == "json":
                 temporary = self.path / (filename + ".tmp")
                 temporary.write_text(text, encoding="utf-8")
-                temporary.replace(self.path / filename)
+                replace_file(temporary, self.path / filename)
             elif kind == "flush":
                 for handle in self.handles.values():
                     handle.flush()

@@ -73,6 +73,7 @@ class StrategyConfig(Settings):
 
 class MemoryConfig(Settings):
     enabled: bool = True
+    bootstrap_history: bool = True
     reflection_use_model: bool = False
     reflection_requests: int = Field(default=4, ge=1, le=4)
     reflection_tokens: int = Field(default=12000, ge=1, le=12000)

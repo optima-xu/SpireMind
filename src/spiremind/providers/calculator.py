@@ -18,6 +18,8 @@ TOOL = {
             "game state, and include every expression needed for a damage, HP, block, gold, "
             "price, or route comparison. Supports +, -, *, /, parentheses, min(), max(), "
             "abs(), and numeric comparisons. Do not estimate arithmetic yourself."
+            " To inspect current action previews and verified effects, use action_ids instead of "
+            "expressions; these facts are bound to the current decision and already include owner bonuses."
         ),
         "parameters": {
             "type": "object",
@@ -28,9 +30,16 @@ TOOL = {
                     "minItems": 1,
                     "maxItems": 12,
                     "description": "Arithmetic expressions using visible numeric facts, e.g. 48-11, 27-14.",
-                }
+                },
+                "action_ids": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "maxItems": 12,
+                    "description": "Current legal action IDs from action_evaluations.",
+                },
             },
-            "required": ["expressions"],
+            "oneOf": [{"required": ["expressions"]}, {"required": ["action_ids"]}],
             "additionalProperties": False,
         },
     },
@@ -113,15 +122,26 @@ def calculate(expression: str) -> str:
         raise CalculatorError("invalid_expression") from error
 
 
-def execute_calculator(arguments: str) -> list[dict[str, str]]:
+def execute_calculator(arguments: str, evaluations=()) -> list[dict[str, str]]:
     if len(arguments) > 2048:
         return [{"error": "invalid_arguments"}]
     try:
         payload = json.loads(arguments)
     except (ValueError, TypeError):
         return [{"error": "invalid_arguments"}]
-    if not isinstance(payload, dict) or set(payload) != {"expressions"}:
+    if not isinstance(payload, dict) or set(payload) not in ({"expressions"}, {"action_ids"}):
         return [{"error": "invalid_arguments"}]
+    if "action_ids" in payload:
+        identities = payload["action_ids"]
+        if not isinstance(identities, list) or not 1 <= len(identities) <= 12:
+            return [{"error": "invalid_arguments"}]
+        bound = {row["action_id"]: row for row in evaluations}
+        return [
+            {"action_id": identity, "result": json.dumps(bound[identity], separators=(",", ":"))}
+            if isinstance(identity, str) and identity in bound
+            else {"error": "unknown_current_action"}
+            for identity in identities
+        ]
     expressions = payload["expressions"]
     if not isinstance(expressions, list) or not 1 <= len(expressions) <= 12:
         return [{"error": "invalid_arguments"}]

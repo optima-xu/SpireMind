@@ -1,4 +1,6 @@
+import json
 from collections import Counter
+from functools import lru_cache
 
 from spiremind.core.state import Card, GameState
 
@@ -20,9 +22,39 @@ def card_view(card: Card):
     return view
 
 
+@lru_cache(maxsize=512)
+def _compact_progress(encoded):
+    """Cache formatting by immutable exported counters; never expose a cached mutable dict."""
+    progress = json.loads(encoded)
+    if progress:
+        compact = {
+            k: v
+            for k, v in progress.items()
+            if k not in {"schema_version", "source_kind", "model_id", "note", "metrics"}
+        }
+        if isinstance(compact.get("primary"), dict):
+            compact["primary"] = {k: v for k, v in compact["primary"].items() if v is not None}
+        # Metrics usually repeat public counters/parameters/statuses. Keep any
+        # unique metric so an unfamiliar mechanism retains its visible values.
+        unique = []
+        for metric in progress.get("metrics", []):
+            represented = any(
+                isinstance(progress.get(key), dict)
+                and metric.get("name") in progress[key]
+                and progress[key][metric["name"]] == metric.get("value")
+                for key in ("counters", "parameters", "statuses", "thresholds")
+            )
+            if not represented:
+                unique.append({k: v for k, v in metric.items() if k != "source_member"})
+        if unique:
+            compact["metrics"] = unique
+        return json.dumps(compact, separators=(",", ":"), ensure_ascii=False)
+    return "{}"
+
+
 def progress_view(value):
     result = value.model_dump(exclude={"trigger_progress"}, exclude_defaults=True)
-    progress = value.trigger_progress.unpack()
+    progress = json.loads(_compact_progress(value.trigger_progress.encoded))
     if progress:
         result["trigger_progress"] = progress
     return result

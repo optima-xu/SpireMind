@@ -53,6 +53,9 @@ class LLMStrategy:
                 output_tokens=result.output_tokens,
                 calculations=list(result.calculations),
                 context_id=context.id,
+                action_evaluation=next(
+                    (row for row in context.action_evaluations if row["action_id"] == choice.action_id), None
+                ),
             )
         except (ProviderError, ContextOverflow) as error:
             decision = self.fallback(state, memory)

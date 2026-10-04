@@ -2,10 +2,13 @@
 
 import asyncio
 import json
+import re
 import time
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
+
+from spiremind.core.files import replace_file
 
 from .locking import SingleWriter
 
@@ -23,7 +26,7 @@ def _write(path, value):
     temporary = path.with_name(path.name + "." + uuid4().hex + ".tmp")
     try:
         temporary.write_text(json.dumps(value, ensure_ascii=False), encoding="utf-8")
-        temporary.replace(path)
+        replace_file(temporary, path)
     finally:
         temporary.unlink(missing_ok=True)
 
@@ -53,12 +56,32 @@ def control_status(path: Path, lock: Path) -> dict:
     current = read_control(path)
     active = writer_active(lock)
     request = read_control(path.with_suffix(".request.json"))
+    attempt = current.get("settings", {}).get("attempt_id", "")
+    progress = (
+        read_control(path.parent / attempt / "progress.json")
+        if re.fullmatch(r"\d{8}T\d{6}-[a-f0-9]{8}", attempt)
+        else {}
+    )
     return current | {
         "active": active,
         "status": current.get("status", "unknown") if active else "stopped",
         "requested_status": request.get("mode")
         if request.get("session_id") == current.get("session_id")
         else None,
+        "progress": {
+            key: progress[key]
+            for key in (
+                "phase",
+                "phase_started_at",
+                "outcome",
+                "steps",
+                "floor",
+                "error_retry_seconds",
+                "provider_failure_seconds",
+                "environment_recovery_seconds",
+            )
+            if key in progress
+        },
     }
 
 
