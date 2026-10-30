@@ -3,10 +3,10 @@ import json
 import httpx
 import pytest
 
+from spiremind.adapters.model.openai import OpenAIProvider, ProviderError
 from spiremind.config import ModelConfig
-from spiremind.context.compiler import AgentContext
-from spiremind.providers.calculator import CalculatorError, calculate, execute_calculator
-from spiremind.providers.openai import OpenAIProvider, ProviderError
+from spiremind.core.calculator import CalculatorError, calculate, execute_calculator
+from spiremind.core.context import AgentContext
 
 CTX = AgentContext("x", "Choose JSON", "legal action A", 20, (), ())
 

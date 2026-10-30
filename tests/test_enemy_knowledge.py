@@ -1,12 +1,12 @@
 import json
 
-from spiremind.context.budget import ContextBudget
-from spiremind.context.compiler import ContextCompiler
+from spiremind.adapters.storage.cards import CardDB
+from spiremind.core.budget import ContextBudget
+from spiremind.core.context import MemoryContext
 from spiremind.core.state import Enemy
-from spiremind.knowledge.cards import CardDB
+from spiremind.decision.context import ContextCompiler
 from spiremind.knowledge.enemies import EnemyKnowledge
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.manager import MemoryContext
 
 
 def empty_memory() -> MemoryContext:

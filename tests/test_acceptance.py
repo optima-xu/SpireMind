@@ -6,14 +6,14 @@ import httpx
 import pytest
 from pydantic import ValidationError
 
-from spiremind.cli import bridge_key, bridge_lock_path, canonical_bridge_url, execute, safe_extra_body
+from spiremind.adapters.game.mcp import MCPEnvironment
+from spiremind.adapters.game.normalize import normalize
+from spiremind.adapters.locking import SingleWriter
+from spiremind.bootstrap import bridge_key, bridge_lock_path, canonical_bridge_url, execute, safe_extra_body
 from spiremind.config import Config, GameConfig
 from spiremind.core.enums import Scene
-from spiremind.environment.base import EnvironmentError
-from spiremind.environment.mcp import MCPEnvironment
-from spiremind.environment.normalize import normalize
-from spiremind.runtime.locking import SingleWriter
-from spiremind.runtime.router import SceneRouter
+from spiremind.core.ports import EnvironmentError
+from spiremind.decision.router import SceneRouter
 
 
 async def test_card_export_exact_version_and_provenance(tmp_path):
@@ -121,7 +121,7 @@ async def test_knowledge_updates_cannot_change_a_running_agents_database(command
         async def card_facts(self):
             pytest.fail("CardDB must not change during an active run")
 
-    monkeypatch.setattr("spiremind.cli.MCPEnvironment", Bridge)
+    monkeypatch.setattr("spiremind.bootstrap.MCPEnvironment", Bridge)
     with SingleWriter(bridge_lock_path(config.game.base_url)):
         with pytest.raises(RuntimeError, match="Another SpireMind"):
             await execute(Namespace(config=None, command=command, path=tmp_path / "unused.json"))

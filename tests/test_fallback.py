@@ -1,8 +1,8 @@
 from spiremind.core.actions import Action
+from spiremind.core.context import MemoryContext
 from spiremind.core.enums import ActionKind, Scene
 from spiremind.core.state import Card, CombatState, Enemy, GameState, Intent, PublicFacts, RunState
-from spiremind.memory.manager import MemoryContext
-from spiremind.strategies.fallback import conservative_choice
+from spiremind.decision.policies.fallback import conservative_choice
 
 MEMORY = MemoryContext(snapshot_id="test", run={}, working={}, skills=())
 

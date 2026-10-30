@@ -1,0 +1,555 @@
+{
+  "schema": 1,
+  "description": "Hand-labeled public-state policy oracles. No simulated game trajectory or win-rate claim.",
+  "cases": [
+    {
+      "id": "hp_cost_cannot_be_paid",
+      "expected_actions": [
+        "end"
+      ],
+      "state": {
+        "scene": "combat",
+        "run": {
+          "id": "quality-hp_cost_cannot_be_paid",
+          "character": "ironclad",
+          "act": 1,
+          "floor": 1,
+          "hp": 2,
+          "max_hp": 80
+        },
+        "combat": {
+          "energy": 1,
+          "turn": 1,
+          "hand": [
+            {
+              "id": "bloodletting",
+              "ref": "bloodletting",
+              "type": "skill",
+              "cost": 0,
+              "values": {
+                "encoded": "{\"HpLoss\":3,\"Energy\":2}"
+              }
+            }
+          ],
+          "enemies": [
+            {
+              "id": "enemy",
+              "ref": "enemy",
+              "hp": 20,
+              "max_hp": 20,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 0,
+                  "hits": 1
+                }
+              ]
+            }
+          ]
+        },
+        "legal_actions": [
+          {
+            "id": "bloodletting",
+            "decision_id": "hp_cost_cannot_be_paid",
+            "kind": "play_card",
+            "card_id": "bloodletting"
+          },
+          {
+            "id": "end",
+            "decision_id": "hp_cost_cannot_be_paid",
+            "kind": "end_turn"
+          }
+        ],
+        "revision": 1,
+        "decision_id": "hp_cost_cannot_be_paid",
+        "game_version": "v0.111.0"
+      },
+      "expected_exclusions": [
+        "bloodletting"
+      ]
+    },
+    {
+      "id": "take_visible_lethal",
+      "expected_actions": [
+        "strike:enemy"
+      ],
+      "state": {
+        "scene": "combat",
+        "run": {
+          "id": "quality-take_visible_lethal",
+          "character": "ironclad",
+          "act": 1,
+          "floor": 1,
+          "hp": 10,
+          "max_hp": 80
+        },
+        "combat": {
+          "energy": 1,
+          "turn": 1,
+          "hand": [
+            {
+              "id": "strike",
+              "ref": "strike",
+              "type": "attack",
+              "cost": 1,
+              "values": {
+                "encoded": "{\"Damage\":6}"
+              }
+            }
+          ],
+          "enemies": [
+            {
+              "id": "enemy",
+              "ref": "enemy",
+              "hp": 6,
+              "max_hp": 6,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 6,
+                  "hits": 1
+                }
+              ]
+            }
+          ]
+        },
+        "legal_actions": [
+          {
+            "id": "strike:enemy",
+            "decision_id": "take_visible_lethal",
+            "kind": "play_card",
+            "card_id": "strike",
+            "target_id": "enemy"
+          },
+          {
+            "id": "end",
+            "decision_id": "take_visible_lethal",
+            "kind": "end_turn"
+          }
+        ],
+        "revision": 1,
+        "decision_id": "take_visible_lethal",
+        "game_version": "v0.111.0"
+      }
+    },
+    {
+      "id": "block_prevents_death",
+      "expected_actions": [
+        "defend"
+      ],
+      "state": {
+        "scene": "combat",
+        "run": {
+          "id": "quality-block_prevents_death",
+          "character": "ironclad",
+          "act": 1,
+          "floor": 1,
+          "hp": 4,
+          "max_hp": 80
+        },
+        "combat": {
+          "energy": 1,
+          "turn": 1,
+          "hand": [
+            {
+              "id": "defend",
+              "ref": "defend",
+              "type": "skill",
+              "cost": 1,
+              "values": {
+                "encoded": "{\"Block\":5}"
+              }
+            }
+          ],
+          "enemies": [
+            {
+              "id": "enemy",
+              "ref": "enemy",
+              "hp": 20,
+              "max_hp": 20,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 6,
+                  "hits": 1
+                }
+              ]
+            }
+          ]
+        },
+        "legal_actions": [
+          {
+            "id": "defend",
+            "decision_id": "block_prevents_death",
+            "kind": "play_card",
+            "card_id": "defend"
+          },
+          {
+            "id": "end",
+            "decision_id": "block_prevents_death",
+            "kind": "end_turn"
+          }
+        ],
+        "revision": 1,
+        "decision_id": "block_prevents_death",
+        "game_version": "v0.111.0"
+      },
+      "survival_status": "survives"
+    },
+    {
+      "id": "focus_attacking_enemy",
+      "expected_actions": [
+        "strike:danger"
+      ],
+      "state": {
+        "scene": "combat",
+        "run": {
+          "id": "quality-focus_attacking_enemy",
+          "character": "ironclad",
+          "act": 1,
+          "floor": 1,
+          "hp": 5,
+          "max_hp": 80
+        },
+        "combat": {
+          "energy": 1,
+          "turn": 1,
+          "hand": [
+            {
+              "id": "strike",
+              "ref": "strike",
+              "type": "attack",
+              "cost": 1,
+              "values": {
+                "encoded": "{\"Damage\":6}"
+              }
+            }
+          ],
+          "enemies": [
+            {
+              "id": "danger",
+              "ref": "danger",
+              "hp": 6,
+              "max_hp": 6,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 8,
+                  "hits": 1
+                }
+              ]
+            },
+            {
+              "id": "other",
+              "ref": "other",
+              "hp": 20,
+              "max_hp": 20,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 2,
+                  "hits": 1
+                }
+              ]
+            }
+          ]
+        },
+        "legal_actions": [
+          {
+            "id": "strike:danger",
+            "decision_id": "focus_attacking_enemy",
+            "kind": "play_card",
+            "card_id": "strike",
+            "target_id": "danger"
+          },
+          {
+            "id": "strike:other",
+            "decision_id": "focus_attacking_enemy",
+            "kind": "play_card",
+            "card_id": "strike",
+            "target_id": "other"
+          },
+          {
+            "id": "end",
+            "decision_id": "focus_attacking_enemy",
+            "kind": "end_turn"
+          }
+        ],
+        "revision": 1,
+        "decision_id": "focus_attacking_enemy",
+        "game_version": "v0.111.0"
+      }
+    },
+    {
+      "id": "known_lethal_despite_unknown_option",
+      "expected_actions": [
+        "strike:enemy"
+      ],
+      "state": {
+        "scene": "combat",
+        "run": {
+          "id": "quality-known_lethal_despite_unknown_option",
+          "character": "ironclad",
+          "act": 1,
+          "floor": 1,
+          "hp": 10,
+          "max_hp": 80
+        },
+        "combat": {
+          "energy": 1,
+          "turn": 1,
+          "hand": [
+            {
+              "id": "strike",
+              "ref": "strike",
+              "type": "attack",
+              "cost": 1,
+              "values": {
+                "encoded": "{\"Damage\":6}"
+              }
+            },
+            {
+              "id": "mystery_attack",
+              "ref": "mystery_attack",
+              "type": "attack",
+              "cost": 0,
+              "values": {
+                "encoded": "{\"Damage\":99}"
+              }
+            }
+          ],
+          "enemies": [
+            {
+              "id": "enemy",
+              "ref": "enemy",
+              "hp": 6,
+              "max_hp": 6,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 6,
+                  "hits": 1
+                }
+              ]
+            }
+          ]
+        },
+        "legal_actions": [
+          {
+            "id": "strike:enemy",
+            "decision_id": "known_lethal_despite_unknown_option",
+            "kind": "play_card",
+            "card_id": "strike",
+            "target_id": "enemy"
+          },
+          {
+            "id": "mystery_attack:enemy",
+            "decision_id": "known_lethal_despite_unknown_option",
+            "kind": "play_card",
+            "card_id": "mystery_attack",
+            "target_id": "enemy"
+          },
+          {
+            "id": "end",
+            "decision_id": "known_lethal_despite_unknown_option",
+            "kind": "end_turn"
+          }
+        ],
+        "revision": 1,
+        "decision_id": "known_lethal_despite_unknown_option",
+        "game_version": "v0.111.0"
+      }
+    },
+    {
+      "id": "pay_hp_to_unlock_lethal",
+      "expected_actions": [
+        "bloodletting"
+      ],
+      "state": {
+        "scene": "combat",
+        "run": {
+          "id": "quality-pay_hp_to_unlock_lethal",
+          "character": "ironclad",
+          "act": 1,
+          "floor": 1,
+          "hp": 7,
+          "max_hp": 80
+        },
+        "combat": {
+          "energy": 1,
+          "turn": 1,
+          "hand": [
+            {
+              "id": "bloodletting",
+              "ref": "bloodletting",
+              "type": "skill",
+              "cost": 0,
+              "values": {
+                "encoded": "{\"HpLoss\":3,\"Energy\":2}"
+              }
+            },
+            {
+              "id": "strike",
+              "ref": "strike",
+              "type": "attack",
+              "cost": 3,
+              "values": {
+                "encoded": "{\"Damage\":14}"
+              },
+              "playable": false,
+              "unplayable_reason": "not_enough_energy"
+            }
+          ],
+          "enemies": [
+            {
+              "id": "enemy",
+              "ref": "enemy",
+              "hp": 14,
+              "max_hp": 14,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 8,
+                  "hits": 1
+                }
+              ]
+            }
+          ]
+        },
+        "legal_actions": [
+          {
+            "id": "bloodletting",
+            "decision_id": "pay_hp_to_unlock_lethal",
+            "kind": "play_card",
+            "card_id": "bloodletting"
+          },
+          {
+            "id": "end",
+            "decision_id": "pay_hp_to_unlock_lethal",
+            "kind": "end_turn"
+          }
+        ],
+        "revision": 1,
+        "decision_id": "pay_hp_to_unlock_lethal",
+        "game_version": "v0.111.0"
+      }
+    },
+    {
+      "id": "unknown_power_is_not_a_survival_proof",
+      "expected_actions": [
+        "defend"
+      ],
+      "state": {
+        "scene": "combat",
+        "run": {
+          "id": "quality-unknown_power_is_not_a_survival_proof",
+          "character": "ironclad",
+          "act": 1,
+          "floor": 1,
+          "hp": 4,
+          "max_hp": 80
+        },
+        "combat": {
+          "energy": 1,
+          "turn": 1,
+          "hand": [
+            {
+              "id": "defend",
+              "ref": "defend",
+              "type": "skill",
+              "cost": 1,
+              "values": {
+                "encoded": "{\"Block\":5}"
+              }
+            }
+          ],
+          "powers": [
+            {
+              "id": "unknown_power",
+              "amount": 1.0
+            }
+          ],
+          "enemies": [
+            {
+              "id": "enemy",
+              "ref": "enemy",
+              "hp": 20,
+              "max_hp": 20,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 6,
+                  "hits": 1
+                }
+              ]
+            }
+          ]
+        },
+        "legal_actions": [
+          {
+            "id": "defend",
+            "decision_id": "unknown_power_is_not_a_survival_proof",
+            "kind": "play_card",
+            "card_id": "defend"
+          },
+          {
+            "id": "end",
+            "decision_id": "unknown_power_is_not_a_survival_proof",
+            "kind": "end_turn"
+          }
+        ],
+        "revision": 1,
+        "decision_id": "unknown_power_is_not_a_survival_proof",
+        "game_version": "v0.111.0"
+      },
+      "survival_status": "unknown"
+    },
+    {
+      "id": "unavoidable_end_turn",
+      "expected_actions": [
+        "end"
+      ],
+      "state": {
+        "scene": "combat",
+        "run": {
+          "id": "quality-unavoidable_end_turn",
+          "character": "ironclad",
+          "act": 1,
+          "floor": 1,
+          "hp": 2,
+          "max_hp": 80
+        },
+        "combat": {
+          "energy": 1,
+          "turn": 1,
+          "enemies": [
+            {
+              "id": "enemy",
+              "ref": "enemy",
+              "hp": 20,
+              "max_hp": 20,
+              "intents": [
+                {
+                  "type": "attack",
+                  "damage": 6,
+                  "hits": 1
+                }
+              ]
+            }
+          ]
+        },
+        "legal_actions": [
+          {
+            "id": "end",
+            "decision_id": "unavoidable_end_turn",
+            "kind": "end_turn"
+          }
+        ],
+        "revision": 1,
+        "decision_id": "unavoidable_end_turn",
+        "game_version": "v0.111.0"
+      },
+      "survival_status": "dead"
+    }
+  ]
+}

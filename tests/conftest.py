@@ -1,7 +1,24 @@
+import httpx
 import pytest
 
-from spiremind.environment.mcp import PROTOCOL
-from spiremind.environment.mock import demo_states
+from spiremind.adapters.game.mcp import PROTOCOL
+from spiremind.evaluation.mock import demo_states
+
+
+@pytest.fixture(autouse=True)
+def offline_http(monkeypatch):
+    """Tests use MockTransport; an accidental real API request is a test failure."""
+
+    monkeypatch.setenv("deepseek_api_key", "offline-test-key")
+
+    def blocked(*args, **kwargs):
+        raise AssertionError("Real HTTP is disabled in the test suite")
+
+    async def async_blocked(*args, **kwargs):
+        blocked()
+
+    monkeypatch.setattr(httpx.HTTPTransport, "handle_request", blocked)
+    monkeypatch.setattr(httpx.AsyncHTTPTransport, "handle_async_request", async_blocked)
 
 
 @pytest.fixture

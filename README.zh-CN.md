@@ -6,15 +6,29 @@
 [![Python](https://img.shields.io/badge/python-3.11--3.13-blue.svg)](https://www.python.org/)
 [![MIT](https://img.shields.io/badge/code-MIT-green.svg)](LICENSE)
 
-为《**杀戮尖塔 2**》设计的多 Agent 决策系统：专业分工、分层记忆、基于证据的经验学习与可恢复执行。
+**一个会自主游玩《杀戮尖塔 2》、并留下决策记录的 Agent。**
 
-## Quick Start
+SpireMind 可以处理战斗、选牌、商店、路线、休息点和事件。它结合语言模型、战斗计算、角色策略和历史经验，让不同场景的决策围绕同一局游戏展开：牌组还缺什么、需要保留多少生命、什么时候值得使用药水。
 
-实机适配 **Windows、STS2 v0.111.0、标准单人模式**。铁甲战士 A0 的实机验证最多，其余角色提供策略包。模组存档与原版存档分开。
+你可以让它连续游玩，暂停后自己接手，再交还给 Agent。每次运行都会记录它看到了什么、选择了什么，以及游戏实际发生了什么，方便观察它的表现，也方便追查一次判断为什么有效或失败。
+
+## 能做什么
+
+- **让整局决策保持联系。** Combat、Run、Map、Event 四类专业 Agent 共享牌组分析、Boss 准备目标和近期战斗结果，由路由器为当前场景选择对应的决策者。
+- **计算可确认的战斗结果。** 本地规则和有限搜索核算伤害、格挡、能量、生命成本与出牌顺序，再把计算结果和当前合法动作交给模型。未覆盖的效果会明确标为未知。
+- **有条件地复用经验。** 经过核验的状态转移可以进入本地经验库；候选经验通过证据检查后才能启用，使用时还会检查当前局面是否适用。学习发生在本地记忆中，模型权重保持不变。
+- **恢复中断的对局。** 动作提交前先保存待处理记录。进程重启后先核对执行结果，再继续决策，降低因响应丢失而重复操作的风险。
+- **检查决策过程。** 日志保留游戏状态、决策上下文、选择理由、动作及核验结果；离线工具可以汇总历史记录、检查标注局面，并测量决策准备开销。
+
+## 在 Windows 上部署
+
+实机适配范围是 **《杀戮尖塔 2》v0.111.0、标准单人模式**。需要已安装的 Steam 游戏和 [Git for Windows](https://git-scm.com/downloads/win)。安装脚本会准备 Python 环境，并安装固定版本的 [STS2AIMCP](https://github.com/BMingSY/sts2-ai-mcp) 游戏桥接模组。
+
+铁甲战士进阶 0 的实机验证最多。Silent、Regent、Necrobinder 和 Defect 也有策略包，但实战验证较少。多人、自定义模式和其他游戏版本尚未纳入当前验证范围。游戏的模组存档与原版存档分开保存。
 
 ### 1. 安装
 
-先安装 [Git for Windows](https://git-scm.com/downloads/win)，**关闭游戏**，在 PowerShell 中执行：
+**先关闭游戏**，打开 PowerShell，执行：
 
 ```powershell
 git clone https://github.com/optima-xu/SpireMind.git
@@ -22,100 +36,120 @@ Set-Location SpireMind
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1
 ```
 
-安装脚本自动查找 Steam 游戏目录，准备 Python 3.13 和锁定依赖、创建配置模板，并构建和安装固定版本的 STS2AIMCP 桥接。缺少 uv 或 .NET 9 SDK 时，通过官方安装器补齐。已有 `.env` 和 `config.local.toml` 会保留。
+脚本会查找 Steam 游戏目录，准备 Python 3.13 和锁定版本的依赖，构建并安装桥接模组，创建 `.env` 与 `config.local.toml`。缺少 uv 或 .NET 9 SDK 时，会通过官方安装器补齐。已有配置文件会保留。安装过程需要联网。
 
-如果没有找到游戏，指定安装目录：
+如果没有找到游戏，手动指定目录：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -GameRoot 'D:\SteamLibrary\steamapps\common\Slay the Spire 2'
 ```
 
-只体验离线演示时加 `-Offline`，跳过游戏桥接；依赖下载仍需要网络。使用阿里云模板时加 `-Provider deepseek`。更多安装细节见[部署指南](docs/DEPLOYMENT.md)。
+### 2. 配置 DeepSeek
 
-### 2. 配置模型
+打开项目目录中的 `.env`，填入自己的密钥：
 
-```powershell
-notepad config.local.toml
-notepad .env
+```dotenv
+deepseek_api_key=replace_with_your_deepseek_key
 ```
 
-在 `config.local.toml` 填写服务地址 `base_url` 和模型名 `model`，在 `.env` 填写 `api_key_env` 指定的密钥变量；默认模板使用 `OPENAI_API_KEY`。模型接口需要支持 OpenAI-compatible Chat Completions、JSON 决策和 function tools。配置文件会自动加载，已有进程环境变量优先。
+生成的 `config.local.toml` 包含以下模型配置：
 
-没有密钥也可以先跑离线演示：
+```toml
+[model]
+base_url = "https://api.deepseek.com"
+model = "deepseek-flash"
+api_key_env = "deepseek_api_key"
 
-```powershell
-.\spiremind.cmd start --environment mock --policy rules
+[model.extra_body]
+thinking = { type = "disabled" }
 ```
 
-### 3. 从游戏首页启动
+从旧版本升级时，请手动更新这些设置；安装脚本会保留原有本地配置。密钥放在 `.env` 或环境变量中。命令行会自动读取配置文件；进程中已有的同名环境变量优先于 `.env`。
 
-从 Steam 打开游戏，启用 **STS2AIMCP** 模组，停留在**首页／主菜单**。保持 Agent 所在终端打开：
+模型接口支持兼容 Chat Completions 的服务。默认策略需要 JSON 输出和函数工具支持。完整配置说明见[部署指南](docs/DEPLOYMENT.md)。
+
+### 3. 开始一局
+
+通过 Steam 启动游戏，启用 **STS2AIMCP** 模组，停留在**主菜单**。在项目目录执行：
 
 ```powershell
 .\spiremind.cmd doctor
 .\spiremind.cmd start --character ironclad --ascension 0
 ```
 
-`--character` 可选 `ironclad`、`silent`、`regent`、`necrobinder`、`defect`。`--ascension 0` 是基础难度，也可选择已解锁的进阶，例如 `--ascension 5`。角色与难度必须存在于当前游戏提供的选项中。启动时自动同步牌库。
+`doctor` 检查游戏桥接，不调用模型。`start` 开始实机游玩，**会调用模型 API 并消耗用量**。游玩期间保持这个终端开启。
 
-**如果游戏不在首页，`start` 会提示先返回首页，不会直接接管当前场景。** 首页有未完成对局时，使用 `resume` 继续；想换角色或难度开新局，需要先在游戏内完成或放弃原对局。
+角色参数可选 `ironclad`、`silent`、`regent`、`necrobinder`、`defect`；进阶等级需要已在游戏中解锁。如果已有未完成的对局，使用 `resume` 继续，或先在游戏内结束、放弃该局，再开始新局。
 
-### 4. 暂停与继续
+### 4. 暂停、查看与继续
 
 在同一项目目录打开另一个 PowerShell 窗口：
 
 | 命令 | 用途 |
 | --- | --- |
-| `.\spiremind.cmd pause` | 请求在下一个安全边界暂停。 |
-| `.\spiremind.cmd status` | 查看控制状态，以及观察／模型／执行／核验阶段。 |
-| `.\spiremind.cmd resume` | 继续暂停的 Agent；进程已停止时，重新连接当前未完成对局。 |
-| 在 Agent 终端按 **Ctrl+C** | 停止进程，保留记忆、日志和待核对动作。 |
-| `.\spiremind.cmd observe` | 只读取当前公开游戏状态。 |
-| `.\spiremind.cmd --help` | 查看命令与参数。 |
+| `.\spiremind.cmd pause` | 请求暂停，等待正在处理的动作完成核对。 |
+| `.\spiremind.cmd status` | 查看当前阶段和控制状态。 |
+| `.\spiremind.cmd resume` | 继续已暂停的 Agent，或在进程停止后重新连接未完成对局。 |
+| 在 Agent 终端按 `Ctrl+C` | 停止进程，保留日志和待处理动作记录。 |
 
-暂停会等待正在进行的模型请求或游戏动作结束。需要手动操作时，先确认 `status` 显示 `paused`；继续时会重新读取状态，丢弃暂停前算出的决策。同一桥接只允许一个 Agent 写进程。显式开启模型复盘时，游戏决策暂停期间，后台复盘可能仍会完成已有作业。
+等到 `status` 显示 `paused` 后再手动操作游戏。恢复时，Agent 会重新读取当前状态并作出新的判断。
 
-关闭步数、时间和累计 token 上限可使用 `start --no-limits`，或在进程停止后使用 `resume --no-limits`。也可在配置的 `[runtime]` 中将相应字段设为 `false`，详见完整命令表。
+## 不用游戏和 API Key 也能体验
 
-[完整命令表](docs/COMMANDS.md)包含单步执行、日志回放、记忆维护和评测。Python 用户也可在 Windows/Linux 使用 `uv run spiremind ...`；这里的实机安装流程针对 Windows。
+克隆仓库后，在项目目录执行：
 
-## 技术报告
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Offline
+.\spiremind.cmd start --environment mock --policy rules
+.\spiremind.cmd evaluate --output runs/quality/latest.json
+.\spiremind.cmd benchmark --rounds 3 --output runs/benchmarks/local.json
+```
 
-### 多 Agent 架构
+`-Offline` 跳过游戏检测和桥接安装，首次下载依赖仍需要网络。安装之后的三个命令都不会请求游戏或模型：
+
+| 命令 | 检查内容 |
+| --- | --- |
+| `start --environment mock --policy rules` | 用固定的十步动作走通运行流程。 |
+| `evaluate` | 检查八个带标注的决策案例，覆盖战斗和奖励选择等场景。 |
+| `benchmark` | 测量固定局面下的决策准备耗时与上下文大小。 |
+
+这些检查用于发现实现错误。Mock 演示不模拟完整游戏，性能计时也不能说明真实胜率。
+
+## 从判断到执行
 
 ```mermaid
 flowchart LR
-    Game[公开游戏状态] --> Coordinator[Coordinator]
-    Coordinator --> Combat[Combat 战斗]
-    Coordinator --> Run[Run 牌组与资源]
-    Coordinator --> Map[Map 路线]
-    Coordinator --> Event[Event 事件]
-    Combat & Run & Map & Event --> Execute[校验 / 执行 / 对账]
-    Execute --> Memory[分层记忆]
-    Memory --> Reflection[后台 Reflection]
-    Reflection --> Retrieval[已验证经验检索]
-    Retrieval --> Coordinator
+    State[公开游戏状态] --> Context[牌组、目标与记忆]
+    Context --> Decide[场景 Agent 与战斗计算]
+    Decide --> Check[核对当前合法动作]
+    Check --> Act[执行一个动作]
+    Act --> Verify[观察并核验结果]
+    Verify --> State
 ```
 
-Coordinator 每次路由一个专业 Agent，并统一负责执行。Agent 可共享模型客户端，但任务、可见记忆和写入权限分别定义。场景交接携带已核验的资源变化和策略版本；Reflection 没有游戏执行接口。
+即使搜索得到多步出牌顺序，运行器也只提交一个动作，然后根据新状态重新规划。执行前核对动作绑定，执行后记录状态变化和受支持的效果是否符合预期。
 
-### 分层记忆与经验学习
+代码按职责组织：`core/` 定义状态和接口，`decision/` 选择动作，`application/` 协调执行与恢复，`adapters/` 连接游戏、模型和存储，`learning/` 管理经验，`evaluation/` 提供离线检查。完整流程和依赖关系见[当前架构说明](docs/ARCHITECTURE.md)。
 
-**Working** 按对局实例、Agent 和任务隔离；**Run** 共享有字段所有权的整局策略；**Episode** 保存已核验的局部转换；**Skill** 保存人工规则和学习到的条件经验。
+## 查看结果与参与开发
 
-启动时离线导入发生变化的本地历史，包括中断对局中可核验的转换。历史与未来运行接入同一闭环：观察 → 复盘 → 证据校验 → 至少三个独立训练种子支持与回归 → 激活 → 检索。留出种子保持隔离，已验证训练反例会停用经验。SQLite FTS5/BM25 按当前手牌和资源重排，每次最多两条 Episode、三条激活 Skill，总上限 600 个估计 token。公开训练文件有 686 条观察，可复现两条局部经验；条件战术学习目前支持免费愤怒先于攻击，每次使用前重新检查安全条件。学习更新经验记忆，不更新模型权重。
+每次运行的记录保存在 `runs/<attempt-id>/`。可以先看 `summary.json`，再查状态和决策日志。以下命令只汇总已有记录，不会向游戏发送动作：
 
-### 性能与可靠性
+```powershell
+.\spiremind.cmd replay runs/<attempt-id>
+```
 
-有界 LRU、单次战斗评估复用、专用 SQLite 线程、合并事务和有界日志队列减少重复工作。计算器将数值预测绑定到当前合法动作，预测不一致时最多修复一次。关键 pending 先持久化再发送，动作后的读取失败会保留回执并先对账。观察、执行、核验分别计算恢复期限，模型耗时不占用桥接恢复窗口。用量报告区分服务端返回值与安全预算估算。
+将 `<attempt-id>` 替换为实际目录名。完整命令、记忆检查和自定义配置见[命令说明](docs/COMMANDS.md)。
 
-| 指标 | 实测变化 |
-| --- | --- |
-| 离线决策准备 P50 | 3.306 → 1.078 ms，**下降 67.4%** |
-| 含异步存储的准备 P50 | 2.313 ms，较基线**下降 30.0%** |
-| 重复牌库查询 | 546 → 16，**减少 97.1%** |
-| 战斗上下文估计 token 中位数 | 6648 → 5647，**减少 15.1%** |
+开发检查：
 
-上表记录 2026-10-02 的架构对照：16 个公开局面、三次重复测量，源码版本和指纹见[性能报告](docs/PERFORMANCE.md)。[2026-10-04 鲁棒性更新](docs/ROBUSTNESS.md)进一步将战斗上下文估计 token 中位数从 5,647 降至 4,272（**减少 24.3%**）；热准备耗时从 1.064 变为 1.233 ms，未证实额外本地加速。之前的模型测试在预算内停止，保留四组完整 A/B/C 配对，尚不能证明胜率提升。CI 覆盖 Windows/Linux 与 Python 3.11/3.13，并验证取消恢复、事务回滚、缓存失效、pending 对账和隔离 wheel 安装。
+```powershell
+uv sync --locked
+uv run pytest -q
+uv run ruff check src tests scripts
+uv run ruff format --check src tests scripts
+```
 
-更多资料：[记忆设计](docs/MULTI_AGENT_MEMORY.md) · [面试说明与中英文简历描述](docs/INTERVIEW.md) · [实机验证范围](docs/ACCEPTANCE.md) · [贡献指南](CONTRIBUTING.md)。
+2026-10-30 的重构已通过本地测试、标注局面检查和独立环境中的安装包检查。新的模型配置仍需要实机复验，目前没有胜率提升结论。战斗计算只覆盖已支持的机制，完整输出搜索目前限于受支持的单个存活敌人局面。早期实机结果见[验收记录](docs/ACCEPTANCE.md)，历史性能数据与复现步骤见[性能文档](docs/PERFORMANCE.md)。
+
+欢迎通过 [CONTRIBUTING.md](CONTRIBUTING.md) 了解贡献方式。SpireMind 代码采用 [MIT 许可证](LICENSE)；游戏资产和第三方组件的条款见[第三方声明](THIRD_PARTY_NOTICES.md)。

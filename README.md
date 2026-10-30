@@ -6,15 +6,29 @@
 [![Python](https://img.shields.io/badge/python-3.11--3.13-blue.svg)](https://www.python.org/)
 [![MIT](https://img.shields.io/badge/code-MIT-green.svg)](LICENSE)
 
-A multi-agent player for **Slay the Spire 2**, with specialized decision agents, hierarchical memory, evidence-backed experience learning and recoverable execution.
+**An autonomous player for Slay the Spire 2, with decisions you can inspect.**
 
-## Quick Start
+SpireMind handles combat, card rewards, shops, routes, rest sites and events. It combines a language model with combat calculations, character strategies and memory of earlier decisions. The same run goals follow it from one room to the next: what the deck lacks, how much health to preserve, and when to spend a potion.
 
-Live play targets **Windows, STS2 v0.111.0 and standard single-player runs**. Ironclad A0 has the most live validation; the other characters have strategy packages. Modded saves are separate from vanilla saves.
+You can let it play, pause to take over, then resume. Each attempt leaves a record of the state it saw, the action it chose and the result it observed. That makes the project useful both for watching an agent play and for investigating why a decision worked or failed.
+
+## What it does
+
+- **Connects decisions across a run.** Combat, Run, Map and Event specialists share deck analysis, boss preparation goals and recent combat results. A scene router selects the relevant specialist for each decision.
+- **Calculates supported combat sequences.** Local rules and bounded search check damage, block, energy, health costs and action order. The model receives these facts alongside the current legal actions. Unsupported effects remain explicit unknowns.
+- **Reuses experience with conditions.** Verified transitions can become local experience. A candidate lesson must pass evidence checks before activation, and retrieval checks whether it fits the current state. This updates a local memory database; model weights stay unchanged.
+- **Recovers interrupted execution.** Pending actions are saved before submission. After a restart, the runtime checks their outcome before continuing, reducing the risk of repeating an action whose response was lost.
+- **Makes behavior inspectable.** Traces contain game states, decision context, explanations, actions and verification results. Offline tools summarize attempts, check labeled decisions and measure preparation costs.
+
+## Deploy on Windows
+
+Live play targets **Slay the Spire 2 v0.111.0, standard single-player mode**. You need an installed Steam copy and [Git for Windows](https://git-scm.com/downloads/win). The setup script installs the Python environment and the pinned [STS2AIMCP](https://github.com/BMingSY/sts2-ai-mcp) game bridge.
+
+Ironclad at Ascension 0 has the most live validation. Strategy packages also cover Silent, Regent, Necrobinder and Defect; their live performance is less tested. Multiplayer, custom runs and other game versions are outside the current validated scope. The game keeps modded saves separate from vanilla saves.
 
 ### 1. Install
 
-Install [Git for Windows](https://git-scm.com/downloads/win), then **close the game** and open PowerShell:
+**Close the game**, open PowerShell, and run:
 
 ```powershell
 git clone https://github.com/optima-xu/SpireMind.git
@@ -22,100 +36,120 @@ Set-Location SpireMind
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1
 ```
 
-Setup finds Steam libraries, prepares Python 3.13 and locked dependencies, creates configuration templates, and builds/installs the pinned STS2AIMCP bridge. Missing uv and .NET 9 SDK are obtained through their official installers. Existing `.env` and `config.local.toml` are preserved.
+Setup finds the Steam game directory, prepares Python 3.13 and locked dependencies, builds and installs the bridge, and creates `.env` and `config.local.toml`. It obtains missing uv and .NET 9 SDK installations through their official installers. Existing configuration files are preserved. Installation requires internet access.
 
-If the game is not found, specify its directory:
+If automatic game detection fails, supply the directory:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -GameRoot 'D:\SteamLibrary\steamapps\common\Slay the Spire 2'
 ```
 
-For a demo without installing the game bridge, add `-Offline`; dependency downloads still require internet access. For the Alibaba Cloud template, add `-Provider deepseek`. See [installation details](docs/DEPLOYMENT.md).
+### 2. Configure DeepSeek
 
-### 2. Configure your model
+Open `.env` in the project directory and fill in your key:
 
-```powershell
-notepad config.local.toml
-notepad .env
+```dotenv
+deepseek_api_key=replace_with_your_deepseek_key
 ```
 
-Set `base_url` and `model` in `config.local.toml`; put your key in the environment variable named by `api_key_env` in `.env`. The default template uses `OPENAI_API_KEY`. The provider must support OpenAI-compatible Chat Completions, JSON decisions and function tools. These files are loaded automatically; process environment variables take precedence.
+The generated `config.local.toml` contains these model settings:
 
-You can try the offline walkthrough first, without a key:
+```toml
+[model]
+base_url = "https://api.deepseek.com"
+model = "deepseek-flash"
+api_key_env = "deepseek_api_key"
 
-```powershell
-.\spiremind.cmd start --environment mock --policy rules
+[model.extra_body]
+thinking = { type = "disabled" }
 ```
 
-### 3. Start from the game's main menu
+When upgrading an existing checkout, update these settings yourself because setup preserves your local files. Keep credentials in `.env` or environment variables. The CLI loads the files automatically; an existing process environment variable takes precedence over `.env`.
 
-Launch the game through Steam, enable **STS2AIMCP**, and leave it at the **main menu**. Keep the agent's terminal open:
+The model adapter supports compatible Chat Completions endpoints. The default policy requires JSON decisions and function tools. See the [deployment guide](docs/DEPLOYMENT.md) for configuration details.
+
+### 3. Start a run
+
+Launch the game through Steam, enable **STS2AIMCP**, and leave it at the **main menu**. Run these commands from the project directory:
 
 ```powershell
 .\spiremind.cmd doctor
 .\spiremind.cmd start --character ironclad --ascension 0
 ```
 
-`--character` accepts `ironclad`, `silent`, `regent`, `necrobinder` or `defect`. `--ascension 0` is base difficulty; select another unlocked level, such as `--ascension 5`. Only combinations offered by the current game are accepted. Card knowledge is synchronized automatically.
+`doctor` checks the game bridge without calling the model. `start` begins live play and **makes model API requests**. Keep this terminal open while the agent runs.
 
-**If the game is not at the main menu, `start` tells you to return there before starting.** If a saved run is available, use `resume` to continue it; starting a different character/difficulty requires finishing or abandoning that run in the game first.
+Available character names are `ironclad`, `silent`, `regent`, `necrobinder` and `defect`. The requested difficulty must be unlocked in the game. If a saved run exists, use `resume`, or finish or abandon that run in the game before starting another.
 
-### 4. Pause and resume
+### 4. Pause, inspect and resume
 
 Open another PowerShell window in the same project directory:
 
 | Command | Purpose |
 | --- | --- |
-| `.\spiremind.cmd pause` | Request a pause at the next safe boundary. |
-| `.\spiremind.cmd status` | Check control status and the current observe/model/execute/verify phase. |
-| `.\spiremind.cmd resume` | Resume a paused agent; if it has stopped, reconnect to the current unfinished run. |
-| **Ctrl+C** in the agent terminal | Stop the process and preserve memory, trace and pending-action evidence. |
-| `.\spiremind.cmd observe` | Read the current public game state. |
-| `.\spiremind.cmd --help` | List commands and options. |
+| `.\spiremind.cmd pause` | Request a pause after any pending action has been checked. |
+| `.\spiremind.cmd status` | Read the current phase and control status. |
+| `.\spiremind.cmd resume` | Continue a paused agent, or reconnect to an unfinished game after the process stopped. |
+| `Ctrl+C` in the agent terminal | Stop the process while preserving logs and pending-action records. |
 
-Pause waits for an ongoing model request or game action to settle. Wait until `status` shows `paused` before manually interacting with the game. Resume reads fresh state and discards any decision computed before the pause. Do not run a second agent on the same bridge. Model reflection, when explicitly enabled, may finish a background job while game decisions are paused.
+Wait until `status` reports `paused` before playing manually. On resume, the agent reads the current state and makes a fresh decision.
 
-To disable step, time and cumulative-token limits, use `start --no-limits` or, after stopping the process, `resume --no-limits`. You can also set the corresponding `[runtime]` config fields to `false`; details are in the command reference.
+## Try it without a game or API key
 
-[Full command reference](docs/COMMANDS.md) includes single-step execution, replay, memory maintenance and benchmarks. Python users can use `uv run spiremind ...` on Windows or Linux; live bridge setup here is for Windows.
+After cloning the repository, run:
 
-## Technical Report
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Offline
+.\spiremind.cmd start --environment mock --policy rules
+.\spiremind.cmd evaluate --output runs/quality/latest.json
+.\spiremind.cmd benchmark --rounds 3 --output runs/benchmarks/local.json
+```
 
-### Agent architecture
+`-Offline` skips game detection and bridge installation; dependency downloads still need internet access. The three commands after setup make no game or model requests:
+
+| Command | What it checks |
+| --- | --- |
+| `start --environment mock --policy rules` | A fixed ten-action walkthrough of the runtime. |
+| `evaluate` | Eight labeled policy cases, including combat and reward decisions. |
+| `benchmark` | Preparation time and context size across fixed states. |
+
+These checks help catch implementation errors. The mock walkthrough does not simulate a full game, and benchmark timing does not measure win rate.
+
+## How decisions become actions
 
 ```mermaid
 flowchart LR
-    Game[Public game state] --> Coordinator[Coordinator]
-    Coordinator --> Combat[Combat]
-    Coordinator --> Run[Run / Deck]
-    Coordinator --> Map[Map]
-    Coordinator --> Event[Event]
-    Combat & Run & Map & Event --> Execute[Validate / execute / reconcile]
-    Execute --> Memory[Hierarchical memory]
-    Memory --> Reflection[Background Reflection]
-    Reflection --> Retrieval[Validated experience retrieval]
-    Retrieval --> Coordinator
+    State[Public game state] --> Context[Deck, goals and memory]
+    Context --> Decide[Scene specialist and combat calculations]
+    Decide --> Check[Validate current legal action]
+    Check --> Act[Execute one action]
+    Act --> Verify[Observe and verify result]
+    Verify --> State
 ```
 
-The Coordinator routes one specialist per decision and owns execution. Agents share a provider but have separate tasks, visible memory and write permissions. Scene handoffs carry verified resource changes and policy versions; Reflection has no game execution port.
+Even when a search finds a multi-step sequence, the runtime submits one action and replans from the resulting state. It checks action bindings before execution and records whether the observed transition and supported effects match expectations.
 
-### Memory and learning
+The code separates responsibilities: `core/` defines state and contracts; `decision/` chooses actions; `application/` coordinates execution and recovery; `adapters/` connects the game, model and storage; `learning/` manages experience; `evaluation/` runs offline checks. See the [current architecture](docs/ARCHITECTURE.md) for the full flow and dependency boundaries.
 
-**Working** memory is private to a run instance, agent and task. **Run** memory shares owned policies across scenes. **Episodes** record verified local transitions. **Skills** contain human rules and learned conditional observations.
+## Inspect results and develop
 
-Startup imports changed local history offline, including verifiable transitions from interrupted runs. Historical traces and future runs feed the same loop: observation → reflection → evidence checks → regression across at least three independent training seeds → activation → retrieval. Holdout seeds stay isolated; verified training counterexamples deactivate lessons. SQLite FTS5/BM25 retrieves at most two episodes and three active skills within 600 estimated tokens, ranked against the current hand and resources. The public training set contains 686 observations and reproduces two local lessons. Conditional tactical learning currently supports free Rage before attacks; it requires fresh safety checks. Learning updates experience memory rather than model weights.
+Each attempt writes to `runs/<attempt-id>/`. Start with `summary.json`, then inspect the state and decision logs. To summarize an existing attempt without sending game actions:
 
-### Performance and reliability
+```powershell
+.\spiremind.cmd replay runs/<attempt-id>
+```
 
-Bounded LRU caches, one combat assessment per decision, a dedicated SQLite thread, combined transactions and a bounded logging queue reduce repeated work. The calculator binds numeric forecasts to current legal actions; mismatches receive one repair before acceptance. Pending actions are persisted before dispatch, and failed post-action reads retain the receipt for reconciliation. Separate recovery windows cover observation, execution and verification, without charging model latency to bridge recovery. Usage reports distinguish server-reported tokens from conservative safety estimates.
+Replace `<attempt-id>` with an actual directory name. Full command options, memory inspection and custom configuration are documented in the [command reference](docs/COMMANDS.md).
 
-| Metric | Measured change |
-| --- | --- |
-| Offline preparation P50 | 3.306 → 1.078 ms, **−67.4%** |
-| Preparation including async storage | 2.313 ms, **−30.0%** vs baseline |
-| Repeated card queries | 546 → 16, **−97.1%** |
-| Median estimated combat-context tokens | 6648 → 5647, **−15.1%** |
+For development:
 
-The table records the 2026-10-02 architecture comparison: 16 public states and three repeats at the revisions in the [performance report](docs/PERFORMANCE.md). The [2026-10-04 robustness update](docs/ROBUSTNESS.md) further reduced median estimated combat-context tokens from 5,647 to 4,272 (**−24.3%**); local warm preparation changed from 1.064 to 1.233 ms, with no additional speedup demonstrated. Model testing previously stopped within budget with four complete A/B/C groups. These results do not establish improved win rate. CI covers Windows/Linux and Python 3.11/3.13, including cancellation, rollback, cache invalidation, pending recovery and isolated wheel installation.
+```powershell
+uv sync --locked
+uv run pytest -q
+uv run ruff check src tests scripts
+uv run ruff format --check src tests scripts
+```
 
-Details: [memory design](docs/MULTI_AGENT_MEMORY.md) · [interview notes and resume bullets](docs/INTERVIEW.md) · [live validation scope](docs/ACCEPTANCE.md) · [contributing](CONTRIBUTING.md).
+The 2026-10-30 refactor passed local tests, labeled policy checks and an isolated package-installation check. It still needs a fresh live run with the new model configuration; improved win rate has not been established. Combat calculations cover a defined subset of mechanics, and complete offensive search is currently limited to supported states with one living enemy. See [validation history](docs/ACCEPTANCE.md) for earlier live results and [performance reproduction](docs/PERFORMANCE.md) for historical measurements.
+
+Contributions are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). SpireMind code is licensed under [MIT](LICENSE). Game assets and third-party components have their own terms, listed in [third-party notices](THIRD_PARTY_NOTICES.md).

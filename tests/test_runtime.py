@@ -3,29 +3,30 @@ import json
 
 import pytest
 
+from spiremind.adapters.locking import SingleWriter
+from spiremind.adapters.storage.cards import CardDB
+from spiremind.adapters.storage.memory import MemoryStore
+from spiremind.adapters.telemetry.trace import TraceWriter, replay_summary
+from spiremind.application.run_state import MemoryManager
+from spiremind.application.session import AgentRuntime, ProviderFallbackLimit, ProviderRetryPending
 from spiremind.config import Config
-from spiremind.context.budget import ContextBudget
-from spiremind.context.compiler import ContextCompiler
 from spiremind.core.actions import Action, ActionResult
+from spiremind.core.budget import ContextBudget
 from spiremind.core.decision import Decision, StrategyUpdate
 from spiremind.core.enums import ActionKind, Scene
-from spiremind.environment.base import EnvironmentError, StaleDecision
-from spiremind.environment.mock import MockEnvironment, demo_states
-from spiremind.knowledge.cards import CardDB
+from spiremind.core.ports import EnvironmentError, StaleDecision
+from spiremind.core.validation import ActionValidator
+from spiremind.decision.context import ContextCompiler
+from spiremind.decision.deck import DeckAnalyzer
+from spiremind.decision.policies.combat import CombatStrategy
+from spiremind.decision.policies.event import EventStrategy
+from spiremind.decision.policies.fallback import conservative_choice
+from spiremind.decision.policies.lifecycle import lifecycle_decision
+from spiremind.decision.policies.map import MapStrategy
+from spiremind.decision.policies.run import RunStrategy
+from spiremind.decision.router import SceneRouter
+from spiremind.evaluation.mock import MockEnvironment, demo_states
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.manager import MemoryManager
-from spiremind.memory.storage_sqlite import MemoryStore
-from spiremind.runtime.agent import AgentRuntime, ProviderFallbackLimit, ProviderRetryPending
-from spiremind.runtime.lifecycle import lifecycle_decision
-from spiremind.runtime.locking import SingleWriter
-from spiremind.runtime.router import SceneRouter
-from spiremind.runtime.trace import TraceWriter, replay_summary
-from spiremind.runtime.validator import ActionValidator
-from spiremind.strategies.combat import CombatStrategy
-from spiremind.strategies.event import EventStrategy
-from spiremind.strategies.fallback import conservative_choice
-from spiremind.strategies.map import MapStrategy
-from spiremind.strategies.run import DeckAnalyzer, RunStrategy
 
 
 def test_total_token_budget_is_unlimited_by_default():
@@ -154,7 +155,7 @@ async def test_provider_retries_for_180_seconds_without_sending_actions(tmp_path
     async def retry_sleep(seconds):
         clock[0] += 20
 
-    monkeypatch.setattr("spiremind.runtime.agent.asyncio.sleep", retry_sleep)
+    monkeypatch.setattr("spiremind.application.session.asyncio.sleep", retry_sleep)
 
     class ProviderFailingStrategy:
         name = "event"
@@ -369,7 +370,7 @@ async def test_repeated_bad_receipt_stops_without_dispatching_a_second_action(tm
     async def backoff(seconds):
         clock[0] += 60
 
-    monkeypatch.setattr("spiremind.runtime.agent.asyncio.sleep", backoff)
+    monkeypatch.setattr("spiremind.application.session.asyncio.sleep", backoff)
     store = MemoryStore(tmp_path / "memory.sqlite")
     strategy = Strategy()
     env = BadReceiptEnvironment(demo_states()[2:])

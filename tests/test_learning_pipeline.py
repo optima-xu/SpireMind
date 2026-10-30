@@ -7,23 +7,24 @@ import time
 import httpx
 import pytest
 
+from spiremind.adapters.model.openai import OpenAIProvider, retry_after_seconds
+from spiremind.adapters.storage.cards import CardDB
+from spiremind.adapters.storage.memory import MemoryStore
+from spiremind.adapters.telemetry.async_trace import AsyncTraceWriter, TraceWriteError
+from spiremind.application.memory import AsyncMemory
+from spiremind.application.run_state import MemoryManager
 from spiremind.config import ModelConfig
-from spiremind.context.compiler import AgentContext
+from spiremind.core.context import AgentContext
 from spiremind.core.decision import StrategyUpdate
 from spiremind.core.enums import Scene
+from spiremind.core.facts import CardFact
+from spiremind.core.model import BudgetExceeded, RequestBudget
 from spiremind.core.state import PublicFacts
-from spiremind.knowledge.cards import CardDB, CardFact
+from spiremind.decision.deck import DeckAnalyzer
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.async_store import AsyncMemory
-from spiremind.memory.evidence_io import import_evidence
-from spiremind.memory.experience import ExperienceStore, LessonProposal
-from spiremind.memory.manager import MemoryManager
-from spiremind.memory.reflection import ReflectionAgent
-from spiremind.memory.storage_sqlite import MemoryStore
-from spiremind.providers.openai import OpenAIProvider, retry_after_seconds
-from spiremind.providers.protocols import BudgetExceeded, RequestBudget
-from spiremind.runtime.async_trace import AsyncTraceWriter, TraceWriteError
-from spiremind.strategies.run import DeckAnalyzer
+from spiremind.learning.evidence_io import import_evidence
+from spiremind.learning.experience import ExperienceStore, LessonProposal
+from spiremind.learning.reflection import ReflectionAgent
 
 
 async def test_private_scopes_resume_and_same_seed_instance(states, tmp_path):
@@ -96,7 +97,7 @@ async def test_ownership_cas_and_handoff_invalidation(states, tmp_path):
 
 
 def test_combined_transaction_rolls_back_without_poisoning_caches(tmp_path):
-    from spiremind.memory.run import RunMemory
+    from spiremind.core.run import RunMemory
 
     store = MemoryStore(tmp_path / "memory.sqlite")
     run = RunMemory(run_id="seed", game_version="v")

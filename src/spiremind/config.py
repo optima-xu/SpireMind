@@ -11,9 +11,9 @@ class Settings(BaseModel):
 
 
 class ModelConfig(Settings):
-    base_url: str = "https://api.openai.com/v1"
-    model: str = ""
-    api_key_env: str = "OPENAI_API_KEY"
+    base_url: str = "https://api.deepseek.com"
+    model: str = "deepseek-flash"
+    api_key_env: str = "deepseek_api_key"
     timeout_seconds: float = Field(default=60, gt=0)
     max_tokens: int = Field(default=600, ge=128)
     max_completion_tokens: int | None = Field(default=None, ge=128)
@@ -23,7 +23,7 @@ class ModelConfig(Settings):
     json_mode: bool = True
     calculator_mode: Literal["required", "auto", "off"] = "required"
     require_exact_model: bool = False
-    extra_body: dict = Field(default_factory=dict)
+    extra_body: dict = Field(default_factory=lambda: {"thinking": {"type": "disabled"}})
 
     @model_validator(mode="after")
     def reserved(self):

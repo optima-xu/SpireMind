@@ -5,6 +5,7 @@ from pathlib import Path
 import httpx
 import pytest
 
+from spiremind.adapters.game.mcp import MCPEnvironment
 from spiremind.config import GameConfig
 from spiremind.core.actions import Action
 from spiremind.core.enums import ActionKind, Scene
@@ -19,16 +20,10 @@ from spiremind.core.state import (
     PublicFacts,
     RunState,
 )
-from spiremind.environment.mcp import MCPEnvironment
-from spiremind.strategies.combat import CombatStrategy
-from spiremind.strategies.combat_tactics import (
-    MAX_SURVIVAL_SEARCH_TRANSITIONS,
-    assess,
-    early_boss_potion_action,
-    forced_survival_action,
-    visible_offense_plan,
-    visible_survival_plan,
-)
+from spiremind.decision.combat import assess, early_boss_potion_action, forced_survival_action
+from spiremind.decision.mechanics.effects import MAX_SURVIVAL_SEARCH_TRANSITIONS
+from spiremind.decision.planning.combat import visible_offense_plan, visible_survival_plan
+from spiremind.decision.policies.combat import CombatStrategy
 
 
 @pytest.fixture
@@ -317,7 +312,7 @@ def test_nonlethal_turn_exposes_damage_plan_without_forcing_reckless_offense(cas
     assert '"visible_max_damage":32' in task
 
 
-def test_unknown_attack_card_makes_offense_plan_abstain(cases):
+def test_unknown_attack_preserves_a_supported_lethal_without_proving_maximum(cases):
     state = bygone_effigy_lethal_state(cases["fatal_one"])
     unknown = Card(
         id="mystery_attack",
@@ -348,7 +343,9 @@ def test_unknown_attack_card_makes_offense_plan_abstain(cases):
     assert not plan["complete"]
     assert plan["max_damage"] is None
     assert not facts["visible_damage_plan_known"]
-    assert facts["verified_lethal_plan"] == []
+    assert facts["verified_lethal_plan"]
+    assert action.id not in facts["verified_lethal_plan"]
+    assert plan["feasible"] and not plan["optimal"]
 
 
 def test_offense_search_abstains_at_its_transition_bound(cases):

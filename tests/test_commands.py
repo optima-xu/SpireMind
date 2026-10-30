@@ -4,30 +4,32 @@ from types import SimpleNamespace
 
 import pytest
 
-from spiremind.cli import build_parser, execute, load_cli_config, validate_entry
+from spiremind.adapters.control import RunControl, control_status, request_control
+from spiremind.adapters.locking import SingleWriter
+from spiremind.adapters.storage.cards import CardDB
+from spiremind.adapters.storage.memory import MemoryStore
+from spiremind.adapters.telemetry.trace import TraceWriter
+from spiremind.application.run_state import MemoryManager
+from spiremind.application.session import AgentRuntime, DecisionInterrupted
+from spiremind.bootstrap import execute, load_cli_config, validate_entry
+from spiremind.cli import build_parser
 from spiremind.config import Config, GameConfig
-from spiremind.context.budget import ContextBudget
-from spiremind.context.compiler import ContextCompiler
 from spiremind.core.actions import Action
+from spiremind.core.budget import ContextBudget
 from spiremind.core.decision import ModelChoice
 from spiremind.core.enums import ActionKind
 from spiremind.core.state import PublicFacts
-from spiremind.environment.mock import MockEnvironment
-from spiremind.knowledge.cards import CardDB
+from spiremind.decision.context import ContextCompiler
+from spiremind.decision.deck import DeckAnalyzer
+from spiremind.decision.policies.combat import CombatStrategy
+from spiremind.decision.policies.event import EventStrategy
+from spiremind.decision.policies.fallback import conservative_choice
+from spiremind.decision.policies.lifecycle import lifecycle_decision
+from spiremind.decision.policies.map import MapStrategy
+from spiremind.decision.policies.run import RunStrategy
+from spiremind.decision.router import SceneRouter
+from spiremind.evaluation.mock import MockEnvironment
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.manager import MemoryManager
-from spiremind.memory.storage_sqlite import MemoryStore
-from spiremind.runtime.agent import AgentRuntime, DecisionInterrupted
-from spiremind.runtime.control import RunControl, control_status, request_control
-from spiremind.runtime.lifecycle import lifecycle_decision
-from spiremind.runtime.locking import SingleWriter
-from spiremind.runtime.router import SceneRouter
-from spiremind.runtime.trace import TraceWriter
-from spiremind.strategies.combat import CombatStrategy
-from spiremind.strategies.event import EventStrategy
-from spiremind.strategies.fallback import conservative_choice
-from spiremind.strategies.map import MapStrategy
-from spiremind.strategies.run import DeckAnalyzer, RunStrategy
 
 
 def test_local_config_and_literal_env_preserve_process_values(tmp_path, monkeypatch):
@@ -104,10 +106,10 @@ async def test_start_off_home_does_not_initialize_model_or_send_actions(tmp_path
             pytest.fail("Card export must follow entry validation")
 
     bridge = Bridge(states[4:])
-    monkeypatch.setattr("spiremind.cli.bridge_lock_path", lambda _: tmp_path / "live.lock")
-    monkeypatch.setattr("spiremind.cli.MCPEnvironment", lambda *_: bridge)
+    monkeypatch.setattr("spiremind.bootstrap.bridge_lock_path", lambda _: tmp_path / "live.lock")
+    monkeypatch.setattr("spiremind.bootstrap.MCPEnvironment", lambda *_: bridge)
     monkeypatch.setattr(
-        "spiremind.cli.OpenAIProvider", lambda *_: pytest.fail("No model request before entry")
+        "spiremind.bootstrap.OpenAIProvider", lambda *_: pytest.fail("No model request before entry")
     )
     with pytest.raises(ValueError, match="请先返回"):
         await execute(build_parser().parse_args(["--config", str(config_path), "start"]))
@@ -192,9 +194,9 @@ async def test_pause_during_decision_discards_choice_and_reads_current_state(tmp
 async def test_cli_resume_signals_running_process_without_model_or_launch(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     path, lock = tmp_path / "live.control.json", tmp_path / "live.lock"
-    monkeypatch.setattr("spiremind.cli.bridge_lock_path", lambda _: lock)
+    monkeypatch.setattr("spiremind.bootstrap.bridge_lock_path", lambda _: lock)
     monkeypatch.setattr(
-        "spiremind.cli.MCPEnvironment", lambda *_: pytest.fail("Must not launch another writer")
+        "spiremind.bootstrap.MCPEnvironment", lambda *_: pytest.fail("Must not launch another writer")
     )
     with SingleWriter(lock), RunControl(path, {}):
         assert (await execute(build_parser().parse_args(["pause"])))["status"] == "pause_requested"
@@ -232,10 +234,10 @@ async def test_stopped_resume_restores_role_difficulty_and_policy(tmp_path, monk
         assert (config.character, config.ascension) == ("silent", 5)
         return bridge
 
-    monkeypatch.setattr("spiremind.cli.bridge_lock_path", lambda _: lock)
-    monkeypatch.setattr("spiremind.cli.MCPEnvironment", connect)
+    monkeypatch.setattr("spiremind.bootstrap.bridge_lock_path", lambda _: lock)
+    monkeypatch.setattr("spiremind.bootstrap.MCPEnvironment", connect)
     monkeypatch.setattr(
-        "spiremind.cli.OpenAIProvider", lambda *_: pytest.fail("Resume must restore the rules policy")
+        "spiremind.bootstrap.OpenAIProvider", lambda *_: pytest.fail("Resume must restore the rules policy")
     )
     result = await execute(build_parser().parse_args(["resume"]))
     assert result["complete"] and result["verified_actions"] == 2

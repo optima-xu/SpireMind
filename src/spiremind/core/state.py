@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .enums import Scene
+from spiremind.core.enums import Scene
 
 
 class Snapshot(BaseModel):
@@ -157,6 +157,6 @@ class GameState(Snapshot):
         return self.scene == Scene.GAME_OVER
 
 
-from .actions import Action  # noqa: E402
+from spiremind.core.actions import Action  # noqa: E402
 
 GameState.model_rebuild()

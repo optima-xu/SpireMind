@@ -8,6 +8,9 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Added
 
+- A shared decision frame, structured run intent, observed combat feedback and labeled offline `evaluate` cases.
+- Durable application-level action recovery, idempotent transition commits and separate immediate-effect verification.
+- Enforced module dependency checks and an offline installed-wheel smoke test.
 - Current-phase diagnostics and calculator facts bound to legal actions, with validated numeric forecasts.
 - Offline history bootstrap for interrupted traces, persistent holdout isolation and conditional tactical learning with counterexample retirement.
 - Public live-state robustness regressions and three reproducible incremental benchmark reports.
@@ -19,11 +22,17 @@ All notable changes to this project will be documented in this file. The format 
 
 ### Changed
 
+- Separate core contracts, decision mechanics/policies, application orchestration, adapters, learning and evaluation; remove unused working-plan buffers and forwarding modules.
+- Default model configuration uses `deepseek-flash` and `deepseek_api_key` on the DeepSeek endpoint, with thinking disabled explicitly.
+- Scope background consolidation to affected evidence and revalidate retrieval against the complete current state.
 - Resume reobserves the game and invalidates pre-pause choices; stopping preserves pending-action recovery.
 - Retain legacy `run` and `step` commands for existing integrations.
 
 ### Fixed
 
+- Publish in-memory strategy changes only after database commit; avoid repeated updates and run initialization during recovery.
+- Reject known unpayable HP costs at the final execution boundary and isolate target-specific numeric previews.
+- Read progress from the configured trace directory when control files live elsewhere.
 - Reconcile retained receipts after post-action read failures before requesting another decision or sending a mutation.
 - Track observe/execute/verify recovery separately, excluding healthy model latency from bridge deadlines.
 - Recompute supported Body Slam damage after Block setup; include Plating at end turn without counting Pyre energy twice.

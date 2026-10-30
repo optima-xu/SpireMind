@@ -11,17 +11,17 @@ import asyncio
 import json
 from pathlib import Path
 
+from spiremind.adapters.model.openai import OpenAIProvider
+from spiremind.adapters.storage.cards import CardDB
 from spiremind.config import Config
-from spiremind.context.budget import ContextBudget
-from spiremind.context.compiler import ContextCompiler
+from spiremind.core.budget import ContextBudget
+from spiremind.core.context import MemoryContext
 from spiremind.core.state import GameState
-from spiremind.knowledge.cards import CardDB
+from spiremind.decision.combat import assess, forced_survival_action
+from spiremind.decision.context import ContextCompiler
+from spiremind.decision.policies.combat import CombatStrategy
+from spiremind.decision.policies.fallback import conservative_choice
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.manager import MemoryContext
-from spiremind.providers.openai import OpenAIProvider
-from spiremind.strategies.combat import CombatStrategy
-from spiremind.strategies.combat_tactics import assess, forced_survival_action
-from spiremind.strategies.fallback import conservative_choice
 
 CASES = [
     ("shield_heavy_hit", 3, 3),

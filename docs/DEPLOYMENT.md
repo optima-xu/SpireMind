@@ -27,7 +27,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -GameRoot 
 # 只安装 Python 演示；跳过游戏、Git 桥接和 .NET
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Offline
 
-# 使用阿里云模型配置模板
+# 显式选择 DeepSeek 配置模板
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Provider deepseek
 ```
 
@@ -39,8 +39,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Provider 
 
 安装后编辑 `config.local.toml` 和 `.env`：
 
-- 通用模板填写 `base_url`、`model`，密钥变量为 `OPENAI_API_KEY`。
-- 阿里云模板填写自己的部署地址，密钥变量为 `DASHSCOPE_API_KEY`，默认 `enable_thinking=true`。
+- 默认地址 `https://api.deepseek.com`，模型 `deepseek-flash`，密钥变量 `deepseek_api_key`。
+- 两份安装模板均使用上述配置，保留旧模板文件名供安装脚本使用；不再默认读取旧服务商密钥。
+- 模板通过 `thinking = { type = "disabled" }` 关闭额外思考输出。模型参数由配置传给通用接口适配器。
 - `calculator_mode="required"` 要求接口支持标准 `tools`、`tool_choice` 和工具结果消息。
   不支持 function calling 时可改为 `"off"`，此时不再强制计算器；`"auto"` 也不保证调用。
 - 不支持 `response_format` 时可设置 `json_mode=false`，最终决策仍须是合法 JSON。

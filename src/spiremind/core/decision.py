@@ -2,7 +2,7 @@ from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .actions import Action
+from spiremind.core.actions import Action
 
 RoutePreference = Annotated[str, Field(max_length=120)]
 

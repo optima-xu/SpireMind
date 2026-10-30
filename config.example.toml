@@ -1,11 +1,17 @@
-# Generic OpenAI Chat Completions compatible endpoint. Keys stay in environment variables.
+# DeepSeek OpenAI-compatible endpoint. Credentials stay in the environment.
 [model]
-base_url = "https://api.openai.com/v1"
-model = "your-model-id"
-api_key_env = "OPENAI_API_KEY"
+base_url = "https://api.deepseek.com"
+model = "deepseek-flash"
+api_key_env = "deepseek_api_key"
 json_mode = true
-calculator_mode = "required" # Set to "off" only for endpoints without function calling.
+calculator_mode = "required"
 require_exact_model = false
+temperature = 0.2
+timeout_seconds = 60
+max_tokens = 4096
+
+[model.extra_body]
+thinking = { type = "disabled" }
 
 [game]
 base_url = "http://127.0.0.1:8080"

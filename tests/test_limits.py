@@ -3,9 +3,10 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from spiremind.cli import build_parser, execute
+from spiremind.bootstrap import execute
+from spiremind.cli import build_parser
 from spiremind.config import Config
-from spiremind.providers.protocols import BudgetExceeded, RequestBudget
+from spiremind.core.model import BudgetExceeded, RequestBudget
 
 
 @pytest.mark.parametrize("field", ["max_steps", "max_seconds", "max_total_tokens"])

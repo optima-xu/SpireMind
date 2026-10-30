@@ -77,7 +77,8 @@ Mock 是固定的十动作流程，不代表真实胜率。控制 Mock 进程时
 | `memory import PATH` | Import a history directory or public evidence JSON. 导入历史记录或公开证据。 |
 | `memory consolidate` | Reflect and validate offline, with no model calls. 离线复盘与校验。 |
 | `memory consolidate --use-model` | Explicitly enable bounded model reflection. 显式调用模型复盘。 |
-| `benchmark` | Offline performance and deterministic-quality checks. 默认离线评测。 |
+| `evaluate [--dataset PATH] [--output PATH]` | Labeled offline policy cases, no model or game connection. 独立标注的局部决策验收。 |
+| `benchmark` | Offline preparation performance and context checks. 默认离线性能评测。 |
 | `benchmark --use-model ...` | Budgeted A/B/C model comparison; needs a baseline and memory database. 有预算的模型对照。 |
 
 Stop the agent before card/memory maintenance; the CLI enforces maintenance locks.
@@ -96,7 +97,10 @@ Agent 停止后再维护数据库。启动时自动离线导入变化的本地�
 .\spiremind.cmd memory --database runs/demo-memory.sqlite consolidate
 .\spiremind.cmd memory --database runs/demo-memory.sqlite inspect
 
-# Local benchmark, no model requests / 离线评测
+# Labeled quality oracles, no model requests / 离线决策验收
+.\spiremind.cmd evaluate --output runs/quality/latest.json
+
+# Local benchmark, no model requests / 离线性能评测
 .\spiremind.cmd benchmark --rounds 25 --output runs/benchmarks/local.json
 
 # A custom config / 指定配置

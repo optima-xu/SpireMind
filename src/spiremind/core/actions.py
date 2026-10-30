@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 
-from .enums import ActionKind
+from spiremind.core.enums import ActionKind
 
 
 class Action(BaseModel):

@@ -2,18 +2,20 @@ import json
 
 import pytest
 
-from spiremind.context.budget import ContextBudget, ContextOverflow
-from spiremind.context.compiler import ContextCompiler
-from spiremind.context.views import state_view
+from spiremind.adapters.storage.cards import CardDB
+from spiremind.adapters.storage.memory import MemoryStore
+from spiremind.application.run_state import MemoryManager
+from spiremind.core.budget import ContextBudget, ContextOverflow
+from spiremind.core.context import MemoryContext
 from spiremind.core.decision import StrategyUpdate
 from spiremind.core.enums import Scene
+from spiremind.core.facts import CardFact
 from spiremind.core.state import Card, Power, PublicFacts
-from spiremind.knowledge.cards import CardDB, CardFact
+from spiremind.decision.context import ContextCompiler
+from spiremind.decision.deck import DeckAnalyzer
+from spiremind.decision.views import state_view
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.manager import MemoryContext, MemoryManager
-from spiremind.memory.skills import SkillMemory
-from spiremind.memory.storage_sqlite import MemoryStore
-from spiremind.strategies.run import DeckAnalyzer
+from spiremind.knowledge.skills import SkillMemory
 
 
 async def test_memory_cross_scene_restart_and_run_isolation(states, tmp_path):
@@ -26,11 +28,10 @@ async def test_memory_cross_scene_restart_and_run_isolation(states, tmp_path):
         states[6],
         StrategyUpdate(boss_plan="Need scaling", gold_policy="Reserve 100 for removal"),
     )
-    memory.working.current_plan = [states[6].legal_actions[0]]
-    memory.working.rejected_options = ["stale"]
+    memory.working.current_goal = "Finish shopping"
     ctx = await memory.context_for(states[7], "map")
     assert ctx.run["boss_plan"] == "Need scaling"
-    assert memory.working.current_plan == []
+    assert memory.working.current_goal == ""
     assert "hp" not in memory.run.model_dump()
     restored = MemoryManager(store)
     assert (await restored.context_for(states[7], "combat")).run["boss_plan"] == "Need scaling"

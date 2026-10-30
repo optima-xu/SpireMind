@@ -1,6 +1,6 @@
 param(
     [string]$GameRoot = '',
-    [ValidateSet('openai', 'deepseek')][string]$Provider = 'openai',
+    [ValidateSet('openai', 'deepseek')][string]$Provider = 'deepseek',
     [switch]$Offline
 )
 $ErrorActionPreference = 'Stop'

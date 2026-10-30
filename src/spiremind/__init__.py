@@ -1,3 +1,3 @@
-"""SpireMind: environment, memory, strategy, and observable runtime."""
+"""SpireMind: observed facts, bounded planning and verified execution."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

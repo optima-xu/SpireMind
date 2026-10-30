@@ -1,9 +1,10 @@
 from spiremind.core.actions import Action
+from spiremind.core.context import MemoryContext
 from spiremind.core.enums import ActionKind, Scene
 from spiremind.core.state import Card, GameState, PublicFacts, RunState
+from spiremind.decision.deck import DeckAnalyzer
+from spiremind.decision.policies.run import RunStrategy
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.manager import MemoryContext
-from spiremind.strategies.run import DeckAnalyzer, RunStrategy
 
 MEMORY = MemoryContext(snapshot_id="test", run={}, working={}, skills=())
 

@@ -3,11 +3,11 @@ from pathlib import Path
 
 import pytest
 
+from spiremind.adapters.game.normalize import normalize
 from spiremind.core.actions import Action
 from spiremind.core.enums import ActionKind, Scene
 from spiremind.core.state import GameState, PublicFacts, RunState
-from spiremind.environment.normalize import normalize
-from spiremind.runtime.progress import NoProgress, ProgressGuard
+from spiremind.decision.progress import NoProgress, ProgressGuard
 
 
 def selection(count, decision):

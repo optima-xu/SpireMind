@@ -7,29 +7,29 @@ from pathlib import Path
 import httpx
 import pytest
 
+from spiremind.adapters.control import RunControl, control_status
+from spiremind.adapters.locking import SingleWriter
+from spiremind.adapters.model.openai import OpenAIProvider, ProviderError
+from spiremind.adapters.storage.memory import MemoryStore
+from spiremind.adapters.telemetry.trace import TraceWriter
+from spiremind.application.memory import AsyncMemory
 from spiremind.config import ModelConfig
-from spiremind.context.action_facts import action_evaluations
-from spiremind.context.compiler import AgentContext
-from spiremind.context.views import progress_view
 from spiremind.core.actions import Action
+from spiremind.core.calculator import execute_calculator
+from spiremind.core.context import AgentContext, MemoryContext
 from spiremind.core.enums import ActionKind, Scene
+from spiremind.core.model import RequestBudget
 from spiremind.core.state import Card, CombatState, Enemy, GameState, Intent, Power, PublicFacts, RunState
+from spiremind.decision.combat import assess
+from spiremind.decision.mechanics.action_facts import action_evaluations
+from spiremind.decision.mechanics.setup import free_rage_action
+from spiremind.decision.planning.combat import visible_offense_plan
+from spiremind.decision.policies.combat import CombatStrategy
+from spiremind.decision.policies.fallback import conservative_choice
+from spiremind.decision.views import progress_view
 from spiremind.knowledge.library import StrategyLibrary
-from spiremind.memory.async_store import AsyncMemory
-from spiremind.memory.evidence_io import import_evidence
-from spiremind.memory.experience import ExperienceStore, digest, import_history
-from spiremind.memory.manager import MemoryContext
-from spiremind.memory.storage_sqlite import MemoryStore
-from spiremind.providers.calculator import execute_calculator
-from spiremind.providers.openai import OpenAIProvider, ProviderError
-from spiremind.providers.protocols import RequestBudget
-from spiremind.runtime.control import RunControl, control_status
-from spiremind.runtime.locking import SingleWriter
-from spiremind.runtime.trace import TraceWriter
-from spiremind.strategies.combat import CombatStrategy
-from spiremind.strategies.combat_tactics import assess, visible_offense_plan
-from spiremind.strategies.fallback import conservative_choice
-from spiremind.strategies.tactics.setup import free_rage_action
+from spiremind.learning.evidence_io import import_evidence
+from spiremind.learning.experience import ExperienceStore, digest, import_history
 
 
 @pytest.fixture
@@ -182,7 +182,7 @@ async def test_bad_numeric_forecast_is_repaired_once_using_bound_tool_results(pr
     async def no_sleep(_):
         pass
 
-    monkeypatch.setattr("spiremind.providers.openai.asyncio.sleep", no_sleep)
+    monkeypatch.setattr("spiremind.adapters.model.openai.asyncio.sleep", no_sleep)
     facts = (
         {
             "action_id": "A",

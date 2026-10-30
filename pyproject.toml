@@ -70,6 +70,7 @@ include = [
   "config.example.toml",
   "config.deepseek.example.toml",
   "docs/ACCEPTANCE.md",
+  "docs/ARCHITECTURE.md",
   "docs/ARCHITECTURE_IMPROVEMENTS.md",
   "docs/MULTI_AGENT_MEMORY.md",
   "docs/PERFORMANCE.md",
