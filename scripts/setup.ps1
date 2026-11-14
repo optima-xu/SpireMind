@@ -82,11 +82,29 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Python dependency installation failed.' }
     foreach ($pair in @(
         @('.env.example', '.env'),
-        @($(if ($Provider -eq 'deepseek') { 'config.deepseek.example.toml' } else { 'config.example.toml' }), 'config.local.toml')
+        @('config.example.toml', 'config.local.toml')
     )) {
         $target = Join-Path $projectRoot $pair[1]
         if (-not (Test-Path -LiteralPath $target)) {
             Copy-Item -LiteralPath (Join-Path $projectRoot $pair[0]) -Destination $target
+        }
+    }
+
+    $webManifest = Join-Path $projectRoot 'web/package.json'
+    if (Test-Path -LiteralPath $webManifest) {
+        $pnpmCmd = Get-Command pnpm -ErrorAction SilentlyContinue
+        if ($pnpmCmd) {
+            if (-not $Offline) {
+                & pnpm --dir web install
+                if ($LASTEXITCODE -ne 0) { throw 'Web Console dependency installation failed.' }
+                & pnpm --dir web run build
+                if ($LASTEXITCODE -ne 0) { throw 'Web Console production build failed.' }
+            } elseif (Test-Path -LiteralPath (Join-Path $projectRoot 'web/node_modules')) {
+                & pnpm --dir web run build
+                if ($LASTEXITCODE -ne 0) { throw 'Web Console production build failed.' }
+            }
+        } else {
+            Write-Output 'pnpm not found; skipping Web Console build. Install Node.js + pnpm and run: pnpm --dir web install; pnpm --dir web run build'
         }
     }
 
@@ -111,8 +129,8 @@ try {
     }
     & (Join-Path $projectRoot '.venv/Scripts/python.exe') -m spiremind --help
     if ($LASTEXITCODE -ne 0) { throw 'Installed SpireMind CLI failed verification.' }
-    Write-Output 'Setup complete. Fill .env and config.local.toml, then run .\spiremind.cmd start.'
-    if (-not $Offline) { Write-Output 'Start the game from Steam, enable STS2AIMCP, and return to the main menu.' }
+    Write-Output 'Setup complete. Run .\spiremind.cmd (or .\spiremind.cmd ui) to launch the Web Console, or pass --no-browser for API-only mode.'
+    if (-not $Offline) { Write-Output 'Start the game from Steam, enable STS2AIMCP, and launch .\spiremind.cmd.' }
 } finally {
     Pop-Location
 }

@@ -3,10 +3,10 @@ import json
 import httpx
 import pytest
 
-from spiremind.adapters.model.openai import OpenAIProvider, ProviderError
 from spiremind.config import ModelConfig
-from spiremind.core.calculator import CalculatorError, calculate, execute_calculator
-from spiremind.core.context import AgentContext
+from spiremind.domain.decision import AgentContext, ProviderError, RequestBudget
+from spiremind.llm.calculator import CalculatorError, calculate, execute_calculator
+from spiremind.llm.client import OpenAIProvider
 
 CTX = AgentContext("x", "Choose JSON", "legal action A", 20, (), ())
 
@@ -280,4 +280,95 @@ async def test_missing_usage_is_estimated_for_runtime_budget(settings):
     assert result.input_tokens >= CTX.estimated_tokens
     assert result.output_tokens == settings.max_tokens
     assert provider.input_tokens == result.input_tokens
+    await provider.close()
+
+
+async def test_bad_numeric_forecast_is_repaired_once_using_bound_tool_results(monkeypatch):
+    monkeypatch.setenv("ROBUSTNESS_TEST_KEY", "test-key")
+    provider_settings = ModelConfig(
+        model="test", api_key_env="ROBUSTNESS_TEST_KEY", attempts=2, max_tokens=128
+    )
+
+    async def no_sleep(_):
+        pass
+
+    monkeypatch.setattr("spiremind.llm.client.asyncio.sleep", no_sleep)
+    facts = (
+        {
+            "action_id": "A",
+            "revision": 5,
+            "decision_id": "d",
+            "forecast": {"live_block": 8},
+            "effects_complete": True,
+        },
+    )
+    context = AgentContext("x", "Choose", "Use current facts", 20, (), (), facts)
+    calls = []
+
+    def wire_answer(choice):
+        return {
+            "model": "test",
+            "choices": [{"message": {"content": json.dumps(choice)}, "finish_reason": "stop"}],
+            "usage": {"prompt_tokens": 20, "completion_tokens": 5},
+        }
+
+    def handler(request):
+        body = json.loads(request.content)
+        calls.append(body)
+        if len(calls) == 1:
+            data = wire_answer({})
+            data["choices"][0] = {
+                "finish_reason": "tool_calls",
+                "message": {
+                    "tool_calls": [
+                        {
+                            "id": "calc",
+                            "type": "function",
+                            "function": {"name": "calculate", "arguments": '{"action_ids":["A"]}'},
+                        }
+                    ]
+                },
+            }
+            return httpx.Response(200, json=data)
+        if len(calls) == 3:
+            assert body["tool_choice"] == "auto"
+            assert sum(m["role"] == "tool" for m in body["messages"]) == 1
+        value = 11 if len(calls) == 2 else 8
+        return httpx.Response(
+            200,
+            json=wire_answer(
+                {
+                    "action_id": "A",
+                    "reason": "Current Block preview",
+                    "confidence": 0.9,
+                    "forecast": {"live_block": value},
+                }
+            ),
+        )
+
+    provider = OpenAIProvider(provider_settings, httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    result = await provider.choose(context, {"A"})
+    assert result.choice.forecast == {"live_block": 8}
+    assert provider.calculator_calls == provider.invalid_responses == 1
+    assert provider.calls == 3
+    await provider.close()
+
+
+@pytest.mark.parametrize("status", [403, 429])
+async def test_http_rejection_is_not_recorded_as_fabricated_billed_tokens(monkeypatch, status):
+    monkeypatch.setenv("ROBUSTNESS_TEST_KEY", "test-key")
+    settings = ModelConfig(model="test", api_key_env="ROBUSTNESS_TEST_KEY", attempts=1, max_tokens=128)
+    budget = RequestBudget(2, 10000)
+    provider = OpenAIProvider(
+        settings,
+        httpx.AsyncClient(
+            transport=httpx.MockTransport(lambda req: httpx.Response(status, text="private body"))
+        ),
+        budget,
+    )
+    with pytest.raises(ProviderError):
+        await provider.choose(AgentContext("x", "Choose", "A", 20, (), ()), {"A"})
+    assert budget.requests == 1 and budget.tokens == 0
+    assert provider.input_tokens == provider.output_tokens == 0
+    assert provider.request_records[0]["http_status"] == status
     await provider.close()

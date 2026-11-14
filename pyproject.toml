@@ -20,7 +20,13 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Topic :: Games/Entertainment :: Turn Based Strategy",
 ]
-dependencies = ["httpx>=0.28,<1", "pydantic>=2.11,<3", "PyYAML>=6,<7"]
+dependencies = [
+  "fastapi>=0.115,<1",
+  "httpx>=0.28,<1",
+  "pydantic>=2.11,<3",
+  "PyYAML>=6,<7",
+  "uvicorn[standard]>=0.32,<1",
+]
 
 [project.urls]
 Homepage = "https://github.com/optima-xu/SpireMind"
@@ -49,7 +55,7 @@ select = ["E", "F", "I", "UP", "B", "ASYNC"]
 packages = ["src/spiremind"]
 
 [tool.hatch.build.targets.sdist]
-exclude = ["/runs/**", "/.uv-cache/**", "/.venv/**", "/.tools/**", "/save-recovery-*/**"]
+exclude = ["/runs/**", "/.uv-cache/**", "/.venv/**", "/.tools/**", "/web/node_modules/**"]
 include = [
   "src",
   "tests",
@@ -68,22 +74,12 @@ include = [
   "THIRD_PARTY_NOTICES.md",
   "bridge.lock.json",
   "config.example.toml",
-  "config.deepseek.example.toml",
-  "docs/ACCEPTANCE.md",
   "docs/ARCHITECTURE.md",
-  "docs/ARCHITECTURE_IMPROVEMENTS.md",
-  "docs/MULTI_AGENT_MEMORY.md",
-  "docs/PERFORMANCE.md",
-  "docs/ROBUSTNESS.md",
-  "docs/AGENT_QUALITY_REVIEW.md",
-  "docs/INTERVIEW.md",
-  "docs/benchmarks",
-  "docs/DEATH_REVIEW.md",
-  "docs/COMMANDS.md",
   "docs/DEPLOYMENT.md",
-  "docs/ENEMY_BESTIARY_v0.111.0.md",
-  "docs/ENEMY_KNOWLEDGE.md",
-  "docs/mcp_notes.md",
+  "web/package.json",
+  "web/index.html",
+  "web/src",
+  "web/dist",
   "pyproject.toml",
   "uv.lock",
 ]

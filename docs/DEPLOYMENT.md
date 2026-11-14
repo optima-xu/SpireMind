@@ -1,120 +1,149 @@
-# 安装与运行
+# 部署与配置指南 / Deployment & Configuration
 
-实机桥接针对 **Windows、STS2 v0.111.0、标准单人模式**。其他游戏版本需重新验证补丁。
-Python 决策代码支持 Windows/Linux、Python 3.11–3.13。
+## 1. 环境要求
 
-## 推荐安装
+| 组件 | 说明 |
+| --- | --- |
+| **操作系统** | 实机桥接需 **Windows**（《杀戮尖塔 2》`v0.111.0`，标准单人模式）；纯后端测试与 Web 开发支持 Windows / Linux。 |
+| **Python & uv** | Python **3.11 – 3.13**，使用 [`uv`](https://docs.astral.sh/uv/) 管理虚拟环境与 `uv.lock`。 |
+| **Node.js & pnpm** | Node **20+ / 22** 与 **`pnpm`**（构建 `web/` 前端静态资源需要；若仅使用终端无界面模式 `spiremind play` 可选）。 |
+| **.NET 9 SDK & Git** | 仅首次自动构建/安装 `STS2AIMCP` 游戏桥接模组时需要。 |
 
-先安装 [Git for Windows](https://git-scm.com/downloads/win)，关闭游戏，然后执行：
+---
+
+## 2. 安装步骤
+
+### 方式一：Windows 一键脚本（推荐）
+
+先**关闭《杀戮尖塔 2》**，然后在项目根目录执行：
 
 ```powershell
-git clone https://github.com/optima-xu/SpireMind.git
-Set-Location SpireMind
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1
 ```
 
-脚本会寻找 Steam 游戏目录，使用 uv 准备 Python 3.13 和锁定的运行依赖；缺少 uv 或 .NET 9 SDK
-时调用[官方 uv 安装器](https://docs.astral.sh/uv/reference/installer/)和
-[官方 .NET 安装器](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script)。
-工具安装在项目 `.tools/`，不需要手动激活虚拟环境或全局修改 PATH。已有 uv/.NET 可复用。
-桥接按 `bridge.lock.json` 固定提交，应用兼容补丁，构建并复制三个模组文件，逐一校验哈希。
-安装过程中游戏必须保持关闭。
+常见可选参数：
+- 手动指定 Steam 游戏目录：
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -GameRoot 'D:\SteamLibrary\steamapps\common\Slay the Spire 2'
+  ```
+- 仅本地准备 Python 与前端（跳过游戏目录探测与桥接构建）：
+  ```powershell
+  powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Offline
+  ```
+
+### 方式二：手动安装（开发者 / CI）
 
 ```powershell
-# 非默认 Steam 库
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -GameRoot 'D:\SteamLibrary\steamapps\common\Slay the Spire 2'
-
-# 只安装 Python 演示；跳过游戏、Git 桥接和 .NET
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Offline
-
-# 显式选择 DeepSeek 配置模板
-powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1 -Provider deepseek
-```
-
-`-Offline` 表示跳过实机集成，首次下载 Python/依赖仍需要网络。重复运行会保留 `.env` 和
-`config.local.toml`；`-Provider` 只影响首次创建的配置，不会覆盖已有服务地址。
-如果升级了游戏，请先重新验证桥接，不要直接沿用旧补丁。
-
-## 配置模型
-
-安装后编辑 `config.local.toml` 和 `.env`：
-
-- 默认地址 `https://api.deepseek.com`，模型 `deepseek-flash`，密钥变量 `deepseek_api_key`。
-- 两份安装模板均使用上述配置，保留旧模板文件名供安装脚本使用；不再默认读取旧服务商密钥。
-- 模板通过 `thinking = { type = "disabled" }` 关闭额外思考输出。模型参数由配置传给通用接口适配器。
-- `calculator_mode="required"` 要求接口支持标准 `tools`、`tool_choice` 和工具结果消息。
-  不支持 function calling 时可改为 `"off"`，此时不再强制计算器；`"auto"` 也不保证调用。
-- 不支持 `response_format` 时可设置 `json_mode=false`，最终决策仍须是合法 JSON。
-
-CLI 默认自动读取 `config.local.toml`，再加载同目录的 `.env`；已有进程环境变量优先。
-`.env` 只支持字面量 `KEY=value`、引号和注释，不执行命令或展开变量。
-使用其他配置：`.\spiremind.cmd --config PATH doctor`。
-
-```powershell
-# 无密钥演示
-.\spiremind.cmd start --environment mock --policy rules
-
-# 主动测试模型；会调用 API
-.\spiremind.cmd probe-model
-```
-
-`probe-model` 检查 JSON、模型设置、动作绑定和计算器往返，结果写入 `runs/model-probe.json`。
-
-## 首页启动、暂停与恢复
-
-从 Steam 打开游戏并启用 STS2AIMCP 模组，停在**首页／主菜单**：
-
-```powershell
-.\spiremind.cmd doctor
-.\spiremind.cmd start --character ironclad --ascension 0
-```
-
-不在首页时，先返回首页；`start` 会拒绝接管当前场景。角色可选 `ironclad`、`silent`、`regent`、
-`necrobinder`、`defect`，进阶必须已解锁。首页有未完成对局时使用 `resume`，换角色／难度前
-先在游戏内完成或放弃原对局。启动会自动同步当前版本牌库。
-
-在同目录的另一个终端执行 `pause`，并用 `status` 确认已到 `paused` 后再手动操作。
-`resume` 继续暂停的进程；Ctrl+C 停止后也可用 `resume` 重新连接未完成对局。
-运行中的动作会完成验证或对账再暂停，恢复时重新读状态。完整命令见[命令说明](COMMANDS.md)。
-
-模组存档与原版存档分开。Mock 只是固定流程测试，不是游戏模拟器。
-
-## 手动安装与开发
-
-已有 Python/uv 的用户可跳过安装脚本：
-
-```powershell
+# 1. 安装后端依赖
 uv sync --locked
+
+# 2. 复制初始配置与密钥文件（若尚不存在）
 Copy-Item .env.example .env
 Copy-Item config.example.toml config.local.toml
-```
 
-不要覆盖已有配置。实机桥接仍需 .NET 9 SDK 和游戏目录；关闭游戏后执行：
+# 3. 安装并构建 Web Console 到 web/dist/
+pnpm --dir web install
+pnpm --dir web run build
 
-```powershell
+# 4. 可选：构建并安装游戏桥接模组（先关闭游戏）
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/prepare-bridge.ps1 -GameRoot 'D:\SteamLibrary\steamapps\common\Slay the Spire 2' -Install
 ```
 
-省略 `-Install` 只构建到 `build/mods/STS2AIMCP`。脚本不覆盖不匹配的 bridge checkout。
-Python 用户也可用 `uv run spiremind ...`，默认配置与 `.env` 行为相同。源码升级前停止 Agent：
+---
 
-```powershell
-git pull --ff-only
-uv sync --locked
-uv run pytest -q
+## 3. 配置模型与密钥
+
+你既可以直接在 Web 控制台的 **设置与诊断 (`Settings & Doctor`)** 中选择预设、填写入 `.env` 的密钥并保存，也可以手动编辑 `config.local.toml` 和 `.env`。
+
+### `.env`
+
+```dotenv
+deepseek_api_key=your_key_here
 ```
 
-## 排查
+> 进程环境变量优先级高于 `.env`。前端与 `/api/settings` 接口永远不会返回明文 Key，只显示环境变量名、是否已配置及首尾脱敏预览。
 
-| 现象 | 检查 |
-| --- | --- |
-| 安装找不到游戏 | 使用 `-GameRoot` 指定目录，或 `-Offline` 体验演示。 |
-| `doctor` 无法连接 | 游戏是否运行、模组是否启用、`[game].base_url` 是否正确。 |
-| 模型返回 401/403 | `.env` 的变量名是否与 `api_key_env` 一致，密钥是否属于该 endpoint。 |
-| `start` 提示先返回首页 | 返回主菜单；已有对局时用 `resume`。 |
-| `pause_requested` 后仍未暂停 | 等待当前模型请求或动作对账完成，查看 `status`。 |
-| `resume` 找不到对局 | 从 Steam 启动游戏；空首页用 `start` 开新局。 |
-| 命令返回退出码 2 | 达到运行预算或状态检查停止，查看 `runs/<attempt-id>/summary.json`。 |
+### `config.local.toml` 主要字段
 
-每次运行保存脱敏配置、状态、上下文、决策和 summary。密钥、配置、数据库、`.tools/`、`runs/`
-及桥接 checkout 被 Git 忽略；分享日志前检查本地路径和游戏信息。实机验证范围见[验收记录](ACCEPTANCE.md)。
+```toml
+[model]
+base_url = "https://api.deepseek.com"
+model = "deepseek-flash"
+api_key_env = "deepseek_api_key"
+json_mode = true
+calculator_mode = "required"
+temperature = 0.2
+max_tokens = 4096
+
+[model.extra_body]
+thinking = { type = "disabled" }
+
+[game]
+base_url = "http://127.0.0.1:8080"
+character = "ironclad"
+ascension = 0
+
+[runtime]
+context_tokens = 4000
+max_context_tokens = 16000
+max_steps = 3000
+error_retry_seconds = 180
+
+[strategy]
+combat_guards = true
+boss_potion_damage_fraction = 0.20
+
+[server]
+host = "127.0.0.1"
+port = 8765
+```
+
+- **OpenAI 兼容接口适配**：若使用的服务不支持 Function Calling，请将 `calculator_mode` 设为 `"off"`；若不支持 `response_format`，请将 `json_mode` 设为 `false`。
+- **Ollama 本地模型**：可在设置页直接点击 `Ollama` 预设（默认 `http://localhost:11434/v1`、`json_mode = false`、`calculator_mode = "auto"`）。
+
+---
+
+## 4. 运行与日常开发
+
+### 生产模式（推荐日常使用）
+
+构建一次 `web/dist/` 后，直接运行：
+
+```powershell
+.\spiremind.cmd
+```
+
+打开浏览器访问 `http://127.0.0.1:8765`。默认会托管构建好的静态页面，不占用额外的 Node 进程。
+
+### 前后端热重载开发模式
+
+1. 终端 1 启动后端（不自动弹窗）：
+   ```powershell
+   uv run spiremind ui --no-browser
+   ```
+2. 终端 2 启动 Vite 开发服务器（自动代理 `/api` 和 `/api/ws` 到 `8765`）：
+   ```powershell
+   pnpm --dir web dev
+   ```
+   浏览器访问 `http://localhost:5173`。
+
+### 终端诊断与无界面模式
+
+```powershell
+# 诊断游戏桥接
+.\spiremind.cmd doctor
+
+# 同时发送一次极简 LLM 连通性测试
+.\spiremind.cmd doctor --check-llm
+
+# 无界面开新局（或加 --attach 接管当前游戏）
+.\spiremind.cmd play --character ironclad --ascension 0 --policy model
+```
+
+---
+
+## 5. 常见问题排查
+
+- **Web 打开后页面空白或提示未构建**：确认已执行 `pnpm --dir web run build` 且 `web/dist/index.html` 存在。
+- **`Start New Run` 报错提示存在存档或场景不符**：游戏处于未完成对局时请改用 **Attach Run**（或游戏内放弃/结束当前局返回主菜单）。
+- **Bridge 探测失败**：确认已从 Steam 启动游戏、启用 `STS2AIMCP` 模组，且 `config.local.toml` 中的 `[game].base_url` 与桥接监听地址一致（默认 `http://127.0.0.1:8080`）。

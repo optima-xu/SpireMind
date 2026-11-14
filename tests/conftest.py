@@ -1,8 +1,8 @@
 import httpx
 import pytest
 
-from spiremind.adapters.game.mcp import PROTOCOL
-from spiremind.evaluation.mock import demo_states
+from spiremind.bridge.client import PROTOCOL
+from tests.helpers import demo_states
 
 
 @pytest.fixture(autouse=True)

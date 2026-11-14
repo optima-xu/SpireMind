@@ -7,12 +7,12 @@ from pathlib import Path
 import httpx
 import pytest
 
-from spiremind.adapters.game.mcp import PROTOCOL, MCPEnvironment
-from spiremind.adapters.game.normalize import normalize
+from spiremind.agent.context import state_view
+from spiremind.agent.policies import CombatStrategy
+from spiremind.bridge.client import PROTOCOL, MCPEnvironment
+from spiremind.bridge.normalize import normalize
 from spiremind.config import GameConfig
-from spiremind.core.ports import EnvironmentError, StaleDecision, TransitionPending
-from spiremind.decision.policies.combat import CombatStrategy
-from spiremind.decision.views import state_view
+from spiremind.domain.decision import EnvironmentError, StaleDecision, TransitionPending
 
 
 def test_public_normalization(raw_decision):
@@ -407,7 +407,7 @@ async def test_pending_journal_retries_transient_replace_lock(raw_decision, tmp_
         return original_replace(source, target)
 
     monkeypatch.setattr(Path, "replace", locked_replace)
-    monkeypatch.setattr("spiremind.adapters.game.mcp.time.sleep", lambda _: None)
+    monkeypatch.setattr("spiremind.bridge.client.time.sleep", lambda _: None)
     env._mark_dispatched()
 
     assert attempts == 3
@@ -440,7 +440,7 @@ async def test_persistent_journal_lock_prevents_game_dispatch(raw_decision, tmp_
         return original_replace(source, target)
 
     monkeypatch.setattr(Path, "replace", locked_replace)
-    monkeypatch.setattr("spiremind.adapters.game.mcp.time.sleep", lambda _: None)
+    monkeypatch.setattr("spiremind.bridge.client.time.sleep", lambda _: None)
     with pytest.raises(PermissionError):
         await env.execute(env.state.legal_actions[0])
 

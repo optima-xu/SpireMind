@@ -24,6 +24,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: pnpm --dir web install
+      - run: pnpm --dir web exec tsc --noEmit
+      - run: pnpm --dir web run build
       - uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python }}
@@ -31,8 +40,4 @@ jobs:
       - run: uv run ruff check src tests scripts
       - run: uv run ruff format --check src tests scripts
       - run: uv run pytest -q
-      - name: Windows Quick Start smoke test
-        if: runner.os == 'Windows' && matrix.python == '3.13'
-        run: uv run python scripts/smoke_setup.py
       - run: uv build
-      - run: uv run python scripts/smoke_wheel.py

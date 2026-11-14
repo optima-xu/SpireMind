@@ -5,11 +5,24 @@ from pathlib import Path
 import httpx
 import pytest
 
-from spiremind.adapters.game.mcp import MCPEnvironment
+from spiremind.agent.mechanics.effects import (
+    MAX_SURVIVAL_SEARCH_TRANSITIONS,
+    action_evaluations,
+    free_rage_action,
+)
+from spiremind.agent.mechanics.planner import (
+    assess,
+    early_boss_potion_action,
+    forced_survival_action,
+    visible_offense_plan,
+    visible_survival_plan,
+)
+from spiremind.agent.policies import CombatStrategy
+from spiremind.bridge.client import MCPEnvironment
 from spiremind.config import GameConfig
-from spiremind.core.actions import Action
-from spiremind.core.enums import ActionKind, Scene
-from spiremind.core.state import (
+from spiremind.domain.state import (
+    Action,
+    ActionKind,
     Card,
     CombatState,
     Enemy,
@@ -19,11 +32,9 @@ from spiremind.core.state import (
     Power,
     PublicFacts,
     RunState,
+    Scene,
 )
-from spiremind.decision.combat import assess, early_boss_potion_action, forced_survival_action
-from spiremind.decision.mechanics.effects import MAX_SURVIVAL_SEARCH_TRANSITIONS
-from spiremind.decision.planning.combat import visible_offense_plan, visible_survival_plan
-from spiremind.decision.policies.combat import CombatStrategy
+from spiremind.llm.calculator import execute_calculator
 
 
 @pytest.fixture
@@ -1570,3 +1581,135 @@ def test_survival_search_can_heal_before_a_later_hp_cost():
         {"action_id": "cost", "resource_key": "card:cost", "cost": 0, "hp_loss": 5, "block_gain": 8},
     ]
     assert visible_survival_plan(state, rows, 12) == ["heal", "cost"]
+
+
+@pytest.fixture
+def live_cases():
+    data = json.loads(
+        (Path(__file__).parent / "fixtures/v0.111.0-live-robustness.json").read_text(encoding="utf-8")
+    )
+    return {item["case"]: GameState.model_validate(item["state"]) for item in data}
+
+
+def numeric_state(*, hp=10, energy=1, block=10, powers=(), enemy_hp=15):
+    body = Card(
+        id="body_slam",
+        ref="body",
+        type="attack",
+        cost=0,
+        values=PublicFacts.of({"CalculationBase": 0, "ExtraDamage": 1, "CalculatedDamage": block}),
+    )
+    defend = Card(id="defend", ref="defend", type="skill", cost=1, values=PublicFacts.of({"Block": 5}))
+    enemy = Enemy(
+        id="enemy",
+        ref="enemy",
+        hp=enemy_hp,
+        max_hp=enemy_hp,
+        intents=(Intent(type="Attack", damage=24, hits=1),),
+    )
+    return GameState(
+        game_version="v0.111.0",
+        decision_id="d",
+        revision=1,
+        scene=Scene.COMBAT,
+        run=RunState(id="seed", character="ironclad", hp=hp, max_hp=80),
+        combat=CombatState(
+            turn=1, block=block, energy=energy, hand=(body, defend), enemies=(enemy,), powers=powers
+        ),
+        legal_actions=(
+            Action(id="body", decision_id="d", kind=ActionKind.PLAY_CARD, card_id="body", target_id="enemy"),
+            Action(id="defend", decision_id="d", kind=ActionKind.PLAY_CARD, card_id="defend"),
+            Action(id="end", decision_id="d", kind=ActionKind.END_TURN),
+        ),
+    )
+
+
+def test_body_slam_search_recomputes_damage_after_block_but_not_after_end_turn_plating():
+    state = numeric_state(powers=(Power(id="plating_power", amount=4),))
+    facts = assess(state)
+    assert facts["evaluated_actions"][0]["hp_damage"] == 10
+    assert facts["end_turn_block_gain"] == 4
+    assert facts["verified_lethal_plan"] == ["defend", "body"]
+    assert visible_offense_plan(state)["max_damage"] == 15
+
+
+def test_body_slam_formula_mismatch_abstains_instead_of_using_metadata_as_bonuses():
+    state = numeric_state()
+    body = state.combat.hand[0].model_copy(
+        update={"values": PublicFacts.of({"CalculationBase": 0, "ExtraDamage": 1, "CalculatedDamage": 999})}
+    )
+    state = state.model_copy(
+        update={"combat": state.combat.model_copy(update={"hand": (body, state.combat.hand[1])})}
+    )
+    assert visible_offense_plan(state)["complete"] is False
+
+
+def test_pyre_does_not_give_extra_current_turn_energy_and_plating_is_version_bound():
+    state = numeric_state(energy=0, powers=(Power(id="pyre_power", amount=2),))
+    state = state.model_copy(update={"legal_actions": (state.legal_actions[0], state.legal_actions[-1])})
+    assert visible_offense_plan(state)["max_damage"] == 10
+    unknown = numeric_state(powers=(Power(id="plating_power", amount=4),)).model_copy(
+        update={"game_version": "v0.999.0"}
+    )
+    assert "plating_power" in assess(unknown)["unmodeled_player_powers"]
+    assert assess(unknown)["end_turn_block_gain"] == 0
+
+
+async def test_actual_rage_ordering_is_fixed_without_claiming_surrounded_combat_is_solved(live_cases):
+    state = live_cases["revision_209"]
+    decision = await CombatStrategy(None, None, None).decide(state, None)
+    card = next(c for c in state.combat.hand if c.ref == decision.action.card_id)
+    assert card.id == "rage" and card.cost == 0
+    assert decision.policy_rule == "play_free_rage_before_attack"
+    assert assess(state)["survival_status"] == "unknown"
+    capped = state.model_copy(
+        update={
+            "combat": state.combat.model_copy(
+                update={"powers": state.combat.powers + (Power(id="ringing_power", amount=1),)}
+            )
+        }
+    )
+    assert free_rage_action(capped) is None
+    reactive = state.model_copy(
+        update={
+            "combat": state.combat.model_copy(
+                update={"powers": state.combat.powers + (Power(id="unknown_retaliation", amount=1),)}
+            )
+        }
+    )
+    assert free_rage_action(reactive) is None
+
+
+def test_unmovable_counter_remains_unknown_even_when_next_card_preview_is_doubled(live_cases):
+    for case in ("revision_36", "revision_37"):
+        facts = assess(live_cases[case])
+        assert "unmovable_power" in facts["unmodeled_player_powers"]
+        assert facts["survival_search"]["optimal"] is False
+        assert not facts["verified_lethal_plan"]
+
+
+@pytest.mark.parametrize(
+    "case,card_id,field,value",
+    [
+        ("revision_200", "taunt", "live_block", 10),
+        ("revision_202", "defend_ironclad", "live_block", 8),
+        ("revision_203", "strike_ironclad", "target_damage_per_hit", 19),
+        ("revision_209", "twin_strike", "live_damage_per_hit", 15),
+        ("revision_209", "twin_strike", "target_damage_per_hit", 22),
+        ("revision_217", "body_slam", "live_damage_per_hit", 28),
+    ],
+)
+def test_grounded_calculator_uses_live_owner_previews_without_readding_bonuses(
+    live_cases, case, card_id, field, value
+):
+    state = live_cases[case]
+    card = next(c for c in state.combat.hand if c.id == card_id)
+    action = next(a for a in state.legal_actions if a.card_id == card.ref)
+    evaluations = action_evaluations(state, assess(state))
+    result = execute_calculator(json.dumps({"action_ids": [action.id]}), evaluations)
+    facts = json.loads(result[0]["result"])
+    assert facts["forecast"][field] == value
+    assert (facts["revision"], facts["decision_id"]) == (state.revision, state.decision_id)
+    assert execute_calculator('{"action_ids":["stale-action"]}', evaluations) == [
+        {"error": "unknown_current_action"}
+    ]

@@ -27,3 +27,5 @@ Thumbs.db
 .idea/
 .vscode/
 docs/handoff-v1.1.txt
+web/node_modules/
+web/dist/

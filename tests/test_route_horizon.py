@@ -1,13 +1,7 @@
-from spiremind.adapters.storage.memory import MemoryStore
-from spiremind.application.run_state import MemoryManager
-from spiremind.core.actions import Action
-from spiremind.core.context import MemoryContext
-from spiremind.core.enums import ActionKind, Scene
-from spiremind.core.state import Choice, GameState, MapNode, MapState, RunState
-from spiremind.decision.planning.route import last_known_shop_before_boss, route_options
-from spiremind.decision.policies.fallback import conservative_choice
-from spiremind.decision.policies.map import MapStrategy
-from spiremind.decision.policies.run import RunStrategy
+from spiremind.agent.context import RunTracker, last_known_shop_before_boss, route_options
+from spiremind.agent.policies import MapStrategy, RunStrategy, conservative_choice
+from spiremind.domain.decision import MemoryContext
+from spiremind.domain.state import Action, ActionKind, Choice, GameState, MapNode, MapState, RunState, Scene
 
 
 def _action(node_id: str, decision_id: str = "map-decision") -> Action:
@@ -64,7 +58,7 @@ async def test_low_hp_map_avoids_elite_when_downstream_route_is_identical():
     assert decision.policy_rule == "low_hp_shared_route_avoid_elite"
 
 
-async def test_last_shop_horizon_survives_scene_transition_and_opens_inventory(tmp_path):
+async def test_last_shop_horizon_survives_scene_transition_and_opens_inventory():
     source = _map_state().model_copy(
         update={
             "run": RunState(id="route-run", act=1, floor=14, hp=9, max_hp=80, gold=304),
@@ -84,12 +78,10 @@ async def test_last_shop_horizon_survives_scene_transition_and_opens_inventory(t
         decision_id="shop-decision",
         game_version="v0.111.0",
     )
-    store = MemoryStore(tmp_path / "route.sqlite")
-    memory = MemoryManager(store)
-    await memory.context_for(source, "map")
-    await memory.update(source, source.legal_actions[0], shop, semantic_success=False)
-    restored = MemoryManager(store)
-    context = await restored.context_for(shop, "run")
+    tracker = RunTracker()
+    await tracker.context_for(source, "map")
+    tracker.update(source, source.legal_actions[0], shop, semantic_success=False)
+    context = await tracker.context_for(shop, "run")
     assert context.run["route_horizon"]["boss_game_floors"] == [17]
     assert last_known_shop_before_boss(shop, context.run["route_horizon"])
     assert "no later shop before the boss" in RunStrategy(None, None, conservative_choice).task_for(
@@ -112,5 +104,4 @@ async def test_last_shop_horizon_survives_scene_transition_and_opens_inventory(t
     assert follow_up.policy_rule is None
 
     next_act = shop.model_copy(update={"run": shop.run.model_copy(update={"act": 2, "floor": 1})})
-    assert (await restored.context_for(next_act, "run")).run["route_horizon"] == {}
-    store.close()
+    assert (await tracker.context_for(next_act, "run")).run["route_horizon"] == {}
